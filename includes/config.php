@@ -8,13 +8,21 @@
 date_default_timezone_set('Asia/Riyadh');
 
 // إعدادات قاعدة البيانات
-define('DB_HOST', '127.0.0.1');
-define('DB_NAME', 'hr_app_db'); // قم بتغيير هذا الاسم حسب اسم قاعدة البيانات في Hostinger
-define('DB_USER', 'root');      // اسم مستخدم قاعدة البيانات
-define('DB_PASS', '');          // كلمة مرور قاعدة البيانات
-
-// إعدادات الموقع
-define('BASE_URL', '/HR-App/'); // قم بتعديل هذا المسار إذا تم الرفع داخل مجلد فرعي
+if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') {
+    // الإعدادات المحلية (XAMPP)
+    define('DB_HOST', '127.0.0.1');
+    define('DB_NAME', 'hr_app_db');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+    define('BASE_URL', '/HR-App/');
+} else {
+    // إعدادات استضافة Hostinger (قم بتعديلها لتطابق بياناتك في Hostinger)
+    define('DB_HOST', 'localhost'); // عادة ما يكون localhost في Hostinger
+    define('DB_NAME', 'u123456789_hr_db'); // اسم قاعدة البيانات في Hostinger
+    define('DB_USER', 'u123456789_hr_user'); // اسم المستخدم في Hostinger
+    define('DB_PASS', 'your_password_here'); // كلمة مرور قاعدة البيانات في Hostinger
+    define('BASE_URL', '/'); // عادة ما يكون الجذر في الاستضافة
+}
 
 // بدء الجلسة
 if (session_status() === PHP_SESSION_NONE) {
