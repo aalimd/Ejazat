@@ -7,6 +7,11 @@
 // إعداد المنطقة الزمنية لمكة المكرمة
 date_default_timezone_set('Asia/Riyadh');
 
+// تفعيل عرض الأخطاء للتشخيص (قم بإيقافه بعد انتهاء الإعداد)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // إعدادات قاعدة البيانات
 if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') {
     // الإعدادات المحلية (XAMPP)
@@ -32,18 +37,33 @@ if (session_status() === PHP_SESSION_NONE) {
 // إعداد اللغة
 require_once 'languages.php';
 require_once 'TotpHelper.php';
+
 if (isset($_GET['lang'])) {
     $_SESSION['lang'] = ($_GET['lang'] == 'en') ? 'en' : 'ar';
 }
 $lang = $_SESSION['lang'] ?? 'ar';
 
-// تعريف اسم الموقع ديناميكياً
-$dynamic_site_name = ($lang == 'en') ? getSetting('site_name_en', 'HR Management System') : getSetting('site_name_ar', 'نظام إدارة الموظفين');
-define('SITE_NAME', $dynamic_site_name);
-
 function __($key) {
     global $translations, $lang;
     return $translations[$lang][$key] ?? $key;
+}
+
+function getSetting($key, $default = null, $org_id = null) {
+    global $app_settings, $pdo;
+    if ($org_id === null && isset($_SESSION['organization_id'])) {
+        $org_id = $_SESSION['organization_id'];
+    }
+    if ($org_id !== null && isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE organization_id = ? AND setting_key = ?");
+            $stmt->execute([$org_id, $key]);
+            $row = $stmt->fetch();
+            return $row ? $row['setting_value'] : $default;
+        } catch (Exception $e) {
+            return $default;
+        }
+    }
+    return $app_settings[$key] ?? $default;
 }
 
 function get_name($row) {
@@ -75,6 +95,13 @@ function generateOperationCode($prefix = 'OP') {
     return $prefix . '-' . date('His') . '-' . strtoupper(substr(uniqid(), -4));
 }
 
+// تعريف اسم الموقع ديناميكياً
+$dynamic_site_name = getSetting('site_name_ar', 'نظام إدارة الموظفين');
+if ($lang == 'en') {
+    $dynamic_site_name = getSetting('site_name_en', 'HR Management System');
+}
+define('SITE_NAME', $dynamic_site_name);
+
 // الاتصال بقاعدة البيانات باستخدام PDO
 try {
     $options = [
@@ -85,7 +112,7 @@ try {
     $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
     $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
 } catch (PDOException $e) {
-    die(__('db_error') . ": " . $e->getMessage());
+    die("Database Error: " . $e->getMessage());
 }
 
 // معالجة تغيير المؤسسة للمدير العام (Super Admin)
@@ -116,24 +143,6 @@ try {
     }
 } catch (Exception $e) {
     // في حال عدم وجود الجدول بعد
-}
-
-function getSetting($key, $default = null, $org_id = null) {
-    global $app_settings, $pdo;
-    if ($org_id === null && isset($_SESSION['organization_id'])) {
-        $org_id = $_SESSION['organization_id'];
-    }
-    if ($org_id !== null && isset($pdo)) {
-        try {
-            $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE organization_id = ? AND setting_key = ?");
-            $stmt->execute([$org_id, $key]);
-            $row = $stmt->fetch();
-            return $row ? $row['setting_value'] : $default;
-        } catch (Exception $e) {
-            return $default;
-        }
-    }
-    return $app_settings[$key] ?? $default;
 }
 
 // دوال مساعدة عامة
