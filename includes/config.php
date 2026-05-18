@@ -21,12 +21,12 @@ if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1'
     define('DB_PASS', '');
     define('BASE_URL', '/HR-App/');
 } else {
-    // إعدادات استضافة Hostinger (قم بتعديلها لتطابق بياناتك في Hostinger)
-    define('DB_HOST', 'localhost'); // عادة ما يكون localhost في Hostinger
-    define('DB_NAME', 'u123456789_hr_db'); // اسم قاعدة البيانات في Hostinger
-    define('DB_USER', 'u123456789_hr_user'); // اسم المستخدم في Hostinger
-    define('DB_PASS', 'your_password_here'); // كلمة مرور قاعدة البيانات في Hostinger
-    define('BASE_URL', '/'); // عادة ما يكون الجذر في الاستضافة
+    // إعدادات استضافة Hostinger
+    define('DB_HOST', 'localhost');
+    define('DB_NAME', 'u331306605_ejazat');
+    define('DB_USER', 'u331306605_ejazatuser');
+    define('DB_PASS', 'Az@99668');
+    define('BASE_URL', 'https://ejazat.aalimd.com/');
 }
 
 // بدء الجلسة
@@ -37,16 +37,19 @@ if (session_status() === PHP_SESSION_NONE) {
 // إعداد اللغة
 require_once 'languages.php';
 require_once 'TotpHelper.php';
-
 if (isset($_GET['lang'])) {
     $_SESSION['lang'] = ($_GET['lang'] == 'en') ? 'en' : 'ar';
 }
 $lang = $_SESSION['lang'] ?? 'ar';
 
+// تعريف الدوال المساعدة قبل استخدامها
 function __($key) {
     global $translations, $lang;
     return $translations[$lang][$key] ?? $key;
 }
+
+// تحميل الإعدادات من قاعدة البيانات الخاصة بالجهة الحالية
+$app_settings = [];
 
 function getSetting($key, $default = null, $org_id = null) {
     global $app_settings, $pdo;
@@ -65,6 +68,10 @@ function getSetting($key, $default = null, $org_id = null) {
     }
     return $app_settings[$key] ?? $default;
 }
+
+// تعريف اسم الموقع ديناميكياً
+$dynamic_site_name = ($lang == 'en') ? getSetting('site_name_en', 'HR Management System') : getSetting('site_name_ar', 'نظام إدارة الموظفين');
+define('SITE_NAME', $dynamic_site_name);
 
 function get_name($row) {
     global $lang;
@@ -95,13 +102,6 @@ function generateOperationCode($prefix = 'OP') {
     return $prefix . '-' . date('His') . '-' . strtoupper(substr(uniqid(), -4));
 }
 
-// تعريف اسم الموقع ديناميكياً
-$dynamic_site_name = getSetting('site_name_ar', 'نظام إدارة الموظفين');
-if ($lang == 'en') {
-    $dynamic_site_name = getSetting('site_name_en', 'HR Management System');
-}
-define('SITE_NAME', $dynamic_site_name);
-
 // الاتصال بقاعدة البيانات باستخدام PDO
 try {
     $options = [
@@ -129,11 +129,9 @@ if (isset($_GET['switch_org']) && isset($_SESSION['role']) && $_SESSION['role'] 
     exit();
 }
 
-// تحميل الإعدادات من قاعدة البيانات الخاصة بالجهة الحالية
-$app_settings = [];
+// استكمال تحميل الإعدادات بعد إنشاء اتصال الـ PDO
 try {
     $org_id = $_SESSION['organization_id'] ?? 1;
-    // إذا كان هناك اتصال بقاعدة البيانات
     if (isset($pdo)) {
         $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE organization_id = ?");
         $stmt->execute([$org_id]);
