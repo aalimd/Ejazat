@@ -26,8 +26,8 @@ if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1'
     define('DB_NAME', 'u331306605_ejazat');
     define('DB_USER', 'u331306605_ejazatuser');
     define('DB_PASS', 'Az@99668');
-    // إذا كان التطبيق داخل مجلد Ejazat
-    define('BASE_URL', '/Ejazat/'); 
+    // بما أن الدومين يوجه مباشرة للمجلد، المسار الأساسي هو /
+    define('BASE_URL', '/'); 
 }
 
 // بدء الجلسة
