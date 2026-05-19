@@ -32,6 +32,7 @@
         }
         body {
             font-family: <?php echo __('dir') == 'rtl' ? "'" . getSetting('font_family_ar', 'Cairo') . "', sans-serif" : "'" . getSetting('font_family_en', 'Inter') . "', sans-serif"; ?>;
+            overflow-x: hidden;
         }
         .bg-primary { background-color: var(--primary-color) !important; }
         .text-primary { color: var(--primary-color) !important; }
