@@ -237,7 +237,7 @@ if (hasRole('super_admin') && $org_id === null) {
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-4 text-center">
         <h4 class="fw-bold text-primary mb-2">💡 <?php echo __('switch_org'); ?></h4>
-        <p class="text-muted mb-0">يمكنك اختيار وتحديد جهة العمل النشطة من القائمة العلوية لإدارة موظفيها، إجازاتها، وإعداداتها بالكامل وكأنك رئيسها التنفيذي!</p>
+        <p class="text-muted mb-0"><?php echo __('switch_org_desc'); ?></p>
     </div>
 </div>
 
@@ -305,21 +305,21 @@ if (hasRole('super_admin') && $org_id === null) {
 <?php if (!empty($pending_requests)): ?>
 <div class="card shadow-sm border-0 mb-4 bg-white overflow-hidden">
     <div class="card-header bg-primary text-white py-3 fw-bold d-flex align-items-center justify-content-between">
-        <span>⚡ مركز الإجراءات السريعة (طلبات الإجازة المعلقة)</span>
-        <span class="badge bg-light text-primary rounded-pill"><?php echo count($pending_requests); ?> طلبات تحتاج اتخاذ قرار</span>
+        <span><?php echo __('quick_actions_center'); ?></span>
+        <span class="badge bg-light text-primary rounded-pill"><?php echo count($pending_requests); ?> <?php echo __('needs_decision'); ?></span>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">الموظف</th>
-                        <th>نوع الإجازة</th>
-                        <th>تاريخ الإجازة</th>
-                        <th>أيام العمل</th>
-                        <th>السبب</th>
-                        <th>ملاحظة المدير (اختياري)</th>
-                        <th class="pe-4 text-end">اتخاذ قرار فوري</th>
+                        <th class="ps-4"><?php echo __('employee_label'); ?></th>
+                        <th><?php echo __('leave_type_label'); ?></th>
+                        <th><?php echo __('leave_dates'); ?></th>
+                        <th><?php echo __('work_days'); ?></th>
+                        <th><?php echo __('reason'); ?></th>
+                        <th><?php echo __('manager_note_optional'); ?></th>
+                        <th class="pe-4 text-end"><?php echo __('quick_decision'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -336,21 +336,21 @@ if (hasRole('super_admin') && $org_id === null) {
                                 <div class="small text-dark"><?php echo h($req['start_date']); ?> إلى <?php echo h($req['end_date']); ?></div>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border"><?php echo $days; ?> أيام عمل</span>
+                                <span class="badge bg-light text-dark border"><?php echo $days; ?> <?php echo __('days'); ?></span>
                             </td>
                             <td class="small" style="max-width: 150px;"><?php echo h($req['reason'] ?: '-'); ?></td>
                             <td>
                                 <form action="index.php" method="POST" class="d-flex align-items-center">
                                     <input type="hidden" name="request_id" value="<?php echo $req['id']; ?>">
-                                    <input type="text" name="manager_note" class="form-control form-control-sm" placeholder="اكتب ملاحظة...">
+                                    <input type="text" name="manager_note" class="form-control form-control-sm" placeholder="<?php echo __('write_note'); ?>">
                             </td>
                             <td class="pe-4 text-end">
                                     <div class="btn-group btn-group-sm">
                                         <button type="submit" name="action" value="approve" class="btn btn-success">
-                                            ✅ موافقة
+                                            ✅ <?php echo __('approve'); ?>
                                         </button>
                                         <button type="submit" name="action" value="reject" class="btn btn-danger">
-                                            ❌ رفض
+                                            ❌ <?php echo __('reject'); ?>
                                         </button>
                                     </div>
                                     <input type="hidden" name="action_dashboard" value="1">
