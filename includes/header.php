@@ -3,7 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php
+    $primary_hex = getSetting('primary_color', '#0d6efd');
+    // تحويل Hex إلى RGB للاستخدام في CSS (مثلاً للشفافية)
+    list($r, $g, $b) = sscanf($primary_hex, "#%02x%02x%02x");
+    $primary_rgb = "$r, $g, $b";
+    ?>
     <title><?php echo isset($pageTitle) ? $pageTitle . " - " . __('site_name') : __('site_name'); ?></title>
+    
+    <!-- PWA Settings & Manifest -->
+    <link rel="manifest" href="<?php echo BASE_URL; ?>manifest.php">
+    <meta name="theme-color" content="<?php echo $primary_hex; ?>">
+    
+    <!-- Mobile Capability Meta Tags (iOS Support) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="<?php echo h(SITE_NAME); ?>">
+    <link rel="apple-touch-icon" href="<?php echo BASE_URL; ?>assets/images/icon-192.png">
+    
+    <script>
+        const BASE_URL = '<?php echo BASE_URL; ?>';
+    </script>
     
     <!-- Bootstrap CSS -->
     <?php if (__('dir') == 'rtl'): ?>
@@ -19,12 +39,7 @@
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=2">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <?php
-    $primary_hex = getSetting('primary_color', '#0d6efd');
-    // تحويل Hex إلى RGB للاستخدام في CSS (مثلاً للشفافية)
-    list($r, $g, $b) = sscanf($primary_hex, "#%02x%02x%02x");
-    $primary_rgb = "$r, $g, $b";
-    ?>
+
     <style>
         :root {
             --primary-color: <?php echo $primary_hex; ?>;
