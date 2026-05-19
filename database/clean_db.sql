@@ -66,7 +66,11 @@ CREATE TABLE `employees` (
   `initial_leave_balance` int(11) DEFAULT 0,
   `leave_balance_verified` tinyint(1) DEFAULT 0,
   `can_request_leave` tinyint(1) DEFAULT 1,
+  `registration_code` varchar(20) DEFAULT NULL,
+  `hire_date` date DEFAULT NULL,
   `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `rejection_reason` text DEFAULT NULL,
+  `decision_date` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `employee_id_number` (`employee_id_number`),
@@ -86,6 +90,8 @@ CREATE TABLE `leave_types` (
   `name_ar` varchar(100) NOT NULL,
   `name_en` varchar(100) NOT NULL,
   `deduct_from_balance` tinyint(1) DEFAULT 1,
+  `max_days_per_year` int(11) DEFAULT 30,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `organization_id` (`organization_id`),
   CONSTRAINT `leave_types_ibfk_1` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE CASCADE
@@ -98,7 +104,11 @@ CREATE TABLE `leave_requests` (
   `leave_type_id` int(11) NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
+  `reason` text DEFAULT NULL,
   `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `request_code` varchar(20) DEFAULT NULL,
+  `manager_note` text DEFAULT NULL,
+  `action_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `employee_id` (`employee_id`),
@@ -107,7 +117,48 @@ CREATE TABLE `leave_requests` (
   CONSTRAINT `leave_requests_ibfk_2` FOREIGN KEY (`leave_type_id`) REFERENCES `leave_types` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 7. جدول الإعدادات
+-- 7. جدول الإجازات الرسمية (Holidays)
+CREATE TABLE `holidays` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `organization_id` int(11) NOT NULL,
+  `name_ar` varchar(150) NOT NULL,
+  `name_en` varchar(150) NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `organization_id` (`organization_id`),
+  CONSTRAINT `holidays_ibfk_1` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 8. جدول الإشعارات
+CREATE TABLE `notifications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `message_ar` text NOT NULL,
+  `message_en` text NOT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 9. جدول سجل النشاطات
+CREATE TABLE `activity_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `action_ar` varchar(255) NOT NULL,
+  `action_en` varchar(255) NOT NULL,
+  `details` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 10. جدول الإعدادات
 CREATE TABLE `settings` (
   `organization_id` int(11) NOT NULL,
   `setting_key` varchar(50) NOT NULL,
