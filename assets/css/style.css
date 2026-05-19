@@ -164,17 +164,25 @@ body {
 /* Modals Mobile Optimization */
 @media (max-width: 576px) {
     .modal-dialog {
-        margin: 0.5rem;
+        margin: 0;
         display: flex;
         align-items: flex-end;
-        min-height: calc(100% - 1rem);
+        min-height: 100%;
+        pointer-events: none; /* السماح بالنقر على ما خلف الحوار إذا لزم الأمر */
     }
     .modal-content {
         border-radius: 20px 20px 0 0;
         border: none;
+        pointer-events: auto; /* استعادة النقر داخل المحتوى */
+        width: 100%;
     }
     .modal.show .modal-dialog {
         transform: none;
+    }
+    /* تحسين ظهور لوحة المفاتيح */
+    .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
     }
 }
 

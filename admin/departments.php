@@ -9,12 +9,14 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_department'])) {
     $name_ar = trim($_POST['name_ar'] ?? '');
     $name_en = trim($_POST['name_en'] ?? '');
+    $org_id = $_SESSION['organization_id'] ?? 1; // استخدام المعرف من الجلسة
+    
     if (empty($name_ar) || empty($name_en)) {
         $error = 'All fields are required.';
     } else {
         try {
-            $stmt = $pdo->prepare("INSERT INTO departments (name_ar, name_en) VALUES (?, ?)");
-            if ($stmt->execute([$name_ar, $name_en])) {
+            $stmt = $pdo->prepare("INSERT INTO departments (name_ar, name_en, organization_id) VALUES (?, ?, ?)");
+            if ($stmt->execute([$name_ar, $name_en, $org_id])) {
                 logActivity("➕ إضافة قسم جديد", "➕ Add New Department", "Name: $name_ar / $name_en");
                 $success = __('success_added');
             }
