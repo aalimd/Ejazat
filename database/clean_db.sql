@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS `activity_log`;
 DROP TABLE IF EXISTS `notifications`;
 DROP TABLE IF EXISTS `leave_requests`;
 DROP TABLE IF EXISTS `employees`;
+DROP TABLE IF EXISTS `employee_leave_balances`;
 DROP TABLE IF EXISTS `departments`;
 DROP TABLE IF EXISTS `leave_types`;
 DROP TABLE IF EXISTS `holidays`;
@@ -17,9 +18,13 @@ CREATE TABLE `organizations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name_ar` varchar(150) NOT NULL,
   `name_en` varchar(150) NOT NULL,
-  `status` enum('active','inactive') DEFAULT 'active',
+  `slug` varchar(50) NOT NULL,
+  `status` enum('active','suspended') DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_ar` (`name_ar`),
+  UNIQUE KEY `name_en` (`name_en`),
+  UNIQUE KEY `slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 2. جدول المستخدمين
@@ -49,6 +54,8 @@ CREATE TABLE `departments` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `organization_id` (`organization_id`),
+  UNIQUE KEY `unique_org_dept_ar` (`organization_id`,`name_ar`),
+  UNIQUE KEY `unique_org_dept_en` (`organization_id`,`name_en`),
   CONSTRAINT `departments_ibfk_1` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -117,7 +124,18 @@ CREATE TABLE `leave_requests` (
   CONSTRAINT `leave_requests_ibfk_2` FOREIGN KEY (`leave_type_id`) REFERENCES `leave_types` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 7. جدول الإجازات الرسمية (Holidays)
+-- 7. جدول أرصدة الموظفين (للتعدد)
+CREATE TABLE `employee_leave_balances` (
+  `employee_id` int(11) NOT NULL,
+  `leave_type_id` int(11) NOT NULL,
+  `balance` int(11) DEFAULT 0,
+  PRIMARY KEY (`employee_id`,`leave_type_id`),
+  KEY `leave_type_id` (`leave_type_id`),
+  CONSTRAINT `employee_leave_balances_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `employee_leave_balances_ibfk_2` FOREIGN KEY (`leave_type_id`) REFERENCES `leave_types` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. جدول الإجازات الرسمية (Holidays)
 CREATE TABLE `holidays` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `organization_id` int(11) NOT NULL,
@@ -130,7 +148,7 @@ CREATE TABLE `holidays` (
   CONSTRAINT `holidays_ibfk_1` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 8. جدول الإشعارات
+-- 9. جدول الإشعارات
 CREATE TABLE `notifications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
@@ -143,7 +161,7 @@ CREATE TABLE `notifications` (
   CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 9. جدول سجل النشاطات
+-- 10. جدول سجل النشاطات
 CREATE TABLE `activity_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) DEFAULT NULL,
@@ -158,7 +176,7 @@ CREATE TABLE `activity_log` (
   CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 10. جدول الإعدادات
+-- 11. جدول الإعدادات
 CREATE TABLE `settings` (
   `organization_id` int(11) NOT NULL,
   `setting_key` varchar(50) NOT NULL,
