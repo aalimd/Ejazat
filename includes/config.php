@@ -88,6 +88,16 @@ function addNotification($user_id, $msg_ar, $msg_en) {
 function logActivity($action_ar, $action_en, $details = null) {
     global $pdo;
     $user_id = $_SESSION['user_id'] ?? null;
+    
+    // التحقق من وجود المستخدم في قاعدة البيانات قبل تسجيل النشاط لتجنب خطأ Foreign Key
+    if ($user_id !== null) {
+        $stmtCheck = $pdo->prepare("SELECT id FROM users WHERE id = ?");
+        $stmtCheck->execute([$user_id]);
+        if (!$stmtCheck->fetch()) {
+            $user_id = null; // إذا لم يكن موجوداً، سجل النشاط بدون ربطه بمستخدم
+        }
+    }
+    
     $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     
