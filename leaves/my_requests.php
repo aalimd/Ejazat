@@ -21,7 +21,7 @@ $error = '';
 $success = '';
 
 // جلب أنواع الإجازات للجهة الحالية
-$org_id = $_SESSION['organization_id'] ?? 1;
+$org_id = CURRENT_ORG_ID ?? 1;
 $stmtTypes = $pdo->prepare("SELECT * FROM leave_types WHERE organization_id = ? ORDER BY name_ar ASC");
 $stmtTypes->execute([$org_id]);
 $leave_types = $stmtTypes->fetchAll();
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
 
             if (empty($error)) {
                 // التحقق من توفر الرصيد والحد الأقصى (نظام أوراكل)
-                $days_requested = calculateLeaveDays($start_date, $end_date, $_SESSION['organization_id']);
+                $days_requested = calculateLeaveDays($start_date, $end_date, CURRENT_ORG_ID);
                 
                 $stmt_type = $pdo->prepare("SELECT deduct_from_balance, max_days_per_year FROM leave_types WHERE id = ?");
                 $stmt_type->execute([$type_id]);
@@ -189,7 +189,7 @@ include '../includes/header.php';
                         </tr>
                     <?php else: ?>
                         <?php foreach ($my_requests as $req): 
-                            $days = calculateLeaveDays($req['start_date'], $req['end_date'], $_SESSION['organization_id']);
+                            $days = calculateLeaveDays($req['start_date'], $req['end_date'], CURRENT_ORG_ID);
                         ?>
                             <tr>
                                 <td><?php echo h(get_name(['name_ar' => $req['type_ar'], 'name_en' => $req['type_en']])); ?></td>

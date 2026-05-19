@@ -202,7 +202,7 @@ include '../includes/header.php';
                         </tr>
                     <?php else: ?>
                         <?php foreach ($requests as $req): 
-                            $days = calculateLeaveDays($req['start_date'], $req['end_date'], $_SESSION['organization_id']);
+                            $days = calculateLeaveDays($req['start_date'], $req['end_date'], CURRENT_ORG_ID);
                         ?>
                             <tr>
                                 <td>

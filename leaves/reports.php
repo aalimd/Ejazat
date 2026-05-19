@@ -2,7 +2,7 @@
 require_once '../includes/config.php';
 checkAuth(['admin']); // فقط مدراء الجهات
 
-$org_id = $_SESSION['organization_id'] ?? 1;
+$org_id = CURRENT_ORG_ID ?? 1;
 $success = '';
 $error = '';
 

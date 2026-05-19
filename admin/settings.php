@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_general'])) {
     ];
 
     try {
-        $org_id = $_SESSION['organization_id'] ?? 1;
+        $org_id = CURRENT_ORG_ID ?? 1;
         $pdo->beginTransaction();
         $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value, organization_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
         foreach ($settings_to_update as $key => $value) {

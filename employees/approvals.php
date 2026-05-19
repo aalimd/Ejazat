@@ -5,6 +5,8 @@ checkAuth(['admin', 'manager']);
 $success = '';
 $error = '';
 
+$org_id = CURRENT_ORG_ID;
+
 // معالجة قرار الاعتماد أو الرفض
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $emp_id = $_POST['employee_id'];
@@ -14,19 +16,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     $status = ($action === 'approve') ? 'approved' : 'rejected';
     
-    $stmt = $pdo->prepare("UPDATE employees SET status = ?, rejection_reason = ?, leave_balance_verified = ?, decision_date = NOW() WHERE id = ?");
-    if ($stmt->execute([$status, $reason, $verify_balance, $emp_id])) {
+    if ($org_id) {
+        $stmt = $pdo->prepare("UPDATE employees SET status = ?, rejection_reason = ?, leave_balance_verified = ?, decision_date = NOW() WHERE id = ? AND organization_id = ?");
+        $exec_success = $stmt->execute([$status, $reason, $verify_balance, $emp_id, $org_id]);
+    } else {
+        $stmt = $pdo->prepare("UPDATE employees SET status = ?, rejection_reason = ?, leave_balance_verified = ?, decision_date = NOW() WHERE id = ?");
+        $exec_success = $stmt->execute([$status, $reason, $verify_balance, $emp_id]);
+    }
+
+    if ($exec_success) {
         // إضافة إشعار للموظف
-        $stmt_user = $pdo->prepare("SELECT user_id, full_name FROM employees WHERE id = ?");
-        $stmt_user->execute([$emp_id]);
+        if ($org_id) {
+            $stmt_user = $pdo->prepare("SELECT user_id, full_name FROM employees WHERE id = ? AND organization_id = ?");
+            $stmt_user->execute([$emp_id, $org_id]);
+        } else {
+            $stmt_user = $pdo->prepare("SELECT user_id, full_name FROM employees WHERE id = ?");
+            $stmt_user->execute([$emp_id]);
+        }
         $emp_data = $stmt_user->fetch();
         
-        if ($status === 'approved') {
-            logActivity("✅ اعتماد موظف", "✅ Approve Employee", "Employee: " . $emp_data['full_name'] . " (ID: $emp_id)");
-            addNotification($emp_data['user_id'], __('profile_approved'), __('profile_approved'));
-        } else {
-            logActivity("❌ رفض اعتماد موظف", "❌ Reject Employee", "Employee: " . $emp_data['full_name'] . " (ID: $emp_id), Reason: $reason");
-            addNotification($emp_data['user_id'], __('leave_request_rejected') . ": " . $reason, __('leave_request_rejected') . ": " . $reason);
+        if ($emp_data) {
+            if ($status === 'approved') {
+                logActivity("✅ اعتماد موظف", "✅ Approve Employee", "Employee: " . $emp_data['full_name'] . " (ID: $emp_id)");
+                addNotification($emp_data['user_id'], __('profile_approved'), __('profile_approved'));
+            } else {
+                logActivity("❌ رفض اعتماد موظف", "❌ Reject Employee", "Employee: " . $emp_data['full_name'] . " (ID: $emp_id), Reason: $reason");
+                addNotification($emp_data['user_id'], __('leave_request_rejected') . ": " . $reason, __('leave_request_rejected') . ": " . $reason);
+            }
         }
         
         $success = __('success_updated');
@@ -36,12 +52,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 // جلب الموظفين بانتظار الاعتماد
-$query = "SELECT e.*, d.name_ar as dept_ar, d.name_en as dept_en 
-          FROM employees e 
-          LEFT JOIN departments d ON e.department_id = d.id 
-          WHERE e.status = 'pending' 
-          ORDER BY e.created_at ASC";
-$pending_employees = $pdo->query($query)->fetchAll();
+if ($org_id) {
+    $query = "SELECT e.*, d.name_ar as dept_ar, d.name_en as dept_en 
+              FROM employees e 
+              LEFT JOIN departments d ON e.department_id = d.id 
+              WHERE e.status = 'pending' AND e.organization_id = ?
+              ORDER BY e.created_at ASC";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$org_id]);
+    $pending_employees = $stmt->fetchAll();
+} else {
+    $query = "SELECT e.*, d.name_ar as dept_ar, d.name_en as dept_en 
+              FROM employees e 
+              LEFT JOIN departments d ON e.department_id = d.id 
+              WHERE e.status = 'pending' 
+              ORDER BY e.created_at ASC";
+    $pending_employees = $pdo->query($query)->fetchAll();
+}
 
 $pageTitle = __('approvals');
 include '../includes/header.php';

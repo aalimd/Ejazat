@@ -9,7 +9,7 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_department'])) {
     $name_ar = trim($_POST['name_ar'] ?? '');
     $name_en = trim($_POST['name_en'] ?? '');
-    $org_id = $_SESSION['organization_id'] ?? 1; // استخدام المعرف من الجلسة
+    $org_id = CURRENT_ORG_ID ?? 1; // استخدام المعرف من الجلسة
     
     if (empty($name_ar) || empty($name_en)) {
         $error = 'All fields are required.';
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_department'])) {
     $id = $_POST['dept_id'];
     $name_ar = trim($_POST['name_ar'] ?? '');
     $name_en = trim($_POST['name_en'] ?? '');
-    $org_id = $_SESSION['organization_id'] ?? 1;
+    $org_id = CURRENT_ORG_ID ?? 1;
 
     if (empty($name_ar) || empty($name_en)) {
         $error = 'All fields are required.';
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_department'])) {
 // حذف قسم
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
-    $org_id = $_SESSION['organization_id'] ?? 1;
+    $org_id = CURRENT_ORG_ID ?? 1;
     try {
         $stmt = $pdo->prepare("DELETE FROM departments WHERE id = ? AND organization_id = ?");
         if ($stmt->execute([$id, $org_id])) {
@@ -64,7 +64,7 @@ if (isset($_GET['delete'])) {
     }
 }
 
-$org_id = $_SESSION['organization_id'] ?? 1;
+$org_id = CURRENT_ORG_ID ?? 1;
 $stmt = $pdo->prepare("SELECT d.*, (SELECT COUNT(*) FROM employees WHERE department_id = d.id) as emp_count FROM departments d WHERE d.organization_id = ? ORDER BY d.name_ar ASC");
 $stmt->execute([$org_id]);
 $departments = $stmt->fetchAll();
