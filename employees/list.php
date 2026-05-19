@@ -5,23 +5,24 @@ checkAuth(['admin', 'manager']);
 $success = '';
 $error = '';
 
-// معالجة تحديث صلاحية طلب الإجازة للموظف
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_leave_perm'])) {
     $emp_id = $_POST['emp_id'];
     $can_request = isset($_POST['can_request']) ? 1 : 0;
     
-    $stmt = $pdo->prepare("UPDATE employees SET can_request_leave = ? WHERE id = ?");
-    if ($stmt->execute([$can_request, $emp_id])) {
-        // جلب اسم الموظف للسجل
-        $stmt_name = $pdo->prepare("SELECT full_name FROM employees WHERE id = ?");
-        $stmt_name->execute([$emp_id]);
+    $stmt = $pdo->prepare("UPDATE employees SET can_request_leave = ? WHERE id = ? AND organization_id = ?");
+    if ($stmt->execute([$can_request, $emp_id, CURRENT_ORG_ID])) {
+        // جلب اسم الموظف للسجل للمؤسسة الحالية فقط
+        $stmt_name = $pdo->prepare("SELECT full_name FROM employees WHERE id = ? AND organization_id = ?");
+        $stmt_name->execute([$emp_id, CURRENT_ORG_ID]);
         $full_name = $stmt_name->fetchColumn();
         
-        $status_text = $can_request ? "تفعيل" : "إيقاف";
-        $status_en = $can_request ? "Enabled" : "Disabled";
-        
-        logActivity("$status_text صلاحية الإجازة للموظف", "$status_en Leave Permission for Employee", "Employee: $full_name (ID: $emp_id)");
-        $success = __('success_updated');
+        if ($full_name) {
+            $status_text = $can_request ? "تفعيل" : "إيقاف";
+            $status_en = $can_request ? "Enabled" : "Disabled";
+            
+            logActivity("$status_text صلاحية الإجازة للموظف", "$status_en Leave Permission for Employee", "Employee: $full_name (ID: $emp_id)");
+            $success = __('success_updated');
+        }
     }
 }
 

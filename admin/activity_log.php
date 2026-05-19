@@ -2,12 +2,28 @@
 require_once '../includes/config.php';
 checkAuth(['admin']); // فقط مدير النظام يمكنه رؤية السجل
 
-$query = "SELECT al.*, u.username 
-          FROM activity_log al 
-          LEFT JOIN users u ON al.user_id = u.id 
-          ORDER BY al.created_at DESC 
-          LIMIT 500";
-$logs = $pdo->query($query)->fetchAll();
+$org_id = CURRENT_ORG_ID;
+
+if ($_SESSION['role'] === 'super_admin' && empty($org_id)) {
+    // الـ Super Admin يرى كل السجلات إذا لم يحدد منشأة
+    $query = "SELECT al.*, u.username 
+              FROM activity_log al 
+              LEFT JOIN users u ON al.user_id = u.id 
+              ORDER BY al.created_at DESC 
+              LIMIT 500";
+    $logs = $pdo->query($query)->fetchAll();
+} else {
+    // مدير المنشأة أو الـ Super Admin المتقمص لجهة معينة يرى فقط سجلات هذه المنشأة
+    $query = "SELECT al.*, u.username 
+              FROM activity_log al 
+              LEFT JOIN users u ON al.user_id = u.id 
+              WHERE al.organization_id = ?
+              ORDER BY al.created_at DESC 
+              LIMIT 500";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$org_id]);
+    $logs = $stmt->fetchAll();
+}
 
 $pageTitle = __('activity_log');
 include '../includes/header.php';

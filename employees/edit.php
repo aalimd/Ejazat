@@ -10,19 +10,24 @@ $emp_id = $_GET['id'] ?? 0;
 $stmt = $pdo->prepare("SELECT e.*, u.email, u.username 
                        FROM employees e 
                        JOIN users u ON e.user_id = u.id 
-                       WHERE e.id = ?");
-$stmt->execute([$emp_id]);
+                       WHERE e.id = ? AND e.organization_id = ?");
+$stmt->execute([$emp_id, CURRENT_ORG_ID]);
 $emp = $stmt->fetch();
 
 if (!$emp) {
     die(__('employee_not_found'));
 }
 
-// جلب الأقسام للاختيار منها
-$departments = $pdo->query("SELECT * FROM departments ORDER BY name_ar ASC")->fetchAll();
+// جلب الأقسام للاختيار منها للجهة الحالية فقط
+$stmtDepts = $pdo->prepare("SELECT * FROM departments WHERE organization_id = ? ORDER BY name_ar ASC");
+$stmtDepts->execute([CURRENT_ORG_ID]);
+$departments = $stmtDepts->fetchAll();
 
-// جلب أنواع الإجازات وأرصدة الموظف منها
-$leave_types = $pdo->query("SELECT * FROM leave_types ORDER BY name_ar ASC")->fetchAll();
+// جلب أنواع الإجازات وأرصدة الموظف منها للجهة الحالية فقط
+$stmtTypes = $pdo->prepare("SELECT * FROM leave_types WHERE organization_id = ? ORDER BY name_ar ASC");
+$stmtTypes->execute([CURRENT_ORG_ID]);
+$leave_types = $stmtTypes->fetchAll();
+
 $stmtBalances = $pdo->prepare("SELECT * FROM employee_leave_balances WHERE employee_id = ?");
 $stmtBalances->execute([$emp_id]);
 $current_balances_raw = $stmtBalances->fetchAll();
@@ -56,12 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmtUser = $pdo->prepare("UPDATE users SET email = ? WHERE id = ?");
             $stmtUser->execute([$email, $emp['user_id']]);
 
-            // 2. تحديث بيانات الموظف (وتحديث الإجمالي)
-            $stmtEmp = $pdo->prepare("UPDATE employees SET full_name = ?, phone = ?, department_id = ?, job_title = ?, hire_date = ?, initial_leave_balance = ?, leave_balance_verified = ? WHERE id = ?");
-            $stmtEmp->execute([$full_name, $phone, $department_id, $job_title, $hire_date, $total_balance, $leave_balance_verified, $emp_id]);
+            // 2. تحديث بيانات الموظف (وتحديث الإجمالي) مع التحقق من المؤسسة
+            $stmtEmp = $pdo->prepare("UPDATE employees SET full_name = ?, phone = ?, department_id = ?, job_title = ?, hire_date = ?, initial_leave_balance = ?, leave_balance_verified = ? WHERE id = ? AND organization_id = ?");
+            $stmtEmp->execute([$full_name, $phone, $department_id, $job_title, $hire_date, $total_balance, $leave_balance_verified, $emp_id, CURRENT_ORG_ID]);
 
-            // 3. تحديث أرصدة الإجازات التفصيلية
-            $pdo->prepare("DELETE FROM employee_leave_balances WHERE employee_id = ?")->execute([$emp_id]);
+            // 3. تحديث أرصدة الإجازات التفصيلية للموظف التابع للجهة الحالية فقط
+            $stmtDel = $pdo->prepare("DELETE FROM employee_leave_balances WHERE employee_id = ? AND employee_id IN (SELECT id FROM employees WHERE organization_id = ?)");
+            $stmtDel->execute([$emp_id, CURRENT_ORG_ID]);
+            
             $stmtBalance = $pdo->prepare("INSERT INTO employee_leave_balances (employee_id, leave_type_id, balance) VALUES (?, ?, ?)");
             foreach ($leave_types as $type) {
                 $type_id = $type['id'];
@@ -74,8 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->commit();
             $success = __('success_updated');
             
-            // إعادة جلب البيانات المحدثة
-            $stmt->execute([$emp_id]);
+            // إعادة جلب البيانات المحدثة مع التحقق من المؤسسة
+            $stmt->execute([$emp_id, CURRENT_ORG_ID]);
             $emp = $stmt->fetch();
         } catch (PDOException $e) {
             $pdo->rollBack();

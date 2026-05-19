@@ -11,14 +11,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_dashboard'])) 
     $action = $_POST['action']; // approve or reject
     $note = trim($_POST['manager_note'] ?? '');
     $status = ($action === 'approve') ? 'approved' : 'rejected';
+    $active_org = CURRENT_ORG_ID;
     
     try {
         $pdo->beginTransaction();
-        $stmt_req = $pdo->prepare("SELECT lr.*, lt.deduct_from_balance 
-                                   FROM leave_requests lr 
-                                   JOIN leave_types lt ON lr.leave_type_id = lt.id 
-                                   WHERE lr.id = ?");
-        $stmt_req->execute([$request_id]);
+        if ($active_org) {
+            $stmt_req = $pdo->prepare("SELECT lr.*, lt.deduct_from_balance 
+                                       FROM leave_requests lr 
+                                       JOIN leave_types lt ON lr.leave_type_id = lt.id 
+                                       JOIN employees e ON lr.employee_id = e.id
+                                       WHERE lr.id = ? AND e.organization_id = ?");
+            $stmt_req->execute([$request_id, $active_org]);
+        } else {
+            $stmt_req = $pdo->prepare("SELECT lr.*, lt.deduct_from_balance 
+                                       FROM leave_requests lr 
+                                       JOIN leave_types lt ON lr.leave_type_id = lt.id 
+                                       WHERE lr.id = ?");
+            $stmt_req->execute([$request_id]);
+        }
         $req_data = $stmt_req->fetch();
 
         if ($req_data) {
@@ -27,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_dashboard'])) 
 
             // خصم الرصيد إذا تمت الموافقة وكان النوع يتطلب ذلك
             if ($status === 'approved' && $req_data['deduct_from_balance']) {
-                $days = calculateLeaveDays($req_data['start_date'], $req_data['end_date'], $_SESSION['organization_id']);
+                $days = calculateLeaveDays($req_data['start_date'], $req_data['end_date'], $active_org);
                 $stmt_deduct = $pdo->prepare("UPDATE employees SET initial_leave_balance = initial_leave_balance - ? WHERE id = ?");
                 $stmt_deduct->execute([$days, $req_data['employee_id']]);
             }
@@ -69,7 +79,7 @@ $top_employees = [];
 $months_labels = [];
 $months_data = [];
 
-$org_id = $_SESSION['organization_id'] ?? null;
+$org_id = CURRENT_ORG_ID;
 
 if (hasRole('super_admin') && $org_id === null) {
     // إحصائيات عامة للنظام ككل للمدير العام
@@ -171,7 +181,7 @@ if (hasRole('super_admin') && $org_id === null) {
         WHERE lt.organization_id = ?
         ORDER BY lt.name_ar ASC
     ");
-    $stmtBalances->execute([$emp_id, $_SESSION['organization_id']]);
+    $stmtBalances->execute([$emp_id, CURRENT_ORG_ID]);
     $emp_balances = $stmtBalances->fetchAll();
 
     $total_balance = 0;

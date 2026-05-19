@@ -9,22 +9,34 @@ if (hasRole('employee') && $emp_id != $_SESSION['employee_id']) {
     die("Access Denied.");
 }
 
-// جلب بيانات الموظف
-$stmt = $pdo->prepare("SELECT e.*, d.name_ar as dept_ar, d.name_en as dept_en, u.email as user_email, u.username 
-                       FROM employees e 
-                       LEFT JOIN departments d ON e.department_id = d.id 
-                       LEFT JOIN users u ON e.user_id = u.id 
-                       WHERE e.id = ?");
-$stmt->execute([$emp_id]);
-$emp = $stmt->fetch();
+$org_id = CURRENT_ORG_ID;
 
-$stmtBalances = $pdo->prepare("SELECT e.balance, l.name_ar, l.name_en FROM employee_leave_balances e JOIN leave_types l ON e.leave_type_id = l.id WHERE e.employee_id = ?");
-$stmtBalances->execute([$emp_id]);
-$detailed_balances = $stmtBalances->fetchAll();
+if ($org_id) {
+    // التحقق من المؤسسة لمنع الوصول غير المصرح به (IDOR)
+    $stmt = $pdo->prepare("SELECT e.*, d.name_ar as dept_ar, d.name_en as dept_en, u.email as user_email, u.username 
+                           FROM employees e 
+                           LEFT JOIN departments d ON e.department_id = d.id 
+                           LEFT JOIN users u ON e.user_id = u.id 
+                           WHERE e.id = ? AND e.organization_id = ?");
+    $stmt->execute([$emp_id, $org_id]);
+} else {
+    // المدير العام (Super Admin) يرى الجميع في حال عدم اختيار منشأة
+    $stmt = $pdo->prepare("SELECT e.*, d.name_ar as dept_ar, d.name_en as dept_en, u.email as user_email, u.username 
+                           FROM employees e 
+                           LEFT JOIN departments d ON e.department_id = d.id 
+                           LEFT JOIN users u ON e.user_id = u.id 
+                           WHERE e.id = ?");
+    $stmt->execute([$emp_id]);
+}
+$emp = $stmt->fetch();
 
 if (!$emp) {
     die("Not Found.");
 }
+
+$stmtBalances = $pdo->prepare("SELECT e.balance, l.name_ar, l.name_en FROM employee_leave_balances e JOIN leave_types l ON e.leave_type_id = l.id WHERE e.employee_id = ?");
+$stmtBalances->execute([$emp_id]);
+$detailed_balances = $stmtBalances->fetchAll();
 
 $pageTitle = __('details');
 include '../includes/header.php';

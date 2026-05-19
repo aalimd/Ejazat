@@ -5,10 +5,15 @@ checkAuth(['admin', 'manager']);
 $error = '';
 $success = '';
 
-// جلب الأقسام للاختيار منها
-$departments = $pdo->query("SELECT * FROM departments ORDER BY name_ar ASC")->fetchAll();
-// جلب أنواع الإجازات
-$leave_types = $pdo->query("SELECT * FROM leave_types ORDER BY name_ar ASC")->fetchAll();
+// جلب الأقسام للاختيار منها للجهة الحالية فقط
+$stmtDepts = $pdo->prepare("SELECT * FROM departments WHERE organization_id = ? ORDER BY name_ar ASC");
+$stmtDepts->execute([CURRENT_ORG_ID]);
+$departments = $stmtDepts->fetchAll();
+
+// جلب أنواع الإجازات للجهة الحالية فقط
+$stmtTypes = $pdo->prepare("SELECT * FROM leave_types WHERE organization_id = ? ORDER BY name_ar ASC");
+$stmtTypes->execute([CURRENT_ORG_ID]);
+$leave_types = $stmtTypes->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // بيانات المستخدم
@@ -38,16 +43,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $system_id = generateSystemId();
 
-            // 1. إنشاء المستخدم
-            $stmtUser = $pdo->prepare("INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, 'employee')");
+            // 1. إنشاء المستخدم مع ربطه بالمؤسسة الحالية
+            $stmtUser = $pdo->prepare("INSERT INTO users (username, password, email, role, organization_id) VALUES (?, ?, ?, 'employee', ?)");
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmtUser->execute([$username, $hashedPassword, $email]);
+            $stmtUser->execute([$username, $hashedPassword, $email, CURRENT_ORG_ID]);
             $user_id = $pdo->lastInsertId();
 
-            // 2. إنشاء الموظف
-            $stmtEmp = $pdo->prepare("INSERT INTO employees (user_id, employee_id_number, system_id, full_name, phone, department_id, job_title, hire_date, initial_leave_balance, status) 
-                                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')");
-            $stmtEmp->execute([$user_id, $employee_id_number, $system_id, $full_name, $phone, $department_id, $job_title, $hire_date, $total_balance]);
+            // 2. إنشاء الموظف مع ربطه بالمؤسسة الحالية
+            $stmtEmp = $pdo->prepare("INSERT INTO employees (user_id, employee_id_number, system_id, full_name, phone, department_id, job_title, hire_date, initial_leave_balance, status, organization_id) 
+                                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
+            $stmtEmp->execute([$user_id, $employee_id_number, $system_id, $full_name, $phone, $department_id, $job_title, $hire_date, $total_balance, CURRENT_ORG_ID]);
             $emp_id = $pdo->lastInsertId();
 
             // 3. إضافة أرصدة الإجازات التفصيلية

@@ -4,7 +4,7 @@ checkAuth(['admin', 'manager']);
 
 $success = '';
 $error = '';
-$org_id = $_SESSION['organization_id'] ?? 1;
+$org_id = CURRENT_ORG_ID ?? 1;
 
 // إضافة نوع إجازة جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_leave_type'])) {
