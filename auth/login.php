@@ -39,10 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['employee_id'] = $emp ? $emp['id'] : null;
             $_SESSION['full_name'] = $emp && !empty($emp['full_name']) ? $emp['full_name'] : $user['username'];
 
-            logActivity("🔐 تسجيل الدخول", "🔐 Login", "User logged in successfully");
+            logActivity("🔐 تسجيل الدخول", "🔐 Login", "User logged in successfully", $user['organization_id']);
             redirect('index.php');
         } else {
-            logActivity("⚠️ محاولة دخول فاشلة", "⚠️ Failed Login Attempt", "Username: " . $username);
+            // لمحاولات الدخول الفاشلة، نحاول تسجيل النشاط بدون مؤسسة إذا كان اليوزر غير معروف
+            logActivity("⚠️ محاولة دخول فاشلة", "⚠️ Failed Login Attempt", "Username: " . $username, null);
             $error = __('error_login');
         }
     }

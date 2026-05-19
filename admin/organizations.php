@@ -79,10 +79,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
 
             $pdo->commit();
-            logActivity("🏢 إضافة جهة عمل", "🏢 Added Organization", "Created organization: $name_en");
+            logActivity("🏢 إضافة جهة عمل", "🏢 Added Organization", "Created organization: $name_en", $org_id);
             $success = __('success_org_created');
         } catch (Exception $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             $error = __('db_error') . ': ' . $e->getMessage();
         }
     }

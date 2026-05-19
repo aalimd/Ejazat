@@ -109,8 +109,27 @@ function logActivity($action_ar, $action_en, $details = null, $org_id = null) {
     $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     
-    $stmt = $pdo->prepare("INSERT INTO activity_log (user_id, organization_id, action_ar, action_en, details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    return $stmt->execute([$user_id, $target_org, $action_ar, $action_en, $details, $ip, $ua]);
+    // إذا لم يكن هناك مؤسسة (مثل نشاطات Super Admin العامة)، نسجلها بـ null إذا كان الجدول يسمح بذلك
+    // أو نضمن عدم محاولة الإدراج إذا كان الحقل إجبارياً ولا توجد قيمة
+    if ($target_org === null && $_SESSION['role'] === 'super_admin') {
+        // في نظام الـ Multi-tenant الصارم، قد نفضل عدم تسجيل نشاط بدون مؤسسة أو تسجيله في مؤسسة النظام (ID: 1)
+        // سنحاول تسجيله بدون مؤسسة إذا كان العمود يسمح بـ NULL
+        try {
+            $stmt = $pdo->prepare("INSERT INTO activity_log (user_id, organization_id, action_ar, action_en, details, ip_address, user_agent) VALUES (?, NULL, ?, ?, ?, ?, ?)");
+            return $stmt->execute([$user_id, $action_ar, $action_en, $details, $ip, $ua]);
+        } catch (Exception $e) {
+            return false; // فشل التسجيل لا يجب أن يعطل العملية الأساسية
+        }
+    }
+
+    if ($target_org === null) return false;
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO activity_log (user_id, organization_id, action_ar, action_en, details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        return $stmt->execute([$user_id, $target_org, $action_ar, $action_en, $details, $ip, $ua]);
+    } catch (Exception $e) {
+        return false;
+    }
 }
 
 function generateSystemId() {
