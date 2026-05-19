@@ -7,9 +7,16 @@ $error = '';
 $success = '';
 
 // Fetch current user security settings
-$stmt = $pdo->prepare("SELECT id, username, email, two_factor_enabled, two_factor_secret FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT id, username, email, two_factor_enabled, two_factor_secret, organization_id FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
+
+if (!$user) {
+    die("Error: User not found.");
+}
+
+// Fetch current organization settings if needed
+$org_id = $user['organization_id'] ?? 1;
 
 // Check if user is trying to confirm setup
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -65,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Generate temp secret if not enabled yet
 $temp_secret = '';
 $qr_url = '';
-if (!$user['two_factor_enabled']) {
+if ($user && !$user['two_factor_enabled']) {
     $temp_secret = TotpHelper::generateSecret();
     $qr_url = TotpHelper::getQrUrl($user['username'], $temp_secret, SITE_NAME);
 }
