@@ -38,21 +38,19 @@
         
         @media (max-width: 767.98px) {
             .sidebar {
-                position: fixed;
-                top: 56px;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                height: auto;
-                display: none;
-                z-index: 1000;
+                border-radius: 0 !important;
+                box-shadow: none !important;
             }
-            .sidebar.show {
-                display: block;
+            .offcanvas-body {
+                padding: 0;
+            }
+            .sidebar .nav-link {
+                margin: 5px 10px;
+                padding: 15px 20px;
+                font-size: 1rem;
             }
             main {
-                padding-top: 20px;
+                padding-top: 10px;
             }
         }
     </style>
@@ -107,16 +105,18 @@ if (isLoggedIn()):
 ?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow">
     <div class="container-fluid">
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <!-- Sidebar Toggler for Mobile -->
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
         
-        <a class="navbar-brand fw-bold" href="<?php echo BASE_URL; ?>index.php">
+        <a class="navbar-brand fw-bold px-lg-3" href="<?php echo BASE_URL; ?>index.php">
             <?php echo __('site_name'); ?>
          </a>
 
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span>⚙️</span>
+        <!-- Top Menu Toggler -->
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="fs-4">👤</span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -214,9 +214,13 @@ if (isLoggedIn()):
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse shadow-sm">
-            <div class="position-sticky pt-3">
-                <ul class="nav flex-column">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar offcanvas-md offcanvas-start shadow-sm" tabindex="-1">
+            <div class="offcanvas-header bg-primary text-white d-md-none">
+                <h5 class="offcanvas-title fw-bold"><?php echo __('site_name'); ?></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body position-sticky pt-3">
+                <ul class="nav flex-column w-100">
                     <li class="nav-item">
                         <a class="nav-link <?php echo $current_page == 'index.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>index.php">
                             <?php echo __('dashboard'); ?>
