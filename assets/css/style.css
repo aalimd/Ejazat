@@ -152,12 +152,30 @@ body {
     border: 1px solid #e2e8f0;
     transition: var(--transition);
     background-color: #f8fafc;
+    font-size: 16px; /* منع التكبير التلقائي في آيفون عند التركيز على المدخلات */
 }
 
 .form-control:focus, .form-select:focus {
     box-shadow: 0 0 0 4px rgba(var(--primary-color-rgb), 0.15);
     border-color: var(--primary-color);
     background-color: #fff;
+}
+
+/* Modals Mobile Optimization */
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        display: flex;
+        align-items: flex-end;
+        min-height: calc(100% - 1rem);
+    }
+    .modal-content {
+        border-radius: 20px 20px 0 0;
+        border: none;
+    }
+    .modal.show .modal-dialog {
+        transform: none;
+    }
 }
 
 /* Badges & Tables */
@@ -169,6 +187,19 @@ body {
 }
 .table {
     vertical-align: middle;
+}
+
+/* Table Mobile Optimization */
+.table-responsive {
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+    .table-responsive table {
+        min-width: 600px;
+    }
 }
 .table thead th {
     border-bottom: 2px solid #edf2f7;
