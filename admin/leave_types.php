@@ -4,6 +4,7 @@ checkAuth(['admin', 'manager']);
 
 $success = '';
 $error = '';
+$org_id = $_SESSION['organization_id'] ?? 1;
 
 // إضافة نوع إجازة جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_leave_type'])) {
@@ -16,8 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_leave_type'])) {
         $error = 'All fields are required.';
     } else {
         try {
-            $stmt = $pdo->prepare("INSERT INTO leave_types (name_ar, name_en, deduct_from_balance, max_days_per_year) VALUES (?, ?, ?, ?)");
-            if ($stmt->execute([$name_ar, $name_en, $deduct, $max_days])) {
+            $stmt = $pdo->prepare("INSERT INTO leave_types (organization_id, name_ar, name_en, deduct_from_balance, max_days_per_year) VALUES (?, ?, ?, ?, ?)");
+            if ($stmt->execute([$org_id, $name_ar, $name_en, $deduct, $max_days])) {
                 logActivity("➕ إضافة نوع إجازة", "➕ Add Leave Type", "Name: $name_ar / $name_en, Deduct: $deduct, Max: $max_days");
                 $success = __('success_added');
             }
@@ -39,8 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_leave_type'])) {
         $error = 'All fields are required.';
     } else {
         try {
-            $stmt = $pdo->prepare("UPDATE leave_types SET name_ar = ?, name_en = ?, deduct_from_balance = ?, max_days_per_year = ? WHERE id = ?");
-            if ($stmt->execute([$name_ar, $name_en, $deduct, $max_days, $id])) {
+            $stmt = $pdo->prepare("UPDATE leave_types SET name_ar = ?, name_en = ?, deduct_from_balance = ?, max_days_per_year = ? WHERE id = ? AND organization_id = ?");
+            if ($stmt->execute([$name_ar, $name_en, $deduct, $max_days, $id, $org_id])) {
                 logActivity("✏️ تعديل نوع إجازة", "✏️ Edit Leave Type", "ID: $id, New Name: $name_ar / $name_en, Deduct: $deduct, Max: $max_days");
                 $success = __('success_updated');
             }
@@ -54,8 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_leave_type'])) {
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
     try {
-        $stmt = $pdo->prepare("DELETE FROM leave_types WHERE id = ?");
-        if ($stmt->execute([$id])) {
+        $stmt = $pdo->prepare("DELETE FROM leave_types WHERE id = ? AND organization_id = ?");
+        if ($stmt->execute([$id, $org_id])) {
             logActivity("🗑️ حذف نوع إجازة", "🗑️ Delete Leave Type", "ID: $id");
             $success = __('success_updated');
         }
@@ -64,7 +65,9 @@ if (isset($_GET['delete'])) {
     }
 }
 
-$leave_types = $pdo->query("SELECT lt.*, (SELECT COUNT(*) FROM leave_requests WHERE leave_type_id = lt.id) as request_count FROM leave_types lt ORDER BY lt.name_ar ASC")->fetchAll();
+$stmt = $pdo->prepare("SELECT lt.*, (SELECT COUNT(*) FROM leave_requests WHERE leave_type_id = lt.id) as request_count FROM leave_types lt WHERE lt.organization_id = ? ORDER BY lt.name_ar ASC");
+$stmt->execute([$org_id]);
+$leave_types = $stmt->fetchAll();
 
 $pageTitle = __('leave_types');
 include '../includes/header.php';
@@ -72,7 +75,7 @@ include '../includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3"><?php echo __('leave_types'); ?></h1>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTypeModal">
+    <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addTypeModal">
         <?php echo __('add_leave_type'); ?>
     </button>
 </div>
@@ -123,43 +126,6 @@ include '../includes/header.php';
                                 <a href="?delete=<?php echo $type['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('<?php echo __('confirm_delete'); ?>')">
                                     🗑️
                                 </a>
-
-                                <!-- Modal Edit -->
-                                <div class="modal fade" id="editTypeModal<?php echo $type['id']; ?>" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title"><?php echo __('edit_leave_type'); ?></h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <form action="leave_types.php" method="POST">
-                                                <input type="hidden" name="type_id" value="<?php echo $type['id']; ?>">
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-bold"><?php echo __('type_name'); ?> *</label>
-                                                        <input type="text" name="name_ar" class="form-control" value="<?php echo h($type['name_ar']); ?>" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-bold"><?php echo __('type_name_en'); ?> *</label>
-                                                        <input type="text" name="name_en" class="form-control" value="<?php echo h($type['name_en']); ?>" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-bold"><?php echo __('max_days_per_year'); ?></label>
-                                                        <input type="number" name="max_days_per_year" class="form-control" value="<?php echo h($type['max_days_per_year']); ?>" required min="1">
-                                                    </div>
-                                                    <div class="form-check form-switch mb-3">
-                                                        <input class="form-check-input" type="checkbox" name="deduct_from_balance" id="deductEdit<?php echo $type['id']; ?>" <?php echo $type['deduct_from_balance'] ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label fw-bold" for="deductEdit<?php echo $type['id']; ?>"><?php echo __('deduct_from_balance'); ?></label>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo __('cancel'); ?></button>
-                                                    <button type="submit" name="edit_leave_type" class="btn btn-primary"><?php echo __('save'); ?></button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -204,5 +170,44 @@ include '../includes/header.php';
         </div>
     </div>
 </div>
+
+<!-- Edit Modals (Moved Outside Loop for Stability) -->
+<?php foreach ($leave_types as $type): ?>
+<div class="modal fade" id="editTypeModal<?php echo $type['id']; ?>" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><?php echo __('edit_leave_type'); ?></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="leave_types.php" method="POST">
+                <input type="hidden" name="type_id" value="<?php echo $type['id']; ?>">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold"><?php echo __('type_name'); ?> *</label>
+                        <input type="text" name="name_ar" class="form-control" value="<?php echo h($type['name_ar']); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold"><?php echo __('type_name_en'); ?> *</label>
+                        <input type="text" name="name_en" class="form-control" value="<?php echo h($type['name_en']); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold"><?php echo __('max_days_per_year'); ?></label>
+                        <input type="number" name="max_days_per_year" class="form-control" value="<?php echo h($type['max_days_per_year']); ?>" required min="1">
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="deduct_from_balance" id="deductEdit<?php echo $type['id']; ?>" <?php echo $type['deduct_from_balance'] ? 'checked' : ''; ?>>
+                        <label class="form-check-label fw-bold" for="deductEdit<?php echo $type['id']; ?>"><?php echo __('deduct_from_balance'); ?></label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo __('cancel'); ?></button>
+                    <button type="submit" name="edit_leave_type" class="btn btn-primary"><?php echo __('save'); ?></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endforeach; ?>
 
 <?php include '../includes/footer.php'; ?>

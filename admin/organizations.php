@@ -107,6 +107,8 @@ if (isset($_GET['toggle_status']) && isset($_GET['org_id'])) {
     }
 }
 
+$lang = $_SESSION['lang'] ?? 'ar';
+
 // Fetch all organizations with their department, employee, and user counts
 $orgs = [];
 try {
@@ -230,7 +232,9 @@ include '../includes/header.php';
     <?php endif; ?>
 </div>
 
-<!-- Add Organization Modal -->
+<?php include '../includes/footer.php'; ?>
+
+<!-- Add Organization Modal (Moved Outside for Stability) -->
 <div class="modal fade" id="addOrgModal" tabindex="-1" aria-labelledby="addOrgModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -277,34 +281,10 @@ include '../includes/header.php';
                 </div>
 
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-secondary fw-bold" data-bs-toggle="modal" data-bs-target="#addOrgModal"><?php echo __('cancel'); ?></button>
+                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal"><?php echo __('cancel'); ?></button>
                     <button type="submit" class="btn btn-primary fw-bold px-4"><?php echo __('submit'); ?></button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-<style>
-.bg-success-soft {
-    background-color: rgba(40, 167, 69, 0.15) !important;
-}
-.bg-danger-soft {
-    background-color: rgba(220, 53, 69, 0.15) !important;
-}
-.transition-hover {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-.transition-hover:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.08)!important;
-}
-.bg-gradient-primary {
-    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
-}
-.x-small {
-    font-size: 0.75rem;
-}
-</style>
-
-<?php include '../includes/footer.php'; ?>
