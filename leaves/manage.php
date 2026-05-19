@@ -16,36 +16,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     try {
         $pdo->beginTransaction();
 
-        // جلب بيانات الطلب ونوع الإجازة
+        // جلب بيانات الطلب ونوع الإجازة مع التأكد من ملكية المؤسسة
         $stmt_req = $pdo->prepare("SELECT lr.*, lt.deduct_from_balance 
                                    FROM leave_requests lr 
                                    JOIN leave_types lt ON lr.leave_type_id = lt.id 
-                                   WHERE lr.id = ?");
-        $stmt_req->execute([$request_id]);
+                                   WHERE lr.id = ? AND lr.organization_id = ?");
+        $stmt_req->execute([$request_id, CURRENT_ORG_ID]);
         $req_data = $stmt_req->fetch();
 
         if ($req_data) {
-            $stmt = $pdo->prepare("UPDATE leave_requests SET status = ?, manager_note = ?, action_at = NOW() WHERE id = ?");
-            $stmt->execute([$status, $note, $request_id]);
+            $stmt = $pdo->prepare("UPDATE leave_requests SET status = ?, manager_note = ?, action_at = NOW() WHERE id = ? AND organization_id = ?");
+            $stmt->execute([$status, $note, $request_id, CURRENT_ORG_ID]);
 
-            // خصم الرصيد إذا تمت الموافقة وكان النوع يتطلب ذلك (نظام أوراكل)
+            // خصم الرصيد إذا تمت الموافقة وكان النوع يتطلب ذلك
             if ($status === 'approved' && $req_data['deduct_from_balance']) {
-                $days = calculateLeaveDays($req_data['start_date'], $req_data['end_date'], $_SESSION['organization_id']);
-                $stmt_deduct = $pdo->prepare("UPDATE employees SET initial_leave_balance = initial_leave_balance - ? WHERE id = ?");
-                $stmt_deduct->execute([$days, $req_data['employee_id']]);
+                $days = calculateLeaveDays($req_data['start_date'], $req_data['end_date'], CURRENT_ORG_ID);
+                $stmt_deduct = $pdo->prepare("UPDATE employees SET initial_leave_balance = initial_leave_balance - ? WHERE id = ? AND organization_id = ?");
+                $stmt_deduct->execute([$days, $req_data['employee_id'], CURRENT_ORG_ID]);
             }
 
             // جلب بيانات الموظف لإرسال إشعار
-            $stmt_user = $pdo->prepare("SELECT user_id FROM employees WHERE id = ?");
-            $stmt_user->execute([$req_data['employee_id']]);
+            $stmt_user = $pdo->prepare("SELECT user_id FROM employees WHERE id = ? AND organization_id = ?");
+            $stmt_user->execute([$req_data['employee_id'], CURRENT_ORG_ID]);
             $user_id = $stmt_user->fetchColumn();
 
             if ($status === 'approved') {
-                logActivity("✅ الموافقة على إجازة", "✅ Approve Leave Request", "Request ID: $request_id, Deducted: " . ($req_data['deduct_from_balance'] ? 'Yes' : 'No'));
-                addNotification($user_id, __('leave_request_approved'), __('leave_request_approved'));
+                logActivity("✅ الموافقة على إجازة", "✅ Approve Leave Request", "Request ID: $request_id, Deducted: " . ($req_data['deduct_from_balance'] ? 'Yes' : 'No'), CURRENT_ORG_ID);
+                addNotification($user_id, __('leave_request_approved'), __('leave_request_approved'), CURRENT_ORG_ID);
             } else {
-                logActivity("❌ رفض طلب إجازة", "❌ Reject Leave Request", "Request ID: $request_id, Note: $note");
-                addNotification($user_id, __('leave_request_rejected') . ": " . $note, __('leave_request_rejected') . ": " . $note);
+                logActivity("❌ رفض طلب إجازة", "❌ Reject Leave Request", "Request ID: $request_id, Note: $note", CURRENT_ORG_ID);
+                addNotification($user_id, __('leave_request_rejected') . ": " . $note, __('leave_request_rejected') . ": " . $note, CURRENT_ORG_ID);
             }
 
             $pdo->commit();
@@ -59,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 
 // Filters
-$where = [];
-$params = [];
+$where = ["lr.organization_id = ?"];
+$params = [CURRENT_ORG_ID];
 
 if (!empty($_GET['status'])) {
     $where[] = "lr.status = ?";
@@ -76,7 +76,7 @@ if (!empty($_GET['type'])) {
     $params[] = $_GET['type'];
 }
 
-$whereClause = count($where) > 0 ? "WHERE " . implode(" AND ", $where) : "";
+$whereClause = "WHERE " . implode(" AND ", $where);
 
 $query = "SELECT lr.*, lt.name_ar as type_ar, lt.name_en as type_en, e.full_name, e.employee_id_number 
           FROM leave_requests lr 
@@ -90,7 +90,9 @@ $stmt->execute($params);
 $requests = $stmt->fetchAll();
 
 // جلب أنواع الإجازات للفلاتر
-$leave_types = $pdo->query("SELECT * FROM leave_types ORDER BY name_ar ASC")->fetchAll();
+$stmt_types = $pdo->prepare("SELECT * FROM leave_types WHERE organization_id = ? ORDER BY name_ar ASC");
+$stmt_types->execute([CURRENT_ORG_ID]);
+$leave_types = $stmt_types->fetchAll();
 
 // Excel (CSV) Export
 if (isset($_GET['export']) && $_GET['export'] === 'excel') {

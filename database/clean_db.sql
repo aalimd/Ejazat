@@ -48,7 +48,7 @@ CREATE TABLE `users` (
 -- 3. جدول الأقسام
 CREATE TABLE `departments` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `organization_id` int(11) DEFAULT NULL,
+  `organization_id` int(11) NOT NULL,
   `name_ar` varchar(100) DEFAULT NULL,
   `name_en` varchar(100) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -63,7 +63,7 @@ CREATE TABLE `departments` (
 CREATE TABLE `employees` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
-  `organization_id` int(11) DEFAULT NULL,
+  `organization_id` int(11) NOT NULL,
   `employee_id_number` varchar(20) NOT NULL,
   `system_id` varchar(20) DEFAULT NULL,
   `full_name` varchar(150) NOT NULL,
@@ -107,6 +107,7 @@ CREATE TABLE `leave_types` (
 -- 6. جدول طلبات الإجازات
 CREATE TABLE `leave_requests` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `organization_id` int(11) NOT NULL,
   `employee_id` int(11) NOT NULL,
   `leave_type_id` int(11) NOT NULL,
   `start_date` date NOT NULL,
@@ -118,10 +119,12 @@ CREATE TABLE `leave_requests` (
   `action_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
+  KEY `organization_id` (`organization_id`),
   KEY `employee_id` (`employee_id`),
   KEY `leave_type_id` (`leave_type_id`),
   CONSTRAINT `leave_requests_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `leave_requests_ibfk_2` FOREIGN KEY (`leave_type_id`) REFERENCES `leave_types` (`id`) ON DELETE CASCADE
+  CONSTRAINT `leave_requests_ibfk_2` FOREIGN KEY (`leave_type_id`) REFERENCES `leave_types` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `leave_requests_ibfk_3` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 7. جدول أرصدة الموظفين (للتعدد)
@@ -140,7 +143,7 @@ CREATE TABLE `holidays` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `organization_id` int(11) NOT NULL,
   `name_ar` varchar(150) NOT NULL,
-  `name_en` varchar(150) NOT NULL,
+  `name_en?` varchar(150) NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
   PRIMARY KEY (`id`),
@@ -151,19 +154,23 @@ CREATE TABLE `holidays` (
 -- 9. جدول الإشعارات
 CREATE TABLE `notifications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `organization_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `message_ar` text NOT NULL,
   `message_en` text NOT NULL,
   `is_read` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
+  KEY `organization_id` (`organization_id`),
   KEY `user_id` (`user_id`),
-  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 10. جدول سجل النشاطات
 CREATE TABLE `activity_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `organization_id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `action_ar` varchar(255) NOT NULL,
   `action_en` varchar(255) NOT NULL,
@@ -172,8 +179,10 @@ CREATE TABLE `activity_log` (
   `user_agent` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
+  KEY `organization_id` (`organization_id`),
   KEY `user_id` (`user_id`),
-  CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `activity_log_ibfk_2` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 11. جدول الإعدادات

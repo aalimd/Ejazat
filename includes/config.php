@@ -1,7 +1,7 @@
 <?php
 /**
  * إعدادات قاعدة البيانات والاتصال
- * تم تجهيز هذا الملف ليعمل على استضافة Hostinger
+ * تم تجهيز هذا الملف ليعمل على استضافة Hostinger بنظام Multi-Tenant احترافي
  */
 
 // إعداد المنطقة الزمنية لمكة المكرمة
@@ -26,7 +26,6 @@ if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1'
     define('DB_NAME', 'u331306605_ejazat');
     define('DB_USER', 'u331306605_ejazatuser');
     define('DB_PASS', 'Az@99668');
-    // بما أن الدومين يوجه مباشرة للمجلد، المسار الأساسي هو /
     define('BASE_URL', '/'); 
 }
 
@@ -43,6 +42,12 @@ if (isset($_GET['lang'])) {
 }
 $lang = $_SESSION['lang'] ?? 'ar';
 
+// تعريف معرف المؤسسة الحالي بشكل صارم
+// للـ Super Admin، يمكن أن يكون null (إدارة النظام) أو قيمة محددة (إدارة مؤسسة)
+// للـ Admin والموظفين، يجب أن يكون قيمة محددة دائماً
+$current_org_id = $_SESSION['organization_id'] ?? null;
+define('CURRENT_ORG_ID', $current_org_id);
+
 // تعريف الدوال المساعدة قبل استخدامها
 function __($key) {
     global $translations, $lang;
@@ -54,13 +59,12 @@ $app_settings = [];
 
 function getSetting($key, $default = null, $org_id = null) {
     global $app_settings, $pdo;
-    if ($org_id === null && isset($_SESSION['organization_id'])) {
-        $org_id = $_SESSION['organization_id'];
-    }
-    if ($org_id !== null && isset($pdo)) {
+    $target_org = $org_id ?? CURRENT_ORG_ID;
+    
+    if ($target_org !== null && isset($pdo)) {
         try {
             $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE organization_id = ? AND setting_key = ?");
-            $stmt->execute([$org_id, $key]);
+            $stmt->execute([$target_org, $key]);
             $row = $stmt->fetch();
             return $row ? $row['setting_value'] : $default;
         } catch (Exception $e) {
@@ -70,7 +74,7 @@ function getSetting($key, $default = null, $org_id = null) {
     return $app_settings[$key] ?? $default;
 }
 
-// تعريف اسم الموقع ديناميكياً
+// تعريف اسم الموقع ديناميكياً بناءً على المؤسسة الحالية
 $dynamic_site_name = ($lang == 'en') ? getSetting('site_name_en', 'HR Management System') : getSetting('site_name_ar', 'نظام إدارة الموظفين');
 define('SITE_NAME', $dynamic_site_name);
 
@@ -79,30 +83,34 @@ function get_name($row) {
     return $lang == 'en' ? ($row['name_en'] ?? $row['name_ar']) : ($row['name_ar'] ?? $row['name_en']);
 }
 
-function addNotification($user_id, $msg_ar, $msg_en) {
+function addNotification($user_id, $msg_ar, $msg_en, $org_id = null) {
     global $pdo;
-    $stmt = $pdo->prepare("INSERT INTO notifications (user_id, message_ar, message_en) VALUES (?, ?, ?)");
-    return $stmt->execute([$user_id, $msg_ar, $msg_en]);
+    $target_org = $org_id ?? CURRENT_ORG_ID;
+    if ($target_org === null) return false;
+
+    $stmt = $pdo->prepare("INSERT INTO notifications (user_id, organization_id, message_ar, message_en) VALUES (?, ?, ?, ?)");
+    return $stmt->execute([$user_id, $target_org, $msg_ar, $msg_en]);
 }
 
-function logActivity($action_ar, $action_en, $details = null) {
+function logActivity($action_ar, $action_en, $details = null, $org_id = null) {
     global $pdo;
     $user_id = $_SESSION['user_id'] ?? null;
+    $target_org = $org_id ?? CURRENT_ORG_ID;
     
     // التحقق من وجود المستخدم في قاعدة البيانات قبل تسجيل النشاط لتجنب خطأ Foreign Key
     if ($user_id !== null) {
         $stmtCheck = $pdo->prepare("SELECT id FROM users WHERE id = ?");
         $stmtCheck->execute([$user_id]);
         if (!$stmtCheck->fetch()) {
-            $user_id = null; // إذا لم يكن موجوداً، سجل النشاط بدون ربطه بمستخدم
+            $user_id = null;
         }
     }
     
     $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     
-    $stmt = $pdo->prepare("INSERT INTO activity_log (user_id, action_ar, action_en, details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)");
-    return $stmt->execute([$user_id, $action_ar, $action_en, $details, $ip, $ua]);
+    $stmt = $pdo->prepare("INSERT INTO activity_log (user_id, organization_id, action_ar, action_en, details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    return $stmt->execute([$user_id, $target_org, $action_ar, $action_en, $details, $ip, $ua]);
 }
 
 function generateSystemId() {
@@ -142,10 +150,9 @@ if (isset($_GET['switch_org']) && isset($_SESSION['role']) && $_SESSION['role'] 
 
 // استكمال تحميل الإعدادات بعد إنشاء اتصال الـ PDO
 try {
-    $org_id = $_SESSION['organization_id'] ?? 1;
-    if (isset($pdo)) {
+    if (CURRENT_ORG_ID !== null && isset($pdo)) {
         $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE organization_id = ?");
-        $stmt->execute([$org_id]);
+        $stmt->execute([CURRENT_ORG_ID]);
         while ($row = $stmt->fetch()) {
             $app_settings[$row['setting_key']] = $row['setting_value'];
         }
@@ -183,6 +190,13 @@ function checkAuth($roles = []) {
     if (!isLoggedIn()) {
         redirect('auth/login.php');
     }
+    
+    // إذا كان المستخدم ليس Super Admin، يجب أن يكون مرتبطاً بمؤسسة دائماً
+    if ($_SESSION['role'] !== 'super_admin' && empty($_SESSION['organization_id'])) {
+        session_destroy();
+        redirect('auth/login.php?error=invalid_org');
+    }
+
     if (!empty($roles) && !hasRole($roles)) {
         die(__('access_denied'));
     }
@@ -194,16 +208,18 @@ function h($string) {
 }
 
 // حساب عدد أيام الإجازة الفعلي باستثناء الإجازات الأسبوعية والعطلات الرسمية للمؤسسة
-function calculateLeaveDays($start_date, $end_date, $org_id) {
+function calculateLeaveDays($start_date, $end_date, $org_id = null) {
     global $pdo;
+    $target_org = $org_id ?? CURRENT_ORG_ID;
+    if ($target_org === null) return 0;
     
     // 1. جلب إعدادات نهاية الأسبوع
-    $weekend_setting = getSetting('weekend_days', 'Friday,Saturday', $org_id);
+    $weekend_setting = getSetting('weekend_days', 'Friday,Saturday', $target_org);
     $weekends = array_map('trim', explode(',', strtolower($weekend_setting)));
 
     // 2. جلب العطلات الرسمية لهذه المؤسسة
     $stmt = $pdo->prepare("SELECT start_date, end_date FROM holidays WHERE organization_id = ?");
-    $stmt->execute([$org_id]);
+    $stmt->execute([$target_org]);
     $holidays = $stmt->fetchAll();
 
     $start = new DateTime($start_date);
