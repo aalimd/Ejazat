@@ -16,9 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
         $error = 'All fields are required.';
     } else {
         try {
-            $stmt = $pdo->prepare("INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)");
+            // إضافة المستخدم مع ربطه بالمؤسسة الحالية حصراً
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, email, role, organization_id) VALUES (?, ?, ?, ?, ?)");
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            if ($stmt->execute([$username, $hash, $email, $role])) {
+            if ($stmt->execute([$username, $hash, $email, $role, CURRENT_ORG_ID])) {
                 logActivity("➕ إضافة مستخدم نظام جديد", "➕ Add New System User", "Username: $username, Role: $role");
                 $success = __('success_added');
             }
@@ -32,8 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     }
 }
 
-// جلب قائمة المستخدمين
-$users = $pdo->query("SELECT * FROM users ORDER BY created_at DESC")->fetchAll();
+// جلب قائمة المستخدمين الخاصة بالمؤسسة الحالية فقط
+$stmt = $pdo->prepare("SELECT * FROM users WHERE organization_id = ? ORDER BY created_at DESC");
+$stmt->execute([CURRENT_ORG_ID]);
+$users = $stmt->fetchAll();
 
 $pageTitle = __('system_users');
 include '../includes/header.php';
@@ -41,49 +44,55 @@ include '../includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3"><?php echo __('system_users'); ?></h1>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+    <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
         <?php echo __('add_user'); ?>
     </button>
 </div>
 
 <?php if ($success): ?>
-    <div class="alert alert-success"><?php echo $success; ?></div>
+    <div class="alert alert-success shadow-sm"><?php echo $success; ?></div>
 <?php endif; ?>
 <?php if ($error): ?>
-    <div class="alert alert-danger"><?php echo $error; ?></div>
+    <div class="alert alert-danger shadow-sm"><?php echo $error; ?></div>
 <?php endif; ?>
 
-<div class="card shadow-sm">
+<div class="card shadow-sm border-0">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>ID</th>
+                        <th class="ps-3">ID</th>
                         <th><?php echo __('username'); ?></th>
                         <th><?php echo __('email'); ?></th>
                         <th><?php echo __('role'); ?></th>
-                        <th><?php echo __('hire_date'); ?></th>
+                        <th class="pe-3"><?php echo __('hire_date'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($users as $user): ?>
+                    <?php if (empty($users)): ?>
                         <tr>
-                            <td><?php echo $user['id']; ?></td>
-                            <td class="fw-bold"><?php echo h($user['username']); ?></td>
-                            <td><?php echo h($user['email']); ?></td>
-                            <td>
-                                <?php if ($user['role'] == 'admin'): ?>
-                                    <span class="badge bg-dark"><?php echo __('admin'); ?></span>
-                                <?php elseif ($user['role'] == 'manager'): ?>
-                                    <span class="badge bg-primary"><?php echo __('manager'); ?></span>
-                                <?php else: ?>
-                                    <span class="badge bg-info text-dark"><?php echo __('employee'); ?></span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="small text-muted"><?php echo $user['created_at']; ?></td>
+                            <td colspan="5" class="text-center py-4 text-muted"><?php echo __('no_data'); ?></td>
                         </tr>
-                    <?php endforeach; ?>
+                    <?php else: ?>
+                        <?php foreach ($users as $user): ?>
+                            <tr>
+                                <td class="ps-3 small text-muted">#<?php echo $user['id']; ?></td>
+                                <td class="fw-bold text-primary"><?php echo h($user['username']); ?></td>
+                                <td><?php echo h($user['email']); ?></td>
+                                <td>
+                                    <?php if ($user['role'] == 'admin'): ?>
+                                        <span class="badge bg-dark px-3"><?php echo __('admin'); ?></span>
+                                    <?php elseif ($user['role'] == 'manager'): ?>
+                                        <span class="badge bg-primary px-3"><?php echo __('manager'); ?></span>
+                                    <?php else: ?>
+                                        <span class="badge bg-info text-dark px-3"><?php echo __('employee'); ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="pe-3 small text-muted"><?php echo date('Y-m-d', strtotime($user['created_at'])); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -92,14 +101,14 @@ include '../includes/header.php';
 
 <!-- Modal إضافة مستخدم -->
 <div class="modal fade" id="addUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><?php echo __('add_user'); ?></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><?php echo __('add_user'); ?></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="users.php" method="POST">
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label small fw-bold"><?php echo __('username'); ?> *</label>
                         <input type="text" name="username" class="form-control" required>
@@ -120,9 +129,9 @@ include '../includes/header.php';
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?php echo __('cancel'); ?></button>
-                    <button type="submit" name="add_user" class="btn btn-primary"><?php echo __('save'); ?></button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal"><?php echo __('cancel'); ?></button>
+                    <button type="submit" name="add_user" class="btn btn-primary px-4 fw-bold"><?php echo __('save'); ?></button>
                 </div>
             </form>
         </div>

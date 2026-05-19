@@ -27,8 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_leave_perm']))
 
 
 // Filters
-$where = [];
-$params = [];
+$where = ["e.organization_id = ?"];
+$params = [CURRENT_ORG_ID];
 
 if (!empty($_GET['search'])) {
     $where[] = "(e.full_name LIKE ? OR e.system_id LIKE ? OR e.employee_id_number LIKE ?)";
@@ -46,7 +46,7 @@ if (!empty($_GET['status'])) {
     $params[] = $_GET['status'];
 }
 
-$whereClause = count($where) > 0 ? "WHERE " . implode(" AND ", $where) : "";
+$whereClause = "WHERE " . implode(" AND ", $where);
 
 $query = "SELECT e.*, d.name_ar as dept_ar, d.name_en as dept_en, u.email as user_email 
           FROM employees e 
@@ -60,7 +60,9 @@ $stmt->execute($params);
 $employees = $stmt->fetchAll();
 
 // Fetch departments for filter
-$departments = $pdo->query("SELECT * FROM departments ORDER BY name_ar ASC")->fetchAll();
+$stmtDept = $pdo->prepare("SELECT * FROM departments WHERE organization_id = ? ORDER BY name_ar ASC");
+$stmtDept->execute([CURRENT_ORG_ID]);
+$departments = $stmtDept->fetchAll();
 
 // Excel (CSV) Export
 if (isset($_GET['export']) && $_GET['export'] === 'excel') {
