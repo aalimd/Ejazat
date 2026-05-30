@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $leave_balance_verified = isset($_POST['leave_balance_verified']) ? 1 : 0;
 
     if (empty($full_name) || empty($email)) {
-        $error = 'Required fields missing.';
+        $error = __('fill_fields_error');
     } else {
         try {
             $pdo->beginTransaction();

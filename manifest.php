@@ -1,6 +1,6 @@
 <?php
-header("Content-Type: application/manifest+json; charset=utf-8");
 require_once 'includes/config.php';
+header("Content-Type: application/manifest+json; charset=utf-8");
 
 $theme_color = getSetting('primary_color', '#0d6efd');
 $site_name = SITE_NAME;

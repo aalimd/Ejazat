@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_leave_type'])) {
     $max_days = !empty($_POST['max_days_per_year']) ? (int)$_POST['max_days_per_year'] : 30;
 
     if (empty($name_ar) || empty($name_en)) {
-        $error = 'All fields are required.';
+        $error = __('fill_fields_error');
     } else {
         try {
             $stmt = $pdo->prepare("INSERT INTO leave_types (organization_id, name_ar, name_en, deduct_from_balance, max_days_per_year) VALUES (?, ?, ?, ?, ?)");
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_leave_type'])) {
                 $success = __('success_added');
             }
         } catch (PDOException $e) {
-            $error = 'Error: ' . $e->getMessage();
+            $error = __('db_error') . ': ' . $e->getMessage();
         }
     }
 }
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_leave_type'])) {
     $max_days = !empty($_POST['max_days_per_year']) ? (int)$_POST['max_days_per_year'] : 30;
 
     if (empty($name_ar) || empty($name_en)) {
-        $error = 'All fields are required.';
+        $error = __('fill_fields_error');
     } else {
         try {
             $stmt = $pdo->prepare("UPDATE leave_types SET name_ar = ?, name_en = ?, deduct_from_balance = ?, max_days_per_year = ? WHERE id = ? AND organization_id = ?");
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_leave_type'])) {
                 $success = __('success_updated');
             }
         } catch (PDOException $e) {
-            $error = 'Error: ' . $e->getMessage();
+            $error = __('db_error') . ': ' . $e->getMessage();
         }
     }
 }
@@ -70,7 +70,11 @@ $stmt->execute([$org_id]);
 $leave_types = $stmt->fetchAll();
 
 $pageTitle = __('leave_types');
-include '../includes/header.php';
+if ($_SESSION['role'] === 'super_admin') {
+    include '../includes/superadmin_header.php';
+} else {
+    include '../includes/header.php';
+}
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -210,4 +214,4 @@ include '../includes/header.php';
 </div>
 <?php endforeach; ?>
 
-<?php include '../includes/footer.php'; ?>
+<?php if ($_SESSION['role'] === 'super_admin') { include '../includes/superadmin_footer.php'; } else { include '../includes/footer.php'; } ?>

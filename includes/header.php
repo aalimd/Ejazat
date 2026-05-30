@@ -168,9 +168,14 @@ if (isLoggedIn()):
                         <?php endforeach; ?>
                     </ul>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white fw-bold bg-danger bg-opacity-75 rounded px-3 ms-2" href="<?php echo BASE_URL; ?>superadmin/dashboard.php" title="Super Admin Control Panel">
+                        🔐 Control Panel
+                    </a>
+                </li>
                 <?php endif; ?>
             </ul>
-            <ul class="navbar-nav <?php echo __('dir') == 'rtl' ? 'ms-auto' : 'me-auto'; ?> mb-2 mb-lg-0">
+            <ul class="navbar-nav mb-2 mb-lg-0">
                 <!-- Theme Toggle -->
                 <li class="nav-item me-2 d-flex align-items-center">
                     <button id="themeToggle" class="btn btn-sm btn-outline-light border-0 fs-5">🌙</button>
@@ -245,11 +250,11 @@ if (isLoggedIn()):
 
                     <?php if (hasRole('super_admin')): ?>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo ($current_dir == 'admin' && $current_page == 'organizations.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>admin/organizations.php">
-                            🏢 <?php echo __('organizations_mgmt'); ?>
+                        <a class="nav-link fw-bold text-warning" href="<?php echo BASE_URL; ?>superadmin/dashboard.php">
+                            🔐 <?php echo __('super_admin_title'); ?>
                         </a>
                     </li>
-                    <?php endif; ?>
+                <?php endif; ?>
                     
                     <?php if (hasRole(['admin', 'manager'])): ?>
                     <li class="nav-item">
@@ -338,10 +343,11 @@ if (isLoggedIn()):
         </nav>
 
         <!-- Main Content -->
-        <main class="col-md-9 <?php echo __('dir') == 'rtl' ? 'ms-sm-auto' : 'me-sm-auto'; ?> col-lg-10 px-md-4 py-4">
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
 <?php else: ?>
-    <!-- Language Switcher for Login Page -->
-    <div class="p-3 text-end">
+    <!-- Language Switcher & Theme Toggle for Login Page -->
+    <div class="p-3 d-flex justify-content-end align-items-center gap-2">
+        <button id="themeToggle" class="btn btn-outline-primary btn-sm fs-5">🌙</button>
         <a class="btn btn-outline-primary btn-sm" href="?lang=<?php echo $lang == 'ar' ? 'en' : 'ar'; ?>">
             <?php echo __('language'); ?>
         </a>

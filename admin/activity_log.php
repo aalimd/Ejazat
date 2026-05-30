@@ -26,12 +26,16 @@ if ($_SESSION['role'] === 'super_admin' && empty($org_id)) {
 }
 
 $pageTitle = __('activity_log');
-include '../includes/header.php';
+if ($_SESSION['role'] === 'super_admin') {
+    include '../includes/superadmin_header.php';
+} else {
+    include '../includes/header.php';
+}
 ?>
 
 <div class="mb-4">
-    <h1 class="h3"><?php echo __('activity_log'); ?></h1>
-    <p class="text-muted small"><?php echo __('Showing last 500 actions'); ?></p>
+    <h1 class="h3">📜 <?php echo __('activity_log'); ?></h1>
+    <p class="text-muted small"><?php echo __('showing_last_500_actions'); ?></p>
 </div>
 
 <div class="card shadow-sm border-0">
@@ -59,7 +63,7 @@ include '../includes/header.php';
                                     <?php if ($log['username']): ?>
                                         <span class="badge bg-light text-dark border"><?php echo h($log['username']); ?></span>
                                     <?php else: ?>
-                                        <span class="text-muted small"><?php echo __('Guest'); ?></span>
+                                        <span class="text-muted small"><?php echo __('guest'); ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -81,4 +85,4 @@ include '../includes/header.php';
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php if ($_SESSION['role'] === 'super_admin') { include '../includes/superadmin_footer.php'; } else { include '../includes/footer.php'; } ?>

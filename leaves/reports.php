@@ -7,8 +7,9 @@ $success = '';
 $error = '';
 
 // 1. معالجة الفلاتر والبحث
-$where = ["e.organization_id = ?"];
+$where = ["e.organization_id = ?", "lr.organization_id = ?"];
 $params = [$org_id];
+$params[] = $org_id;
 
 if (!empty($_GET['search'])) {
     $where[] = "(e.full_name LIKE ? OR e.employee_id_number LIKE ? OR lr.request_code LIKE ?)";
@@ -87,18 +88,18 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     fputs($output, "\xEF\xBB\xBF");
     
     // العناوين
-    fputcsv($output, ['كود الطلب', 'الرقم الوظيفي', 'اسم الموظف', 'القسم', 'نوع الإجازة', 'تاريخ البدء', 'تاريخ الانتهاء', 'أيام العمل الفعلية', 'الحالة', 'تاريخ التقديم']);
+    fputcsv($output, [__('export_request_code'), __('export_employee_id'), __('export_employee_name'), __('export_department'), __('export_leave_type'), __('export_from_date'), __('export_to_date'), __('export_work_days'), __('export_status'), __('export_submitted_on')]);
     
     // البيانات
     foreach ($requests as $r) {
         $days = calculateLeaveDays($r['start_date'], $r['end_date'], $org_id);
-        $status_text = $r['status'] == 'approved' ? 'مقبولة' : ($r['status'] == 'rejected' ? 'مرفوضة' : 'معلقة');
+        $status_text = $r['status'] == 'approved' ? __('status_approved_leave') : ($r['status'] == 'rejected' ? __('status_rejected_leave') : __('status_pending_leave'));
         fputcsv($output, [
             $r['request_code'],
             $r['employee_id_number'],
             $r['full_name'],
-            $r['dept_ar'],
-            $r['type_ar'],
+            get_name(['name_ar' => $r['dept_ar'], 'name_en' => $r['dept_en']]),
+            get_name(['name_ar' => $r['type_ar'], 'name_en' => $r['type_en']]),
             $r['start_date'],
             $r['end_date'],
             $days,
@@ -139,7 +140,7 @@ include '../includes/header.php';
             $export_url = 'reports.php?' . http_build_query($query_params);
         ?>
         <a href="<?php echo $export_url; ?>" class="btn btn-success shadow-sm">
-            📥 تصدير التقرير الحالي إلى Excel
+            📥 <?php echo __('export_current_report'); ?>
         </a>
     </div>
 </div>
@@ -161,7 +162,7 @@ include '../includes/header.php';
         <div class="card shadow-sm border-0 h-100 bg-light text-dark">
             <div class="card-body py-3 d-flex align-items-center">
                 <div class="flex-grow-1">
-                    <h6 class="text-muted small mb-1">إجمالي أيام العمل الفعلية</h6>
+                    <h6 class="text-muted small mb-1"><?php echo __('total_work_days'); ?></h6>
                     <h3 class="fw-bold mb-0 text-success"><?php echo $stats['total_days']; ?></h3>
                 </div>
                 <div class="fs-2 opacity-50">📆</div>
@@ -172,7 +173,7 @@ include '../includes/header.php';
         <div class="card shadow-sm border-0 h-100 bg-light text-dark">
             <div class="card-body py-3 d-flex align-items-center">
                 <div class="flex-grow-1">
-                    <h6 class="text-muted small mb-1">الطلبات المعتمدة</h6>
+                    <h6 class="text-muted small mb-1"><?php echo __('approved_requests_count'); ?></h6>
                     <h3 class="fw-bold mb-0 text-success"><?php echo $stats['approved_count']; ?></h3>
                 </div>
                 <div class="fs-2 opacity-50">✅</div>
@@ -183,7 +184,7 @@ include '../includes/header.php';
         <div class="card shadow-sm border-0 h-100 bg-light text-dark">
             <div class="card-body py-3 d-flex align-items-center">
                 <div class="flex-grow-1">
-                    <h6 class="text-muted small mb-1">الطلبات المعلقة</h6>
+                    <h6 class="text-muted small mb-1"><?php echo __('pending_requests_count'); ?></h6>
                     <h3 class="fw-bold mb-0 text-warning"><?php echo $stats['pending_count']; ?></h3>
                 </div>
                 <div class="fs-2 opacity-50">⏳</div>
@@ -195,39 +196,39 @@ include '../includes/header.php';
 <!-- فلترة التقرير -->
 <div class="card shadow-sm border-0 mb-4 bg-white">
     <div class="card-body p-4">
-        <h5 class="fw-bold text-dark mb-3">🔍 تصفية وبحث متقدم</h5>
+        <h5 class="fw-bold text-dark mb-3">🔍 <?php echo __('advanced_filter_search'); ?></h5>
         <form action="reports.php" method="GET" class="row g-3">
             <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">اسم الموظف أو كود الطلب</label>
-                <input type="text" name="search" class="form-control" placeholder="البحث..." value="<?php echo h($_GET['search'] ?? ''); ?>">
+                <label class="form-label small fw-bold text-muted"><?php echo __('employee_name_or_code'); ?></label>
+                <input type="text" name="search" class="form-control" placeholder="<?php echo __('search_dots'); ?>" value="<?php echo h($_GET['search'] ?? ''); ?>">
             </div>
             
             <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">القسم</label>
+                <label class="form-label small fw-bold text-muted"><?php echo __('department'); ?></label>
                 <select name="department_id" class="form-select">
                     <option value=""><?php echo __('all'); ?></option>
                     <?php foreach ($departments as $d): ?>
                         <option value="<?php echo $d['id']; ?>" <?php echo (($_GET['department_id'] ?? '') == $d['id']) ? 'selected' : ''; ?>>
-                            <?php echo h($d['name_ar']); ?>
+                            <?php echo get_name($d); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
             
             <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">نوع الإجازة</label>
+                <label class="form-label small fw-bold text-muted"><?php echo __('leave_type_label'); ?></label>
                 <select name="leave_type_id" class="form-select">
                     <option value=""><?php echo __('all'); ?></option>
                     <?php foreach ($leave_types as $lt): ?>
                         <option value="<?php echo $lt['id']; ?>" <?php echo (($_GET['leave_type_id'] ?? '') == $lt['id']) ? 'selected' : ''; ?>>
-                            <?php echo h($lt['name_ar']); ?>
+                            <?php echo get_name($lt); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
             
             <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted">الحالة</label>
+                <label class="form-label small fw-bold text-muted"><?php echo __('status'); ?></label>
                 <select name="status" class="form-select">
                     <option value=""><?php echo __('all'); ?></option>
                     <option value="pending" <?php echo (($_GET['status'] ?? '') == 'pending') ? 'selected' : ''; ?>><?php echo __('pending'); ?></option>
@@ -237,18 +238,18 @@ include '../includes/header.php';
             </div>
             
             <div class="col-md-4">
-                <label class="form-label small fw-bold text-muted">من تاريخ البدء</label>
+                <label class="form-label small fw-bold text-muted"><?php echo __('from_start_date'); ?></label>
                 <input type="date" name="from_date" class="form-control" value="<?php echo h($_GET['from_date'] ?? ''); ?>">
             </div>
             
             <div class="col-md-4">
-                <label class="form-label small fw-bold text-muted">إلى تاريخ الانتهاء</label>
+                <label class="form-label small fw-bold text-muted"><?php echo __('to_end_date'); ?></label>
                 <input type="date" name="to_date" class="form-control" value="<?php echo h($_GET['to_date'] ?? ''); ?>">
             </div>
             
             <div class="col-md-4 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100 shadow-sm">
-                    🔍 تحديث وتصفية التقرير
+                    🔍 <?php echo __('update_filter_report'); ?>
                 </button>
             </div>
         </form>
@@ -262,13 +263,13 @@ include '../includes/header.php';
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">الموظف</th>
-                        <th>القسم</th>
-                        <th>كود الطلب</th>
-                        <th>نوع الإجازة</th>
-                        <th>التاريخ والمدة</th>
-                        <th>أيام العمل الفعلية</th>
-                        <th>حالة الطلب</th>
+                        <th class="ps-4"><?php echo __('employee'); ?></th>
+                        <th><?php echo __('department'); ?></th>
+                        <th><?php echo __('request_code'); ?></th>
+                        <th><?php echo __('leave_type_label'); ?></th>
+                        <th><?php echo __('date_and_duration'); ?></th>
+                        <th><?php echo __('actual_work_days'); ?></th>
+                        <th><?php echo __('request_status'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -289,10 +290,10 @@ include '../includes/header.php';
                                 <td><span class="badge bg-light text-dark border"><?php echo h($r['request_code']); ?></span></td>
                                 <td><?php echo h(get_name(['name_ar' => $r['type_ar'], 'name_en' => $r['type_en']])); ?></td>
                                 <td>
-                                    <div class="small text-dark"><?php echo h($r['start_date']); ?> إلى <?php echo h($r['end_date']); ?></div>
+                                    <div class="small text-dark"><?php echo h($r['start_date']); ?> <?php echo __('to'); ?> <?php echo h($r['end_date']); ?></div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-primary rounded-pill px-3"><?php echo $days; ?> يوم</span>
+                                    <span class="badge bg-primary rounded-pill px-3"><?php echo $days; ?> <?php echo __('day'); ?></span>
                                 </td>
                                 <td>
                                     <?php if ($r['status'] == 'approved'): ?>

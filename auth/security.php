@@ -12,7 +12,7 @@ $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 
 if (!$user) {
-    die("Error: User not found.");
+    die(__('employee_not_found'));
 }
 
 // Fetch current organization settings if needed
