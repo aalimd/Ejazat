@@ -1,5 +1,309 @@
 /* HR-App Professional Global Styles */
 
+/* ==========================================
+   Emoji Icon — consistent rendering everywhere
+   ========================================== */
+.emoji-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3em;
+    height: 1.3em;
+    font-size: 1.15em;
+    line-height: 1;
+    vertical-align: middle;
+    font-style: normal;
+}
+
+/* Sidebar emoji icon */
+.sidebar .nav-link .emoji-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+[dir="ltr"] .sidebar .nav-link .emoji-icon { margin-right: 12px; }
+[dir="rtl"] .sidebar .nav-link .emoji-icon { margin-left: 12px; }
+
+.sidebar .nav-link:hover .emoji-icon,
+.sidebar .nav-link.active .emoji-icon {
+    transform: scale(1.15);
+}
+
+/* ==========================================
+   Premium Page Header
+   ========================================== */
+.page-header {
+    margin-bottom: 1.75rem;
+}
+.page-header h1 {
+    font-weight: 800;
+    font-size: 1.5rem;
+    margin-bottom: 0.15rem;
+    color: var(--text-main);
+}
+.page-header .emoji-icon {
+    font-size: 1.3em;
+}
+.page-header .page-desc {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+[data-theme="dark"] .page-header h1 { color: var(--text-main); }
+[data-theme="dark"] .page-header .page-desc { color: var(--text-muted); }
+
+/* ==========================================
+   Premium Stat Cards
+   ========================================== */
+.stat-card-modern {
+    background: var(--card-bg);
+    border: 1px solid rgba(0,0,0,0.04);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.stat-card-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+.stat-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.35rem;
+}
+.stat-card-value {
+    font-size: 1.65rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text-main);
+}
+.stat-card-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+
+[data-theme="dark"] .stat-card-modern {
+    border-color: var(--border-color);
+}
+[data-theme="dark"] .stat-card-modern:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================
+   Quick Action / Link Cards
+   ========================================== */
+.quick-link-card {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: var(--card-bg);
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: all 0.2s;
+    text-decoration: none;
+    color: var(--text-main);
+}
+.quick-link-card:hover {
+    border-color: var(--primary-color);
+    transform: translateX(3px);
+    color: var(--text-main);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.08);
+}
+.quick-link-card .emoji-icon {
+    font-size: 1.2rem;
+}
+[dir="rtl"] .quick-link-card:hover {
+    transform: translateX(-3px);
+}
+
+[data-theme="dark"] .quick-link-card {
+    border-color: var(--border-color);
+}
+[data-theme="dark"] .quick-link-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.15);
+}
+
+/* ==========================================
+   Section Headers with divider
+   ========================================== */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    margin-bottom: 0.75rem;
+}
+[data-theme="dark"] .section-header {
+    border-bottom-color: var(--border-color);
+}
+
+/* ==========================================
+   Premium empty states
+   ========================================== */
+.empty-state-modern {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--text-muted);
+}
+.empty-state-modern .emoji-icon {
+    font-size: 2.5rem;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+.empty-state-modern h5 {
+    color: var(--text-main);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+.empty-state-modern p {
+    font-size: 0.85rem;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+/* ==========================================
+   Premium badge variants
+   ========================================== */
+.badge-modern {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+.badge-modern-success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+.badge-modern-warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+}
+.badge-modern-danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+.badge-modern-info {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+}
+
+[data-theme="dark"] .badge-modern-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+}
+[data-theme="dark"] .badge-modern-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+}
+[data-theme="dark"] .badge-modern-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+[data-theme="dark"] .badge-modern-info {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+}
+
+/* ==========================================
+   Premium table enhancements
+   ========================================== */
+.table-premium thead th {
+    background: rgba(0,0,0,0.02);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-bottom: 2px solid rgba(0,0,0,0.06);
+    padding: 12px 16px;
+}
+.table-premium tbody td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+.table-premium tbody tr {
+    transition: background 0.15s;
+}
+.table-premium tbody tr:hover {
+    background: rgba(var(--primary-color-rgb), 0.03);
+}
+
+[data-theme="dark"] .table-premium thead th {
+    background: rgba(255,255,255,0.02);
+    border-bottom-color: var(--border-color);
+}
+[data-theme="dark"] .table-premium tbody tr:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+/* ==========================================
+   Premium form enhancements
+   ========================================== */
+.form-premium .form-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    margin-bottom: 0.4rem;
+}
+.form-premium .form-control,
+.form-premium .form-select {
+    border-radius: 8px;
+    padding: 10px 14px;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: var(--card-bg);
+    transition: all 0.2s;
+}
+.form-premium .form-control:focus,
+.form-premium .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.12);
+}
+
+[data-theme="dark"] .form-premium .form-control,
+[data-theme="dark"] .form-premium .form-select {
+    background: #0f172a;
+    border-color: var(--border-color);
+}
+
+/* ==========================================
+   Premium action bar (filter/search row)
+   ========================================== */
+.action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+@media (max-width: 576px) {
+    .action-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
 :root {
     --bg-color: #f4f7fa;
     --card-bg: #ffffff;
@@ -688,6 +992,19 @@ body {
         right: 16px;
         max-width: none;
     }
+}
+
+/* ==========================================
+   Print Stylesheet
+   ========================================== */
+@media print {
+    .navbar, .sidebar, .offcanvas, .no-print, .btn, .modal, footer, #sidebar, .sa-sidebar, .sa-topbar, .sa-main > nav { display: none !important; }
+    body { background: #fff !important; color: #000 !important; }
+    .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+    .table-responsive { overflow: visible !important; }
+    .table { border-collapse: collapse !important; }
+    .table th, .table td { border: 1px solid #ddd !important; }
+    a { text-decoration: underline; color: #000 !important; }
 }
 
 

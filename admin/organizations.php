@@ -291,9 +291,9 @@ if ($_SESSION['role'] === 'super_admin') {
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="h3 mb-0 text-gray-800 fw-bold">🏢 <?php echo __('organizations_mgmt'); ?></h2>
+    <h2 class="h3 mb-0 text-gray-800 fw-bold"><span class="emoji-icon">🏢</span> <?php echo __('organizations_mgmt'); ?></h2>
     <button class="btn btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addOrgModal">
-        ➕ <?php echo __('add_organization'); ?>
+        <span class="emoji-icon">➕</span> <?php echo __('add_organization'); ?>
     </button>
 </div>
 
@@ -337,7 +337,7 @@ if ($_SESSION['role'] === 'super_admin') {
                                 <h6 class="text-uppercase small mb-2 opacity-75 fw-bold"><?php echo __('org_count'); ?></h6>
                                 <h2 class="display-5 fw-bold mb-0"><?php echo count($orgs); ?></h2>
                             </div>
-                            <div class="fs-1 opacity-50">🏢</div>
+                            <div class="fs-1 opacity-50"><span class="emoji-icon">🏢</span></div>
                         </div>
                     </div>
                 </div>
@@ -393,19 +393,19 @@ if ($_SESSION['role'] === 'super_admin') {
                                     <a href="organizations.php?toggle_email=<?php echo $email_enabled ? '0' : '1'; ?>&org_id=<?php echo $org['id']; ?>&csrf_token=<?php echo csrf_token(); ?>"
                                        class="btn btn-sm fw-bold py-2 <?php echo $email_enabled ? 'btn-outline-success' : 'btn-outline-secondary'; ?>"
                                        onclick="return confirm('<?php echo $email_enabled ? __('confirm_disable_email') : __('confirm_enable_email'); ?>')">
-                                        📧 <?php echo $email_enabled ? __('email_on') : __('email_off'); ?>
+                                        <span class="emoji-icon">📧</span> <?php echo $email_enabled ? __('email_on') : __('email_off'); ?>
                                     </a>
                                     <?php if ($org['id'] > 1): ?>
                                         <?php if ($org['status'] === 'active'): ?>
                                             <a href="organizations.php?toggle_status=suspended&org_id=<?php echo $org['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" 
                                                class="btn btn-outline-danger btn-sm w-100 fw-bold py-2"
                                                onclick="return confirm('<?php echo __('confirm_delete'); ?>')">
-                                                🚫 <?php echo __('suspended'); ?>
+                                                <span class="emoji-icon">❌</span> <?php echo __('suspended'); ?>
                                             </a>
                                         <?php else: ?>
                                             <a href="organizations.php?toggle_status=active&org_id=<?php echo $org['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" 
                                                class="btn btn-outline-success btn-sm w-100 fw-bold py-2">
-                                                🟢 <?php echo __('active'); ?>
+                                                <span class="emoji-icon">🟢</span> <?php echo __('active'); ?>
                                             </a>
                                         <?php endif; ?>
                                     <?php else: ?>
@@ -429,7 +429,7 @@ if ($_SESSION['role'] === 'super_admin') {
                 <h5 class="fw-bold mb-4 text-gray-800"><?php echo __('pending_requests'); ?></h5>
                 <?php if (empty($pending_requests)): ?>
                     <div class="text-center py-5">
-                        <div class="fs-1 text-muted mb-3">📥</div>
+                        <div class="fs-1 text-muted mb-3"><span class="emoji-icon">📥</span></div>
                         <p class="text-muted mb-0 fs-5"><?php echo __('no_pending_requests'); ?></p>
                     </div>
                 <?php else: ?>
@@ -457,8 +457,8 @@ if ($_SESSION['role'] === 'super_admin') {
                                         </td>
                                         <td>
                                             <div class="fw-bold"><?php echo h($req['manager_name']); ?></div>
-                                            <div class="small text-muted">✉️ <?php echo h($req['manager_email']); ?></div>
-                                            <div class="small text-muted">📞 <?php echo h($req['manager_phone']); ?></div>
+                                            <div class="small text-muted"><span class="emoji-icon">📧</span> <?php echo h($req['manager_email']); ?></div>
+                                            <div class="small text-muted"><span class="emoji-icon">📞</span> <?php echo h($req['manager_phone']); ?></div>
                                         </td>
                                         <td>
                                             <div class="small text-wrap" style="max-width: 250px;"><?php echo h($req['notes'] ?: __('no_notes')); ?></div>
@@ -498,7 +498,7 @@ if ($_SESSION['role'] === 'super_admin') {
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary text-white border-0 py-3">
-                <h5 class="modal-title fw-bold" id="addOrgModalLabel">🏢 <?php echo __('add_organization'); ?></h5>
+                <h5 class="modal-title fw-bold" id="addOrgModalLabel"><span class="emoji-icon">🏢</span> <?php echo __('add_organization'); ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="organizations.php" method="POST" autocomplete="off">
@@ -506,7 +506,7 @@ if ($_SESSION['role'] === 'super_admin') {
                 <input type="hidden" name="action" value="add">
                 
                 <div class="modal-body p-4">
-                    <h6 class="fw-bold mb-3 border-bottom pb-2 text-primary">📋 <?php echo __('basic_info'); ?></h6>
+                    <h6 class="fw-bold mb-3 border-bottom pb-2 text-primary"><span class="emoji-icon">📋</span> <?php echo __('basic_info'); ?></h6>
                     <div class="row mb-4">
                         <div class="col-md-6 mb-3">
                             <label class="form-label small fw-bold"><?php echo __('org_name_ar'); ?> <span class="text-danger">*</span></label>
@@ -523,7 +523,7 @@ if ($_SESSION['role'] === 'super_admin') {
                         </div>
                     </div>
 
-                    <h6 class="fw-bold mb-3 border-bottom pb-2 text-success">👤 <?php echo __('account_info'); ?> (Supervising Manager)</h6>
+                    <h6 class="fw-bold mb-3 border-bottom pb-2 text-success"><span class="emoji-icon">👤</span> <?php echo __('account_info'); ?> (Supervising Manager)</h6>
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label small fw-bold"><?php echo __('org_manager_username'); ?> <span class="text-danger">*</span></label>

@@ -31,6 +31,9 @@ foreach($current_balances_raw as $b) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     $full_name = trim($_POST['full_name'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -83,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = $e->getMessage();
         }
     }
+    } // end CSRF else
 }
 
 $pageTitle = __('my_profile');
@@ -105,6 +109,7 @@ include '../includes/header.php';
                 <?php endif; ?>
 
                 <form action="my_profile_edit.php" method="POST">
+                    <?php echo csrf_field(); ?>
                     <div class="row g-3">
                         <div class="col-md-12">
                             <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
@@ -129,10 +134,10 @@ include '../includes/header.php';
 
                         <div class="col-md-12 mt-3">
                             <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
-                                📅 <?php echo __('initial_leave_balances'); ?>
+                                <i class="bi bi-calendar"></i> <?php echo __('initial_leave_balances'); ?>
                             </h6>
                             <?php if (!$emp['leave_balance_verified']): ?>
-                                <div class="alert alert-warning x-small">ℹ️ <?php echo __('enter_balance_accurately'); ?></div>
+                                <div class="alert alert-warning x-small"><i class="bi bi-info-circle"></i> <?php echo __('enter_balance_accurately'); ?></div>
                             <?php endif; ?>
                         </div>
                         

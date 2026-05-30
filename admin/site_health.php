@@ -630,7 +630,7 @@ if ($_SESSION['role'] === 'super_admin') {
 <!-- Overall Status -->
 <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
     <span class="overall-badge overall-<?php echo $overall; ?>">
-        <?php if ($overall === 'healthy'): ?>🟢<?php elseif ($overall === 'warning'): ?>🟡<?php else: ?>🔴<?php endif; ?>
+        <?php if ($overall === 'healthy'): ?><i class="bi bi-circle-fill text-success"></i><?php elseif ($overall === 'warning'): ?><i class="bi bi-circle-fill text-warning"></i><?php else: ?><i class="bi bi-circle-fill text-danger"></i><?php endif; ?>
         <?php echo __('health_overall_' . $overall); ?>
     </span>
     <span class="text-muted small"><?php echo sprintf(__('health_checks_run'), count($health)); ?></span>
@@ -675,7 +675,7 @@ if ($_SESSION['role'] === 'super_admin') {
 <!-- Test Email Card -->
 <div class="health-card">
     <div class="health-card-header">
-        <span>📧</span> <?php echo __('health_test_email'); ?>
+        <span><i class="bi bi-envelope"></i></span> <?php echo __('health_test_email'); ?>
     </div>
     <div class="health-card-body p-3">
         <form method="POST" action="site_health.php" class="row g-2 align-items-end">
@@ -694,7 +694,7 @@ if ($_SESSION['role'] === 'super_admin') {
 <!-- Diagnostics Panel -->
 <div class="health-card">
     <div class="health-card-header">
-        <span>📊</span> <?php echo __('health_diagnostics'); ?>
+        <span><i class="bi bi-bar-chart-line"></i></span> <?php echo __('health_diagnostics'); ?>
     </div>
     <div class="health-card-body">
         <!-- Mini stats -->

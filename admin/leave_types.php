@@ -8,6 +8,9 @@ $org_id = CURRENT_ORG_ID ?? 1;
 
 // إضافة نوع إجازة جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_leave_type'])) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     $name_ar = trim($_POST['name_ar'] ?? '');
     $name_en = trim($_POST['name_en'] ?? '');
     $deduct = isset($_POST['deduct_from_balance']) ? 1 : 0;
@@ -26,10 +29,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_leave_type'])) {
             $error = __('db_error') . ': ' . $e->getMessage();
         }
     }
+    }
 }
 
 // تعديل نوع إجازة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_leave_type'])) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     $id = $_POST['type_id'];
     $name_ar = trim($_POST['name_ar'] ?? '');
     $name_en = trim($_POST['name_en'] ?? '');
@@ -49,10 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_leave_type'])) {
             $error = __('db_error') . ': ' . $e->getMessage();
         }
     }
+    }
 }
 
 // حذف نوع إجازة
 if (isset($_GET['delete'])) {
+    if (!isset($_GET['csrf_token']) || !verify_csrf($_GET['csrf_token'])) {
+        $error = __('csrf_token_invalid');
+    } else {
     $id = $_GET['delete'];
     try {
         $stmt = $pdo->prepare("DELETE FROM leave_types WHERE id = ? AND organization_id = ?");
@@ -62,6 +73,7 @@ if (isset($_GET['delete'])) {
         }
     } catch (PDOException $e) {
         $error = 'Cannot delete this type with existing requests.';
+    }
     }
 }
 
@@ -106,6 +118,9 @@ if ($_SESSION['role'] === 'super_admin') {
                     </tr>
                 </thead>
                 <tbody>
+                    <?php if (empty($leave_types)): ?>
+                        <tr><td colspan="6" class="text-center py-4 text-muted small"><?php echo __('no_data'); ?></td></tr>
+                    <?php else: ?>
                     <?php foreach ($leave_types as $type): ?>
                         <tr>
                             <td><?php echo h($type['name_ar']); ?></td>
@@ -124,15 +139,16 @@ if ($_SESSION['role'] === 'super_admin') {
                             <td><span class="fw-bold"><?php echo $type['max_days_per_year']; ?></span> <?php echo __('days'); ?></td>
                             <td><span class="badge bg-light text-dark border"><?php echo $type['request_count']; ?></span></td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editTypeModal<?php echo $type['id']; ?>">
-                                    ✏️
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editTypeModal<?php echo $type['id']; ?>" aria-label="<?php echo __('edit'); ?>">
+                                    <span class="emoji-icon">✏️</span>
                                 </button>
-                                <a href="?delete=<?php echo $type['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('<?php echo __('confirm_delete'); ?>')">
-                                    🗑️
-                                </a>
+                            <a href="?delete=<?php echo $type['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('<?php echo __('confirm_delete'); ?>')" aria-label="<?php echo __('delete'); ?>">
+                                <span class="emoji-icon">🗑️</span>
+                            </a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -148,6 +164,7 @@ if ($_SESSION['role'] === 'super_admin') {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="leave_types.php" method="POST">
+                <?php echo csrf_field(); ?>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label small fw-bold"><?php echo __('type_name'); ?> *</label>
@@ -185,6 +202,7 @@ if ($_SESSION['role'] === 'super_admin') {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="leave_types.php" method="POST">
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="type_id" value="<?php echo $type['id']; ?>">
                 <div class="modal-body">
                     <div class="mb-3">

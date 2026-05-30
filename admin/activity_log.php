@@ -34,7 +34,7 @@ if ($_SESSION['role'] === 'super_admin') {
 ?>
 
 <div class="mb-4">
-    <h1 class="h3">📜 <?php echo __('activity_log'); ?></h1>
+    <h1 class="h3"><i class="bi bi-journal-text"></i> <?php echo __('activity_log'); ?></h1>
     <p class="text-muted small"><?php echo __('showing_last_500_actions'); ?></p>
 </div>
 

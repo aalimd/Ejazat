@@ -77,7 +77,7 @@ include '../includes/header.php';
         <div class="card shadow-sm mb-4 text-center">
             <div class="card-body">
                 <div class="mb-3">
-                    <div class="fs-1 mb-3">👤</div>
+                    <div class="fs-1 mb-3"><i class="bi bi-person"></i></div>
                 </div>
                 <h5 class="fw-bold"><?php echo h($emp['full_name']); ?></h5>
                 <p class="text-muted mb-3"><?php echo h($emp['job_title']); ?></p>
@@ -161,7 +161,7 @@ include '../includes/header.php';
                 </div>
                 <?php if (!$emp['leave_balance_verified'] && hasRole('employee')): ?>
                     <div class="alert alert-light border small mt-2">
-                        ℹ️
+                        <i class="bi bi-info-circle"></i>
                         <?php echo __('can_edit_balance_before_verification'); ?>
                     </div>
                 <?php endif; ?>

@@ -36,7 +36,9 @@ $leave_attachment_required = getSetting('leave_field_attachment_required', '0') 
 
 // تقديم طلب جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
-    if ($is_restricted) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } elseif ($is_restricted) {
         $error = __('balance_not_verified_error');
     } elseif (!$global_allow_leaves) {
         $error = __('leave_requests_disabled');
@@ -140,7 +142,7 @@ include '../includes/header.php';
 
 <?php if ($is_restricted): ?>
     <div class="alert alert-warning shadow-sm border-0 d-flex align-items-center mb-4">
-        🔒
+        <i class="bi bi-lock"></i>
         <div>
             <h6 class="fw-bold mb-1"><?php echo __('balance_not_verified_error'); ?></h6>
             <p class="small mb-0 opacity-75"><?php echo __('ensure_balance_verified'); ?></p>
@@ -203,7 +205,7 @@ include '../includes/header.php';
                                 </td>
                                 <td>
                                     <div class="small text-muted mb-1">
-                                        <span class="fs-6 opacity-75">📅</span> <?php echo __('submitted_on'); ?>:<br>
+                                        <span class="fs-6 opacity-75"><i class="bi bi-calendar"></i></span> <?php echo __('submitted_on'); ?>:<br>
                                         <span class="fw-bold text-dark"><?php echo date('Y-m-d h:i A', strtotime($req['created_at'])); ?></span>
                                     </div>
                                 </td>
@@ -218,7 +220,7 @@ include '../includes/header.php';
 
                                     <?php if ($req['status'] != 'pending'): ?>
                                         <div class="small text-muted" style="font-size: 0.75rem;">
-                                            <span class="opacity-75">📌</span> <?php echo $req['action_at'] ? date('Y-m-d h:i A', strtotime($req['action_at'])) : date('Y-m-d h:i A', strtotime($req['created_at'])); ?>
+                                            <span class="opacity-75"><i class="bi bi-pin"></i></span> <?php echo $req['action_at'] ? date('Y-m-d h:i A', strtotime($req['action_at'])) : date('Y-m-d h:i A', strtotime($req['created_at'])); ?>
                                         </div>
                                     <?php endif; ?>
                                 </td>
@@ -250,6 +252,7 @@ include '../includes/header.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="my_requests.php" method="POST">
+                <?php echo csrf_field(); ?>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label small fw-bold"><?php echo __('type_name'); ?> *</label>
@@ -327,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 daysDisplay.classList.remove('d-none');
                 
                 // إضافة لمسة جمالية للإشارة أن الحسبة تقويمية
-                const suffix = '<?php echo __('calendar_days_suffix'); ?>';
+                const suffix = <?php echo json_encode(__('calendar_days_suffix')); ?>;
                 daysCount.textContent += ' ' + suffix;
             } else {
                 daysDisplay.classList.add('d-none');

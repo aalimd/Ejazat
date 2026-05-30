@@ -130,7 +130,7 @@ include '../includes/superadmin_header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-        <h1 class="h3 fw-bold mb-1" style="color: var(--text-main);">🗄️ <?php echo __('db_migration_center'); ?></h1>
+        <h1 class="h3 fw-bold mb-1" style="color: var(--text-main);"><i class="bi bi-database"></i> <?php echo __('db_migration_center'); ?></h1>
         <p class="text-muted small mb-0"><?php echo __('db_migration_desc'); ?></p>
     </div>
 </div>
@@ -181,12 +181,12 @@ include '../includes/superadmin_header.php';
     <div class="col-lg-7">
         <div class="card border-0 shadow-sm" style="background: var(--sa-topbar-bg); border: 1px solid var(--sa-topbar-border) !important;">
             <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center" style="border-color: var(--sa-topbar-border) !important;">
-                <h6 class="fw-bold mb-0" style="color: var(--text-main);">📋 <?php echo __('pending_migrations'); ?></h6>
+                <h6 class="fw-bold mb-0" style="color: var(--text-main);"><i class="bi bi-clipboard"></i> <?php echo __('pending_migrations'); ?></h6>
             </div>
             <div class="card-body p-3">
                 <?php if (empty($pending)): ?>
                     <div class="text-center py-4">
-                        <div class="fs-1 mb-2" style="opacity:0.3;">✅</div>
+                        <div class="fs-1 mb-2" style="opacity:0.3;"><i class="bi bi-check-circle"></i></div>
                         <p class="text-muted small mb-0"><?php echo __('no_pending_migrations'); ?></p>
                     </div>
                 <?php else: ?>
@@ -241,7 +241,7 @@ include '../includes/superadmin_header.php';
                         <form method="POST" style="display:inline;" onsubmit="return confirm('<?php echo __('confirm_migration_text'); ?>')">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="action" value="apply_all">
-                            <button type="submit" class="btn btn-primary fw-bold btn-sm px-4">🚀 <?php echo __('apply_all'); ?></button>
+                            <button type="submit" class="btn btn-primary fw-bold btn-sm px-4"><i class="bi bi-rocket"></i> <?php echo __('apply_all'); ?></button>
                         </form>
                     </div>
                     <?php endif; ?>
@@ -254,17 +254,17 @@ include '../includes/superadmin_header.php';
     <div class="col-lg-5">
         <div class="card border-0 shadow-sm mb-4" style="background: var(--sa-topbar-bg); border: 1px solid var(--sa-topbar-border) !important;">
             <div class="card-header bg-transparent border-bottom py-3" style="border-color: var(--sa-topbar-border) !important;">
-                <h6 class="fw-bold mb-0" style="color: var(--text-main);">🛡️ <?php echo __('migration_safety'); ?></h6>
+                <h6 class="fw-bold mb-0" style="color: var(--text-main);"><i class="bi bi-shield-check"></i> <?php echo __('migration_safety'); ?></h6>
             </div>
             <div class="card-body p-3">
                 <!-- Backup reminder -->
                 <div class="d-flex align-items-start gap-2 mb-3 p-2 rounded" style="background: rgba(245,158,11,0.08);">
-                    <span style="font-size:1.1rem;">⚠️</span>
+                    <span style="font-size:1.1rem;"><i class="bi bi-exclamation-triangle"></i></span>
                     <div>
                         <div class="fw-semibold small" style="color: var(--text-main);"><?php echo __('safety_backup'); ?></div>
                         <div class="text-muted" style="font-size:0.75rem;"><?php echo __('safety_backup_desc'); ?></div>
                         <div class="mt-1">
-                            <a href="#" onclick="return confirmBackup()" class="small fw-semibold" style="color: var(--sa-sidebar-active);">✅ <?php echo __('confirm_migration'); ?></a>
+                            <a href="#" onclick="return confirmBackup()" class="small fw-semibold" style="color: var(--sa-sidebar-active);"><i class="bi bi-check-circle"></i> <?php echo __('confirm_migration'); ?></a>
                         </div>
                     </div>
                 </div>
@@ -276,12 +276,12 @@ include '../includes/superadmin_header.php';
                         : 'Have you taken a database backup?';
                     if (confirm(msg)) {
                         document.getElementById('backupConfirmed').value = '1';
-                        document.getElementById('backupStatus').innerHTML = '<span style="color:#22c55e;font-weight:600;">✅ <?php echo __('confirm_migration'); ?></span>';
+                        document.getElementById('backupStatus').innerHTML = '<span style="color:#22c55e;font-weight:600;"><i class="bi bi-check-circle"></i> <?php echo __('confirm_migration'); ?></span>';
                     }
                     return false;
                 }
                 </script>
-                <div id="backupStatus" class="small text-muted">❌ <?php echo __('migration_not_applied'); ?></div>
+                <div id="backupStatus" class="small text-muted"><i class="bi bi-x-circle"></i> <?php echo __('migration_not_applied'); ?></div>
                 <input type="hidden" id="backupConfirmed" value="0">
 
                 <hr style="border-color: var(--sa-topbar-border);">
@@ -289,7 +289,7 @@ include '../includes/superadmin_header.php';
                 <!-- Preflight Check -->
                 <form method="POST" class="d-flex justify-content-between align-items-center">
                     <?php echo csrf_field(); ?>
-                    <span class="fw-semibold small" style="color: var(--text-main);">🔍 <?php echo __('preflight_check'); ?></span>
+                    <span class="fw-semibold small" style="color: var(--text-main);"><i class="bi bi-search"></i> <?php echo __('preflight_check'); ?></span>
                     <button type="submit" name="action" value="run_preflight" class="btn btn-sm btn-outline-primary fw-bold"><?php echo __('run_preflight'); ?></button>
                 </form>
 
@@ -297,15 +297,15 @@ include '../includes/superadmin_header.php';
                 <div class="mt-3">
                     <?php if ($preflight['all_pass'] && !$preflight['has_warnings']): ?>
                         <div class="mm-preflight-pass mb-2">
-                            <span class="fw-semibold small" style="color:#22c55e;">✅ <?php echo __('preflight_pass'); ?></span>
+                            <span class="fw-semibold small" style="color:#22c55e;"><i class="bi bi-check-circle"></i> <?php echo __('preflight_pass'); ?></span>
                         </div>
                     <?php elseif ($preflight['all_pass']): ?>
                         <div class="mm-preflight-warn mb-2">
-                            <span class="fw-semibold small" style="color:#f59e0b;">⚠️ <?php echo __('preflight_warn'); ?></span>
+                            <span class="fw-semibold small" style="color:#f59e0b;"><i class="bi bi-exclamation-triangle"></i> <?php echo __('preflight_warn'); ?></span>
                         </div>
                     <?php else: ?>
                         <div class="mm-preflight-fail mb-2">
-                            <span class="fw-semibold small" style="color:#ef4444;">🚫 <?php echo __('preflight_fail'); ?></span>
+                            <span class="fw-semibold small" style="color:#ef4444;"><i class="bi bi-x-circle"></i> <?php echo __('preflight_fail'); ?></span>
                         </div>
                     <?php endif; ?>
                     <div class="d-flex flex-column gap-1 mt-2">
@@ -313,7 +313,7 @@ include '../includes/superadmin_header.php';
                         <div class="d-flex justify-content-between align-items-center mm-check-label">
                             <span class="text-muted"><?php echo h($check['name']); ?></span>
                             <span class="fw-semibold" style="color: <?php echo $check['status'] === 'pass' ? '#22c55e' : ($check['status'] === 'warn' ? '#f59e0b' : '#ef4444'); ?>;">
-                                <?php echo $check['status'] === 'pass' ? '✅' : ($check['status'] === 'warn' ? '⚠️' : '🚫'); ?>
+                                <?php echo $check['status'] === 'pass' ? '<i class="bi bi-check-circle"></i>' : ($check['status'] === 'warn' ? '<i class="bi bi-exclamation-triangle"></i>' : '<i class="bi bi-x-circle"></i>'); ?>
                                 <?php echo h($check['message']); ?>
                             </span>
                         </div>
@@ -329,7 +329,7 @@ include '../includes/superadmin_header.php';
 <!-- Migration History -->
 <div class="card border-0 shadow-sm mt-4" style="background: var(--sa-topbar-bg); border: 1px solid var(--sa-topbar-border) !important;">
     <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center" style="border-color: var(--sa-topbar-border) !important;">
-        <h6 class="fw-bold mb-0" style="color: var(--text-main);">📜 <?php echo __('migration_history'); ?></h6>
+        <h6 class="fw-bold mb-0" style="color: var(--text-main);"><i class="bi bi-journal-text"></i> <?php echo __('migration_history'); ?></h6>
     </div>
     <div class="card-body p-0">
         <?php if (empty($applied_history)): ?>
@@ -372,9 +372,9 @@ include '../includes/superadmin_header.php';
                         <td>
                             <code class="small text-muted" style="font-size:0.65rem;"><?php echo h(substr($m['checksum'], 0, 12)); ?>...</code>
                             <?php if ($m['integrity_pass'] === true): ?>
-                                <span class="mm-timestamp" style="color:#22c55e;">✅</span>
+                                <span class="mm-timestamp" style="color:#22c55e;"><i class="bi bi-check-circle"></i></span>
                             <?php elseif ($m['integrity_pass'] === false): ?>
-                                <span class="mm-timestamp" style="color:#ef4444;">🚫</span>
+                                <span class="mm-timestamp" style="color:#ef4444;"><i class="bi bi-x-circle"></i></span>
                             <?php else: ?>
                                 <span class="mm-timestamp">—</span>
                             <?php endif; ?>
@@ -388,11 +388,11 @@ include '../includes/superadmin_header.php';
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="action" value="rollback">
                                 <input type="hidden" name="version" value="<?php echo h($v); ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-danger mm-badge">↩️ <?php echo __('rollback'); ?></button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger mm-badge"><i class="bi bi-arrow-return-left"></i> <?php echo __('rollback'); ?></button>
                             </form>
                             <?php endif; ?>
                             <?php if ($m['output']): ?>
-                            <button class="btn btn-sm btn-outline-secondary mm-badge" onclick="toggleOutput('hist-<?php echo $v; ?>')">👁️</button>
+                            <button class="btn btn-sm btn-outline-secondary mm-badge" onclick="toggleOutput('hist-<?php echo $v; ?>')"><i class="bi bi-eye"></i></button>
                             <div id="hist-<?php echo $v; ?>" class="mm-code-block mt-1" style="display:none;"><?php echo h(substr($m['output'], 0, 2000)); ?></div>
                             <?php endif; ?>
                         </td>

@@ -164,7 +164,7 @@ if ($_SESSION['role'] === 'super_admin') {
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-0">🎯 <?php echo __('reg_control_title'); ?></h1>
+        <h1 class="h3 mb-0"><i class="bi bi-crosshair"></i> <?php echo __('reg_control_title'); ?></h1>
         <p class="text-muted small mb-0"><?php echo __('reg_control_desc_text'); ?></p>
     </div>
 </div>
@@ -212,7 +212,7 @@ if ($_SESSION['role'] === 'super_admin') {
 
 <!-- Global Registration Settings -->
 <div class="control-section">
-    <h5 class="fw-bold mb-4">⚙️ <?php echo __('global_reg_settings'); ?></h5>
+    <h5 class="fw-bold mb-4"><i class="bi bi-gear"></i> <?php echo __('global_reg_settings'); ?></h5>
     
     <form method="POST" class="mb-4">
         <?php echo csrf_field(); ?>
@@ -243,26 +243,26 @@ if ($_SESSION['role'] === 'super_admin') {
 
 <!-- Organizations Registration Settings -->
 <div class="control-section">
-    <h5 class="fw-bold mb-4">🏢 <?php echo __('org_reg_settings'); ?></h5>
+    <h5 class="fw-bold mb-4"><i class="bi bi-building"></i> <?php echo __('org_reg_settings'); ?></h5>
     
     <?php foreach ($organizations as $org): ?>
         <div class="org-card">
             <div class="row align-items-center">
                 <div class="col-md-4">
                     <h6 class="mb-1"><?php echo h(get_name($org)); ?></h6>
-                    <small class="text-muted">👥 <?php echo $org['user_count']; ?> <?php echo __('users_count'); ?></small>
+                    <small class="text-muted"><i class="bi bi-people"></i> <?php echo $org['user_count']; ?> <?php echo __('users_count'); ?></small>
                 </div>
                 <div class="col-md-4">
                     <span class="badge <?php echo $org['is_public'] ? 'bg-success' : 'bg-danger'; ?>">
-                        <?php echo $org['is_public'] ? '🌐 ' . __('public') : '🔒 ' . __('private'); ?>
+                        <?php echo $org['is_public'] ? '<i class="bi bi-globe"></i> ' . __('public') : '<i class="bi bi-lock"></i> ' . __('private'); ?>
                     </span>
                     <?php if ($org['requires_invitation_code']): ?>
-                        <span class="badge bg-warning text-dark">🔐 <?php echo __('code_required'); ?></span>
+                        <span class="badge bg-warning text-dark"><i class="bi bi-shield-lock"></i> <?php echo __('code_required'); ?></span>
                     <?php endif; ?>
                 </div>
                 <div class="col-md-4 text-end">
                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editOrgModal<?php echo $org['id']; ?>">
-                        ⚙️ <?php echo __('edit_settings'); ?>
+                        <i class="bi bi-gear"></i> <?php echo __('edit_settings'); ?>
                     </button>
                 </div>
             </div>
@@ -311,7 +311,7 @@ if ($_SESSION['role'] === 'super_admin') {
 <!-- Pending Registrations -->
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header fw-bold py-3">
-        ⏳ <?php echo __('pending_verifications_title'); ?> (<?php echo $pending_count; ?>)
+        <i class="bi bi-clock-history"></i> <?php echo __('pending_verifications_title'); ?> (<?php echo $pending_count; ?>)
     </div>
     <div class="card-body">
         <?php if ($pending_users): ?>
@@ -323,7 +323,7 @@ if ($_SESSION['role'] === 'super_admin') {
                             <br>
                             <small><?php echo h($user['email']); ?></small>
                             <br>
-                            <small class="text-muted">📅 <?php echo date('Y-m-d H:i', strtotime($user['created_at'])); ?></small>
+                            <small class="text-muted"><i class="bi bi-calendar"></i> <?php echo date('Y-m-d H:i', strtotime($user['created_at'])); ?></small>
                             <?php if ($user['organization_id']): ?>
                                 <br>
                                 <small class="badge bg-info"><?php echo h(get_name($user)); ?></small>
@@ -334,13 +334,13 @@ if ($_SESSION['role'] === 'super_admin') {
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="action" value="approve_registration">
                                 <input type="hidden" name="employee_id" value="<?php echo $user['employee_id']; ?>">
-                                <button type="submit" class="btn btn-success btn-sm">✅ <?php echo __('approve_reg'); ?></button>
+                                <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-circle"></i> <?php echo __('approve_reg'); ?></button>
                             </form>
                             <form method="POST" style="display: inline;">
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="action" value="reject_registration">
                                 <input type="hidden" name="employee_id" value="<?php echo $user['employee_id']; ?>">
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('<?php echo __('confirm_delete_reg'); ?>');">❌ <?php echo __('reject_reg'); ?></button>
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('<?php echo __('confirm_delete_reg'); ?>');"><i class="bi bi-x-circle"></i> <?php echo __('reject_reg'); ?></button>
                             </form>
                         </div>
                     </div>
@@ -348,7 +348,7 @@ if ($_SESSION['role'] === 'super_admin') {
             <?php endforeach; ?>
         <?php else: ?>
             <div class="text-center py-4 text-muted">
-                ✅ <?php echo __('no_pending_verifications'); ?>
+                <i class="bi bi-check-circle"></i> <?php echo __('no_pending_verifications'); ?>
             </div>
         <?php endif; ?>
     </div>
@@ -357,7 +357,7 @@ if ($_SESSION['role'] === 'super_admin') {
 <!-- Help & Guide -->
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header fw-bold py-3">
-        📚 <?php echo __('how_to_control_reg'); ?>
+        <i class="bi bi-book"></i> <?php echo __('how_to_control_reg'); ?>
     </div>
     <div class="card-body">
         <div class="alert alert-info mb-0">

@@ -7,6 +7,9 @@ $error = '';
 
 // معالجة القرار
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     $request_id = $_POST['request_id'];
     $action = $_POST['action']; // approve or reject
     $note = trim($_POST['manager_note'] ?? '');
@@ -59,10 +62,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $pdo->rollBack();
             $error = __('access_denied');
         }
-    } catch (Exception $e) {
+        } catch (Exception $e) {
         $pdo->rollBack();
         $error = 'Error: ' . $e->getMessage();
-    }
+        }
+    } // end CSRF else
 }
 
 
@@ -143,7 +147,7 @@ include '../includes/header.php';
 <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
     <h1 class="h3 mb-3 mb-md-0"><?php echo __('leaves'); ?></h1>
     <a href="?<?php echo http_build_query(array_merge($_GET, ['export' => 'excel'])); ?>" class="btn btn-success shadow-sm">
-        📊 <?php echo __('export_excel'); ?>
+        <i class="bi bi-bar-chart-line"></i> <?php echo __('export_excel'); ?>
     </a>
 </div>
 
@@ -174,7 +178,7 @@ include '../includes/header.php';
                 </select>
             </div>
             <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100 shadow-sm">🔍 <?php echo __('filter_btn'); ?></button>
+                <button type="submit" class="btn btn-primary w-100 shadow-sm"><i class="bi bi-search"></i> <?php echo __('filter_btn'); ?></button>
             </div>
         </form>
     </div>
@@ -224,7 +228,7 @@ include '../includes/header.php';
                                 </td>
                                 <td>
                                     <div class="small text-muted mb-1">
-                                        <span class="fs-6 opacity-75">📅</span> <?php echo __('submitted_on'); ?>:<br>
+                                        <span class="fs-6 opacity-75"><i class="bi bi-calendar"></i></span> <?php echo __('submitted_on'); ?>:<br>
                                         <span class="fw-bold text-dark"><?php echo date('Y-m-d h:i A', strtotime($req['created_at'])); ?></span>
                                     </div>
                                 </td>
@@ -249,7 +253,7 @@ include '../includes/header.php';
 
                                     <?php if ($req['status'] != 'pending'): ?>
                                         <div class="small text-muted" style="font-size: 0.75rem;">
-                                            <span class="opacity-75">📌</span> <?php echo $req['action_at'] ? date('Y-m-d h:i A', strtotime($req['action_at'])) : date('Y-m-d h:i A', strtotime($req['created_at'])); ?>
+                                            <span class="opacity-75"><i class="bi bi-pin"></i></span> <?php echo $req['action_at'] ? date('Y-m-d h:i A', strtotime($req['action_at'])) : date('Y-m-d h:i A', strtotime($req['created_at'])); ?>
                                         </div>
                                     <?php endif; ?>
                                 </td>
@@ -268,6 +272,7 @@ include '../includes/header.php';
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <form action="manage.php" method="POST">
+                                                        <?php echo csrf_field(); ?>
                                                         <input type="hidden" name="request_id" value="<?php echo $req['id']; ?>">
                                                         <div class="modal-body">
                                                             <div class="mb-3">

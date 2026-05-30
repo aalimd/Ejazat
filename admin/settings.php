@@ -7,6 +7,9 @@ $error = '';
 
 // معالجة تحديث الإعدادات العامة للمؤسسة النشطة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_general'])) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     $settings_to_update = [
         'site_name_ar' => $_POST['site_name_ar'],
         'site_name_en' => $_POST['site_name_en'],
@@ -57,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_general'])) {
         $pdo->rollBack();
         $error = $e->getMessage();
     }
+    } // end CSRF else
 }
 
 $pageTitle = __('settings');
@@ -68,24 +72,25 @@ if ($_SESSION['role'] === 'super_admin') {
 ?>
 
 <div class="mb-4 d-flex align-items-center">
-    <div class="bg-primary text-white rounded p-2 me-3">
-        ⚙️
-    </div>
+        <div class="bg-primary text-white rounded p-2 me-3">
+            <i class="bi bi-gear"></i>
+        </div>
     <h1 class="h3 mb-0"><?php echo __('settings'); ?></h1>
 </div>
 
 <?php if ($success): ?>
     <div class="alert alert-success shadow-sm border-0 d-flex align-items-center">
-        ✅ <?php echo $success; ?>
+        <i class="bi bi-check-circle"></i> <?php echo $success; ?>
     </div>
 <?php endif; ?>
 <?php if ($error): ?>
     <div class="alert alert-danger shadow-sm border-0 d-flex align-items-center">
-        ⚠️ <?php echo $error; ?>
+        <i class="bi bi-exclamation-triangle"></i> <?php echo $error; ?>
     </div>
 <?php endif; ?>
 
 <form action="settings.php" method="POST">
+    <?php echo csrf_field(); ?>
     <div class="row g-4 justify-content-center">
         <!-- إعدادات النظام العامة -->
         <div class="col-lg-10">
@@ -109,14 +114,14 @@ if ($_SESSION['role'] === 'super_admin') {
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted"><?php echo __('site_name_ar_setting'); ?> (AR)</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-light">🅰️</span>
+                                        <span class="input-group-text bg-light"><i class="bi bi-fonts"></i></span>
                                         <input type="text" name="site_name_ar" class="form-control" value="<?php echo h(getSetting('site_name_ar')); ?>" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted"><?php echo __('site_name_en_setting'); ?> (EN)</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-light">🌐</span>
+                                        <span class="input-group-text bg-light"><i class="bi bi-globe"></i></span>
                                         <input type="text" name="site_name_en" class="form-control" value="<?php echo h(getSetting('site_name_en')); ?>" required>
                                     </div>
                                 </div>
@@ -164,7 +169,7 @@ if ($_SESSION['role'] === 'super_admin') {
                                     <div class="p-3 rounded border bg-light d-flex align-items-center justify-content-between shadow-sm">
                                         <div class="d-flex align-items-center">
                                             <div class="bg-white p-2 rounded shadow-sm me-3 text-primary">
-                                                👤➕
+                                                <i class="bi bi-person-plus"></i>
                                             </div>
                                             <label class="fw-bold mb-0" for="allowReg"><?php echo __('allow_registration'); ?></label>
                                         </div>
@@ -177,7 +182,7 @@ if ($_SESSION['role'] === 'super_admin') {
                                     <div class="p-3 rounded border bg-light d-flex align-items-center justify-content-between shadow-sm">
                                         <div class="d-flex align-items-center">
                                             <div class="bg-white p-2 rounded shadow-sm me-3 text-primary">
-                                                ✈️
+                                                <i class="bi bi-airplane"></i>
                                             </div>
                                             <label class="fw-bold mb-0" for="allowLeaves"><?php echo __('allow_leave_requests'); ?></label>
                                         </div>
@@ -199,7 +204,7 @@ if ($_SESSION['role'] === 'super_admin') {
                                     <div class="p-3 rounded border bg-light d-flex align-items-center justify-content-between shadow-sm">
                                         <div class="d-flex align-items-center">
                                             <div class="bg-white p-2 rounded shadow-sm me-3 text-danger">
-                                                🛡️
+                                                <i class="bi bi-shield-check"></i>
                                             </div>
                                             <label class="fw-bold mb-0" for="preventOverlap"><?php echo __('prevent_overlapping_leaves'); ?></label>
                                         </div>
@@ -212,7 +217,7 @@ if ($_SESSION['role'] === 'super_admin') {
                                     <div class="p-3 rounded border bg-light d-flex align-items-center justify-content-between shadow-sm">
                                         <div class="d-flex align-items-center">
                                             <div class="bg-white p-2 rounded shadow-sm me-3 text-warning">
-                                                ⏳
+                                                <i class="bi bi-clock-history"></i>
                                             </div>
                                             <label class="fw-bold mb-0" for="allowPast"><?php echo __('allow_past_leaves'); ?></label>
                                         </div>
@@ -343,7 +348,7 @@ if ($_SESSION['role'] === 'super_admin') {
                         <!-- إعدادات عطلة نهاية الأسبوع -->
                         <div class="col-md-12 mt-4">
                             <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
-                                📅 <?php echo __('weekend_settings'); ?>
+                                <i class="bi bi-calendar"></i> <?php echo __('weekend_settings'); ?>
                             </h6>
                             <div class="row g-3">
                                 <div class="col-md-6">

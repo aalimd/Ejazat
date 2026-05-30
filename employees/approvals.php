@@ -9,6 +9,9 @@ $org_id = CURRENT_ORG_ID;
 
 // معالجة قرار الاعتماد أو الرفض
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     $emp_id = $_POST['employee_id'];
     $action = $_POST['action']; // approved or rejected
     $reason = $_POST['rejection_reason'] ?? '';
@@ -62,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $error = __('access_denied');
     }
     }
+    } // end CSRF else
 }
 
 // جلب الموظفين بانتظار الاعتماد
@@ -103,7 +107,7 @@ include '../includes/header.php';
         <div class="col-12">
             <div class="card bg-light border-0 py-5">
                 <div class="card-body text-center">
-                    ✔️
+                    <i class="bi bi-check-lg"></i>
                     <h5 class="text-muted"><?php echo __('no_data'); ?></h5>
                 </div>
             </div>
@@ -148,6 +152,7 @@ include '../includes/header.php';
                         <hr>
                         
                         <form action="approvals.php" method="POST" class="mt-3">
+                            <?php echo csrf_field(); ?>
                             <input type="hidden" name="employee_id" value="<?php echo $emp['id']; ?>">
                             
                             <div class="form-check mb-3">
