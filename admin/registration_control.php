@@ -45,11 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $is_public = isset($_POST['org_is_public']) ? 1 : 0;
         $requires_code = isset($_POST['org_requires_code']) ? 1 : 0;
         
-        $stmt = $pdo->prepare("UPDATE organizations 
-                              SET is_public = ?, requires_invitation_code = ? 
-                              WHERE id = ?");
-        $stmt->execute([$is_public, $requires_code, $org_id]);
-        $success = __('org_settings_updated');
+        try {
+            $stmt = $pdo->prepare("UPDATE organizations 
+                                  SET is_public = ?, requires_invitation_code = ? 
+                                  WHERE id = ?");
+            $stmt->execute([$is_public, $requires_code, $org_id]);
+            $success = __('org_settings_updated');
+        } catch (PDOException $e) {
+            $error = __('db_error') . ': ' . $e->getMessage();
+        }
     }
     
     // Approve pending registration
@@ -93,10 +97,24 @@ $registration_enabled = $pdo->query("SELECT COUNT(*) FROM settings WHERE setting
 $email_verification_required = $pdo->query("SELECT COUNT(*) FROM settings WHERE setting_key = 'email_verification_required' AND setting_value = '0'")->fetchColumn() == 0;
 
 // Get all organizations with registration settings
-$orgs_stmt = $pdo->query("SELECT id, name_ar, name_en, is_public, requires_invitation_code, 
-                                  created_at, (SELECT COUNT(*) FROM users WHERE organization_id = organizations.id) as user_count 
-                          FROM organizations ORDER BY name_ar ASC");
-$organizations = $orgs_stmt->fetchAll();
+try {
+    $orgs_stmt = $pdo->query("SELECT id, name_ar, name_en, is_public, requires_invitation_code, 
+                                      created_at, (SELECT COUNT(*) FROM users WHERE organization_id = organizations.id) as user_count 
+                              FROM organizations ORDER BY name_ar ASC");
+    $organizations = $orgs_stmt->fetchAll();
+} catch (PDOException $e) {
+    // Fallback if is_public/requires_invitation_code columns don't exist yet
+    $orgs_stmt = $pdo->query("SELECT id, name_ar, name_en, created_at, 
+                                      (SELECT COUNT(*) FROM users WHERE organization_id = organizations.id) as user_count 
+                              FROM organizations ORDER BY name_ar ASC");
+    $organizations = $orgs_stmt->fetchAll();
+    // Set defaults for missing columns
+    foreach ($organizations as &$org) {
+        $org['is_public'] = 0;
+        $org['requires_invitation_code'] = 0;
+    }
+    unset($org);
+}
 
 // Get pending registrations from employee approval queue
 $pending_stmt = $pdo->query("SELECT e.id AS employee_id, e.full_name, e.organization_id, e.created_at,

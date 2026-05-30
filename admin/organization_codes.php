@@ -54,22 +54,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 // جلب جميع المؤسسات مع أكوادها
-$orgs_query = $pdo->prepare("
-    SELECT 
-        o.id, 
-        o.name_ar, 
-        o.name_en, 
-        o.is_public,
-        oic.code,
-        oic.code_regenerated_at,
-        oic.is_active
-    FROM organizations o
-    LEFT JOIN organization_invitation_codes oic ON o.id = oic.organization_id AND oic.is_active = 1
-    WHERE o.is_active = 1
-    ORDER BY o.name_ar ASC
-");
-$orgs_query->execute();
-$organizations = $orgs_query->fetchAll();
+try {
+    $orgs_query = $pdo->prepare("
+        SELECT 
+            o.id, 
+            o.name_ar, 
+            o.name_en, 
+            o.is_public,
+            oic.code,
+            oic.code_regenerated_at,
+            oic.is_active AS code_active
+        FROM organizations o
+        LEFT JOIN organization_invitation_codes oic ON o.id = oic.organization_id AND oic.is_active = 1
+        WHERE o.is_active = 1
+        ORDER BY o.name_ar ASC
+    ");
+    $orgs_query->execute();
+    $organizations = $orgs_query->fetchAll();
+} catch (PDOException $e) {
+    // Fallback if columns/tables don't exist yet
+    $orgs_query = $pdo->prepare("
+        SELECT 
+            o.id, 
+            o.name_ar, 
+            o.name_en
+        FROM organizations o
+        ORDER BY o.name_ar ASC
+    ");
+    $orgs_query->execute();
+    $organizations = $orgs_query->fetchAll();
+    foreach ($organizations as &$org) {
+        $org['is_public'] = 0;
+        $org['code'] = '';
+        $org['code_regenerated_at'] = null;
+        $org['code_active'] = 0;
+    }
+    unset($org);
+}
 
 $pageTitle = __('org_codes_mgmt');
 include '../includes/superadmin_header.php';
