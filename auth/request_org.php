@@ -59,18 +59,18 @@ include '../includes/header.php';
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <div class="display-4 text-primary mb-2">🏢➕</div>
-                        <h4 class="fw-bold"><?php echo __('request_new_org_title'); ?></h4>
+                        <div class="display-4 text-primary mb-2"><span class="emoji-icon">🏢➕</span></div>
+                        <h1 class="h4 fw-bold"><?php echo __('request_new_org_title'); ?></h1>
                         <p class="text-muted small"><?php echo __('request_org_desc'); ?></p>
                     </div>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger shadow-sm border-0">⚠️ <?php echo $error; ?></div>
+                        <div class="alert alert-danger shadow-sm border-0"><span class="emoji-icon">⚠️</span> <?php echo $error; ?></div>
                     <?php endif; ?>
                     
                     <?php if ($success): ?>
                         <div class="alert alert-success shadow-sm border-0 text-center py-4">
-                            <h5 class="fw-bold mb-3">✅ <?php echo $success; ?></h5>
+                            <h5 class="fw-bold mb-3"><span class="emoji-icon">✅</span> <?php echo $success; ?></h5>
                             <p class="mb-0 text-muted small"><?php echo __('follow_up_email'); ?></p>
                             <a href="login.php" class="btn btn-primary mt-4 px-5 shadow-sm"><?php echo __('login'); ?></a>
                         </div>

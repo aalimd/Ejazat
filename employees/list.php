@@ -6,6 +6,9 @@ $success = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_leave_perm'])) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     $emp_id = $_POST['emp_id'];
     $can_request = isset($_POST['can_request']) ? 1 : 0;
     
@@ -24,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_leave_perm']))
             $success = __('success_updated');
         }
     }
+    } // end CSRF else
 }
 
 
@@ -103,7 +107,7 @@ include '../includes/header.php';
     <h1 class="h3 mb-3 mb-md-0"><?php echo __('employees'); ?></h1>
     <div>
         <a href="?<?php echo http_build_query(array_merge($_GET, ['export' => 'excel'])); ?>" class="btn btn-success shadow-sm me-2">
-            📊 <?php echo __('export_excel'); ?>
+            <i class="bi bi-bar-chart-line"></i> <?php echo __('export_excel'); ?>
         </a>
         <a href="add.php" class="btn btn-primary shadow-sm">
             <?php echo __('add_new'); ?>
@@ -138,7 +142,7 @@ include '../includes/header.php';
                 </select>
             </div>
             <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100 shadow-sm">🔍 <?php echo __('filter_btn'); ?></button>
+                <button type="submit" class="btn btn-primary w-100 shadow-sm"><i class="bi bi-search"></i> <?php echo __('filter_btn'); ?></button>
             </div>
         </form>
     </div>
@@ -182,6 +186,7 @@ include '../includes/header.php';
                                 <td>
                                     <?php if ($emp['status'] == 'approved'): ?>
                                         <form action="list.php" method="POST" class="d-inline">
+                                            <?php echo csrf_field(); ?>
                                             <input type="hidden" name="emp_id" value="<?php echo $emp['id']; ?>">
                                             <input type="hidden" name="update_leave_perm" value="1">
                                             <div class="form-check form-switch fs-5">
@@ -204,10 +209,10 @@ include '../includes/header.php';
                                 <td class="pe-3">
                                     <div class="btn-group shadow-sm rounded">
                                         <a href="view.php?id=<?php echo $emp['id']; ?>" class="btn btn-sm btn-white border" title="<?php echo __('view'); ?>">
-                                            👁️
+                                            <i class="bi bi-eye"></i>
                                         </a>
                                         <a href="edit.php?id=<?php echo $emp['id']; ?>" class="btn btn-sm btn-white border" title="<?php echo __('edit'); ?>">
-                                            ✏️
+                                            <i class="bi bi-pencil"></i>
                                         </a>
                                     </div>
                                 </td>

@@ -54,7 +54,7 @@ if ($_SESSION['role'] === 'super_admin') {
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">👥 <?php echo __('system_users'); ?></h1>
+    <h1 class="h3"><span class="emoji-icon">👥</span> <?php echo __('system_users'); ?></h1>
     <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
         <?php echo __('add_user'); ?>
     </button>

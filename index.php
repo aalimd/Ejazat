@@ -7,6 +7,9 @@ $error_msg = '';
 
 // معالجة القرار السريع للإجازات من لوحة التحكم
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_dashboard'])) {
+    if (!verify_csrf()) {
+        $error_msg = __('csrf_token_invalid');
+    } else {
     $active_org = CURRENT_ORG_ID;
     
     // Require admin/manager role — prevent employee privilege escalation
@@ -92,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_dashboard'])) 
         $error_msg = 'Error: ' . $e->getMessage();
     }
     }
+    } // end CSRF else
 }
 
 $pageTitle = __('dashboard');
@@ -241,7 +245,7 @@ if (hasRole('super_admin') && $org_id === null) {
                     <h6 class="text-uppercase small opacity-75"><?php echo __('all_organizations'); ?></h6>
                     <h2 class="mb-0 fw-bold"><?php echo $stats['total_organizations']; ?></h2>
                 </div>
-                <div class="fs-1 opacity-50">🏢</div>
+                <div class="fs-1 opacity-50"><i class="bi bi-building"></i></div>
             </div>
         </div>
     </div>
@@ -252,7 +256,7 @@ if (hasRole('super_admin') && $org_id === null) {
                     <h6 class="text-uppercase small opacity-75"><?php echo __('total_employees'); ?></h6>
                     <h2 class="mb-0 fw-bold"><?php echo $stats['total_employees']; ?></h2>
                 </div>
-                <div class="fs-1 opacity-50">👥</div>
+                <div class="fs-1 opacity-50"><i class="bi bi-people"></i></div>
             </div>
         </div>
     </div>
@@ -263,7 +267,7 @@ if (hasRole('super_admin') && $org_id === null) {
                     <h6 class="text-uppercase small opacity-75"><?php echo __('leaves'); ?></h6>
                     <h2 class="mb-0 fw-bold"><?php echo $stats['total_leaves']; ?></h2>
                 </div>
-                <div class="fs-1 opacity-50">📅</div>
+                <div class="fs-1 opacity-50"><i class="bi bi-calendar"></i></div>
             </div>
         </div>
     </div>
@@ -274,7 +278,7 @@ if (hasRole('super_admin') && $org_id === null) {
                     <h6 class="text-uppercase small opacity-75"><?php echo __('system_users'); ?></h6>
                     <h2 class="mb-0 fw-bold"><?php echo $stats['total_users']; ?></h2>
                 </div>
-                <div class="fs-1 opacity-50">👤</div>
+                <div class="fs-1 opacity-50"><i class="bi bi-person"></i></div>
             </div>
         </div>
     </div>
@@ -282,7 +286,7 @@ if (hasRole('super_admin') && $org_id === null) {
 
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-4 text-center">
-        <h4 class="fw-bold text-primary mb-2">💡 <?php echo __('switch_org'); ?></h4>
+        <h4 class="fw-bold text-primary mb-2"><i class="bi bi-lightbulb"></i> <?php echo __('switch_org'); ?></h4>
         <p class="text-muted mb-0"><?php echo __('switch_org_desc'); ?></p>
     </div>
 </div>
@@ -298,7 +302,7 @@ if (hasRole('super_admin') && $org_id === null) {
                     <h6 class="text-uppercase small opacity-75"><?php echo __('total_employees'); ?></h6>
                     <h2 class="mb-0 fw-bold"><?php echo $stats['total_employees']; ?></h2>
                 </div>
-                <div class="fs-1 opacity-50">👥</div>
+                <div class="fs-1 opacity-50"><i class="bi bi-people"></i></div>
             </div>
         </div>
     </div>
@@ -309,7 +313,7 @@ if (hasRole('super_admin') && $org_id === null) {
                     <h6 class="text-uppercase small opacity-75"><?php echo __('pending_approvals'); ?></h6>
                     <h2 class="mb-0 fw-bold"><?php echo $stats['pending_approvals']; ?></h2>
                 </div>
-                <div class="fs-1 opacity-50">⏳</div>
+                <div class="fs-1 opacity-50"><i class="bi bi-clock-history"></i></div>
             </div>
         </div>
     </div>
@@ -320,7 +324,7 @@ if (hasRole('super_admin') && $org_id === null) {
                     <h6 class="text-uppercase small opacity-75"><?php echo __('pending_leaves'); ?></h6>
                     <h2 class="mb-0 fw-bold"><?php echo $stats['pending_leaves']; ?></h2>
                 </div>
-                <div class="fs-1 opacity-50">📅</div>
+                <div class="fs-1 opacity-50"><i class="bi bi-calendar"></i></div>
             </div>
         </div>
     </div>
@@ -331,19 +335,19 @@ if (hasRole('super_admin') && $org_id === null) {
                     <h6 class="text-uppercase small opacity-75"><?php echo __('approved_leaves'); ?></h6>
                     <h2 class="mb-0 fw-bold"><?php echo $stats['approved_leaves']; ?></h2>
                 </div>
-                <div class="fs-1 opacity-50">✅</div>
+                <div class="fs-1 opacity-50"><i class="bi bi-check-circle"></i></div>
             </div>
         </div>
 </div>
 
 <?php if ($success_msg): ?>
     <div class="alert alert-success shadow-sm border-0 mb-4">
-        ✅ <?php echo $success_msg; ?>
+        <i class="bi bi-check-circle"></i> <?php echo $success_msg; ?>
     </div>
 <?php endif; ?>
 <?php if ($error_msg): ?>
     <div class="alert alert-danger shadow-sm border-0 mb-4">
-        ⚠️ <?php echo $error_msg; ?>
+        <i class="bi bi-exclamation-triangle"></i> <?php echo $error_msg; ?>
     </div>
 <?php endif; ?>
 
@@ -387,16 +391,17 @@ if (hasRole('super_admin') && $org_id === null) {
                             <td class="small" style="max-width: 150px;"><?php echo h($req['reason'] ?: '-'); ?></td>
                             <td>
                                 <form action="index.php" method="POST" class="d-flex align-items-center">
+                                    <?php echo csrf_field(); ?>
                                     <input type="hidden" name="request_id" value="<?php echo $req['id']; ?>">
                                     <input type="text" name="manager_note" class="form-control form-control-sm" placeholder="<?php echo __('write_note'); ?>">
                             </td>
                             <td class="pe-4 text-end">
                                     <div class="btn-group btn-group-sm">
                                         <button type="submit" name="action" value="approve" class="btn btn-success">
-                                            ✅ <?php echo __('approve'); ?>
+                                            <i class="bi bi-check-circle"></i> <?php echo __('approve'); ?>
                                         </button>
                                         <button type="submit" name="action" value="reject" class="btn btn-danger">
-                                            ❌ <?php echo __('reject'); ?>
+                                            <i class="bi bi-x-circle"></i> <?php echo __('reject'); ?>
                                         </button>
                                     </div>
                                     <input type="hidden" name="action_dashboard" value="1">
@@ -416,7 +421,7 @@ if (hasRole('super_admin') && $org_id === null) {
     <div class="col-lg-8">
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-white fw-bold py-3">
-                📈 <?php echo __('monthly_requests'); ?>
+                <i class="bi bi-bar-chart-line"></i> <?php echo __('monthly_requests'); ?>
             </div>
             <div class="card-body">
                 <canvas id="monthlyChart" style="max-height: 300px;"></canvas>
@@ -428,7 +433,7 @@ if (hasRole('super_admin') && $org_id === null) {
     <div class="col-lg-4">
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-white fw-bold py-3">
-                🥧 <?php echo __('top_leave_types'); ?>
+                <i class="bi bi-pie-chart"></i> <?php echo __('top_leave_types'); ?>
             </div>
             <div class="card-body">
                 <ul class="list-group list-group-flush">
@@ -447,7 +452,7 @@ if (hasRole('super_admin') && $org_id === null) {
     <div class="col-lg-12">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white fw-bold py-3">
-                🏅 <?php echo __('top_employees_leaves'); ?>
+                <i class="bi bi-trophy"></i> <?php echo __('top_employees_leaves'); ?>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -496,12 +501,12 @@ if (hasRole('super_admin') && $org_id === null) {
             datasets: [{
                 label: '<?php echo __('requests'); ?>',
                 data: <?php echo json_encode($months_data); ?>,
-                borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#0d6efd',
+                backgroundColor: (getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#0d6efd').replace(/^#/, 'rgba(') + ', 0.1)',
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
-                pointBackgroundColor: '#0d6efd'
+                pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#0d6efd'
             }]
         },
         options: {
@@ -522,7 +527,7 @@ if (hasRole('super_admin') && $org_id === null) {
 <?php if (isset($emp_balances)): ?>
 <div class="card shadow-sm border-0 mb-4 bg-light">
     <div class="card-body p-4">
-        <h4 class="fw-bold mb-3 text-primary">👋 <?php echo __('welcome'); ?>: <?php echo h($_SESSION['full_name'] ?? $_SESSION['username']); ?></h4>
+        <h4 class="fw-bold mb-3 text-primary"><i class="bi bi-hand-wave"></i> <?php echo __('welcome'); ?>: <?php echo h($_SESSION['full_name'] ?? $_SESSION['username']); ?></h4>
         <p class="mb-3 fs-6 text-muted">
             <?php echo __('you_have_total'); ?> 
             <span class="badge bg-primary fs-6 mx-1 shadow-sm"><?php echo $total_balance; ?></span> 
@@ -544,7 +549,7 @@ if (hasRole('super_admin') && $org_id === null) {
     <div class="col-md-4">
         <div class="card bg-info text-white shadow-sm border-0">
             <div class="card-body text-center py-4">
-                <div class="fs-1 opacity-50 mb-3">📅</div>
+                <div class="fs-1 opacity-50 mb-3"><i class="bi bi-calendar"></i></div>
                 <h5><?php echo __('my_pending_leaves'); ?></h5>
                 <h2 class="fw-bold"><?php echo $stats['my_pending_leaves']; ?></h2>
             </div>
@@ -553,7 +558,7 @@ if (hasRole('super_admin') && $org_id === null) {
     <div class="col-md-4">
         <div class="card bg-success text-white shadow-sm border-0">
             <div class="card-body text-center py-4">
-                <div class="fs-1 opacity-50 mb-3">✅</div>
+                <div class="fs-1 opacity-50 mb-3"><i class="bi bi-check-circle"></i></div>
                 <h5><?php echo __('my_approved_leaves'); ?></h5>
                 <h2 class="fw-bold"><?php echo $stats['my_approved_leaves']; ?></h2>
             </div>

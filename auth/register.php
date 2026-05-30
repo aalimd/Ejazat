@@ -194,17 +194,17 @@ include '../includes/header.php';
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        👤➕
-                        <h4 class="fw-bold"><?php echo __('register'); ?></h4>
+                        <span class="emoji-icon">👤➕</span>
+                        <h1 class="h4 fw-bold"><?php echo __('register'); ?></h1>
                         <p class="text-muted small"><?php echo __('site_name'); ?></p>
                     </div>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger shadow-sm border-0">⚠️ <?php echo $error; ?></div>
+                        <div class="alert alert-danger shadow-sm border-0"><span class="emoji-icon">⚠️</span> <?php echo $error; ?></div>
                     <?php endif; ?>
                     <?php if ($success): ?>
                         <div class="alert alert-success shadow-sm border-0">
-                            <h5 class="fw-bold">✅ <?php echo $success; ?></h5>
+                            <h5 class="fw-bold"><span class="emoji-icon">✅</span> <?php echo $success; ?></h5>
                             <hr>
                             <div class="row text-start small">
                                 <div class="col-6 mb-2"><strong><?php echo __('operation_code'); ?>:</strong></div>
@@ -254,7 +254,7 @@ include '../includes/header.php';
                         <?php if (!$selected_org_id || !$is_reg_enabled): ?>
                         <div class="col-md-12 mb-3">
                             <div class="alert alert-warning text-center py-4 shadow-sm border-0">
-                                ⚠️ <h5 class="fw-bold mb-2"><?php echo __('no_org_selected'); ?></h5>
+                                <span class="emoji-icon">⚠️</span> <h5 class="fw-bold mb-2"><?php echo __('no_org_selected'); ?></h5>
                                 <p class="mb-0 text-muted small"><?php echo __('select_org_instruction'); ?></p>
                             </div>
                         </div>

@@ -90,14 +90,14 @@ include '../includes/header.php';
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <div class="fs-1 mb-3">🔑</div>
-                        <h4 class="fw-bold"><?php echo __('reset_password'); ?></h4>
+                        <div class="fs-1 mb-3"><span class="emoji-icon">🔑</span></div>
+                        <h1 class="h4 fw-bold"><?php echo __('reset_password'); ?></h1>
                         <p class="text-muted small"><?php echo __('site_name'); ?></p>
                     </div>
 
                     <?php if ($error): ?>
                         <div class="alert alert-danger py-2 small">
-                            ⚠️ <?php echo $error; ?>
+                            <span class="emoji-icon">⚠️</span> <?php echo $error; ?>
                         </div>
                     <?php endif; ?>
 
@@ -107,7 +107,7 @@ include '../includes/header.php';
                         </div>
                         <div class="text-center mt-4">
                             <a href="login.php" class="btn btn-primary px-4 shadow-sm">
-                                🔐 <?php echo __('login'); ?>
+                                <span class="emoji-icon">🔐</span> <?php echo __('login'); ?>
                             </a>
                         </div>
                     <?php elseif ($show_form): ?>
@@ -118,7 +118,7 @@ include '../includes/header.php';
                             <div class="mb-3">
                                 <label for="new_password" class="form-label small fw-bold"><?php echo __('new_password'); ?></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light">🔒</span>
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">🔒</span></span>
                                     <input type="password" name="new_password" id="new_password" class="form-control bg-light" required>
                                 </div>
                                 <small class="text-muted d-block mt-1"><?php echo __('password_reset_instruction'); ?></small>
@@ -127,13 +127,13 @@ include '../includes/header.php';
                             <div class="mb-4">
                                 <label for="confirm_password" class="form-label small fw-bold"><?php echo __('confirm_password'); ?></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light">🔒</span>
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">🔒</span></span>
                                     <input type="password" name="confirm_password" id="confirm_password" class="form-control bg-light" required>
                                 </div>
                             </div>
 
                             <button type="submit" name="reset_password" class="btn btn-primary w-100 py-2 fw-bold">
-                                ✅ <?php echo __('reset_password'); ?>
+                                <span class="emoji-icon">✅</span> <?php echo __('reset_password'); ?>
                             </button>
                         </form>
                     <?php else: ?>
@@ -142,7 +142,7 @@ include '../includes/header.php';
                         </div>
                         <div class="text-center">
                             <a href="forgot_password.php" class="btn btn-primary px-4 shadow-sm">
-                                📧 <?php echo __('forgot_password'); ?>
+                                <span class="emoji-icon">📧</span> <?php echo __('forgot_password'); ?>
                             </a>
                         </div>
                     <?php endif; ?>

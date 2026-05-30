@@ -53,25 +53,25 @@ include '../includes/header.php';
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <div class="fs-1 mb-3">📧</div>
-                        <h4 class="fw-bold"><?php echo __('forgot_password'); ?></h4>
+                        <div class="fs-1 mb-3"><span class="emoji-icon">📧</span></div>
+                        <h1 class="h4 fw-bold"><?php echo __('forgot_password'); ?></h1>
                         <p class="text-muted small"><?php echo __('site_name'); ?></p>
                     </div>
 
                     <?php if ($error): ?>
                         <div class="alert alert-danger py-2 small">
-                            ⚠️ <?php echo $error; ?>
+                            <span class="emoji-icon">⚠️</span> <?php echo $error; ?>
                         </div>
                     <?php endif; ?>
 
                     <?php if ($success): ?>
                         <div class="alert alert-success py-3 small">
-                            ✅ <strong><?php echo $success; ?></strong>
+                            <span class="emoji-icon">✅</span> <strong><?php echo $success; ?></strong>
                         </div>
                         <div class="text-center mt-4">
                             <p class="text-muted small mb-3"><?php echo __('check_email_instruction'); ?></p>
                             <a href="login.php" class="btn btn-primary px-4 shadow-sm">
-                                🔐 <?php echo __('login'); ?>
+                                <span class="emoji-icon">🔐</span> <?php echo __('login'); ?>
                             </a>
                         </div>
                     <?php else: ?>
@@ -80,7 +80,7 @@ include '../includes/header.php';
                             <div class="mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('email'); ?></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light">📧</span>
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">📧</span></span>
                                     <input type="email" name="email" class="form-control bg-light" required autofocus>
                                 </div>
                                 <small class="text-muted d-block mt-1">

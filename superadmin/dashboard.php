@@ -66,7 +66,7 @@ try {
 <!-- Welcome -->
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-        <h1 class="h3 fw-bold mb-1" style="color: var(--text-main);">🔐 <?php echo __('super_admin_title'); ?></h1>
+        <h1 class="h3 fw-bold mb-1" style="color: var(--text-main);"><span class="emoji-icon">🔐</span> <?php echo __('super_admin_title'); ?></h1>
         <p class="text-muted small mb-0"><?php echo __('complete_system_admin_desc'); ?></p>
     </div>
     <span class="sa-badge-super fs-6 px-3 py-2"><?php echo date('Y-m-d H:i'); ?></span>
@@ -76,7 +76,7 @@ try {
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
         <div class="sa-stat-card d-flex align-items-center gap-3">
-            <div class="sa-stat-icon" style="background: rgba(37,99,235,0.12); color: #3b82f6;">🏢</div>
+            <div class="sa-stat-icon" style="background: rgba(37,99,235,0.12); color: #3b82f6;"><span class="emoji-icon">🏢</span></div>
             <div>
                 <div class="sa-stat-value"><?php echo $active_orgs; ?><small class="fs-6 text-muted">/<?php echo $org_count; ?></small></div>
                 <div class="sa-stat-label"><?php echo __('active_organizations'); ?></div>
@@ -85,7 +85,7 @@ try {
     </div>
     <div class="col-6 col-md-3">
         <div class="sa-stat-card d-flex align-items-center gap-3">
-            <div class="sa-stat-icon" style="background: rgba(16,185,129,0.12); color: #10b981;">👥</div>
+            <div class="sa-stat-icon" style="background: rgba(16,185,129,0.12); color: #10b981;"><span class="emoji-icon">👥</span></div>
             <div>
                 <div class="sa-stat-value"><?php echo $total_users; ?></div>
                 <div class="sa-stat-label"><?php echo __('system_users'); ?></div>
@@ -94,7 +94,7 @@ try {
     </div>
     <div class="col-6 col-md-3">
         <div class="sa-stat-card d-flex align-items-center gap-3">
-            <div class="sa-stat-icon" style="background: rgba(245,158,11,0.12); color: #f59e0b;">⏳</div>
+            <div class="sa-stat-icon" style="background: rgba(245,158,11,0.12); color: #f59e0b;"><span class="emoji-icon">⏳</span></div>
             <div>
                 <div class="sa-stat-value"><?php echo $pending_regs + $pending_orgs; ?></div>
                 <div class="sa-stat-label"><?php echo __('pending_requests'); ?></div>
@@ -103,7 +103,7 @@ try {
     </div>
     <div class="col-6 col-md-3">
         <div class="sa-stat-card d-flex align-items-center gap-3">
-            <div class="sa-stat-icon" style="background: rgba(139,92,246,0.12); color: #8b5cf6;">🩺</div>
+            <div class="sa-stat-icon" style="background: rgba(139,92,246,0.12); color: #8b5cf6;"><span class="emoji-icon">🩺</span></div>
             <div>
                 <div class="sa-stat-value d-flex align-items-center gap-2">
                     <span class="sa-health-dot" style="background: <?php echo $health_crit > 0 ? '#ef4444' : ($health_warn > 0 ? '#f59e0b' : '#22c55e'); ?>; box-shadow: 0 0 6px <?php echo $health_crit > 0 ? 'rgba(239,68,68,0.4)' : ($health_warn > 0 ? 'rgba(245,158,11,0.4)' : 'rgba(34,197,94,0.4)'); ?>"></span>
@@ -120,32 +120,32 @@ try {
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm" style="background: var(--sa-topbar-bg); border: 1px solid var(--sa-topbar-border) !important;">
             <div class="card-header bg-transparent border-bottom py-3" style="border-color: var(--sa-topbar-border) !important;">
-                <h6 class="fw-bold mb-0" style="color: var(--text-main);">⚡ <?php echo __('quick_actions'); ?></h6>
+                <h6 class="fw-bold mb-0" style="color: var(--text-main);"><span class="emoji-icon">⚡</span> <?php echo __('quick_actions'); ?></h6>
             </div>
             <div class="card-body p-3">
                 <div class="d-flex flex-column gap-2">
                     <a href="<?php echo BASE_URL; ?>admin/organizations.php" class="sa-quick-link">
-                        <div class="sa-quick-link-icon" style="background: rgba(37,99,235,0.12);">🏢</div>
+                        <div class="sa-quick-link-icon" style="background: rgba(37,99,235,0.12);"><span class="emoji-icon">🏢</span></div>
                         <div><div class="fw-semibold small"><?php echo __('manage_orgs_btn'); ?></div><div class="text-muted" style="font-size:0.75rem;"><?php echo __('create_edit_delete_orgs'); ?></div></div>
                     </a>
                     <a href="<?php echo BASE_URL; ?>admin/system_settings.php" class="sa-quick-link">
-                        <div class="sa-quick-link-icon" style="background: rgba(16,185,129,0.12);">⚙️</div>
+                        <div class="sa-quick-link-icon" style="background: rgba(16,185,129,0.12);"><span class="emoji-icon">⚙️</span></div>
                         <div><div class="fw-semibold small"><?php echo __('system_settings_title'); ?></div><div class="text-muted" style="font-size:0.75rem;"><?php echo __('system_settings_desc'); ?></div></div>
                     </a>
                     <a href="<?php echo BASE_URL; ?>admin/site_health.php" class="sa-quick-link">
-                        <div class="sa-quick-link-icon" style="background: rgba(245,158,11,0.12);">🩺</div>
+                        <div class="sa-quick-link-icon" style="background: rgba(245,158,11,0.12);"><span class="emoji-icon">🩺</span></div>
                         <div><div class="fw-semibold small"><?php echo __('site_health_title'); ?></div><div class="text-muted" style="font-size:0.75rem;"><?php echo __('site_health_desc'); ?></div></div>
                     </a>
                     <a href="<?php echo BASE_URL; ?>admin/registration_control.php" class="sa-quick-link">
-                        <div class="sa-quick-link-icon" style="background: rgba(139,92,246,0.12);">📋</div>
+                        <div class="sa-quick-link-icon" style="background: rgba(139,92,246,0.12);"><span class="emoji-icon">📋</span></div>
                         <div><div class="fw-semibold small"><?php echo __('registration_settings_btn'); ?></div><div class="text-muted" style="font-size:0.75rem;"><?php echo __('reg_control_desc'); ?></div></div>
                     </a>
                     <a href="<?php echo BASE_URL; ?>admin/users.php" class="sa-quick-link">
-                        <div class="sa-quick-link-icon" style="background: rgba(239,68,68,0.12);">👥</div>
+                        <div class="sa-quick-link-icon" style="background: rgba(239,68,68,0.12);"><span class="emoji-icon">👥</span></div>
                         <div><div class="fw-semibold small"><?php echo __('all_users_btn'); ?></div><div class="text-muted" style="font-size:0.75rem;"><?php echo __('users_desc'); ?></div></div>
                     </a>
                     <a href="<?php echo BASE_URL; ?>superadmin/database_migration.php" class="sa-quick-link">
-                        <div class="sa-quick-link-icon" style="background: rgba(139,92,246,0.12);">🗄️</div>
+                        <div class="sa-quick-link-icon" style="background: rgba(139,92,246,0.12);"><span class="emoji-icon">🗄️</span></div>
                         <div><div class="fw-semibold small"><?php echo __('db_migration_center'); ?></div><div class="text-muted" style="font-size:0.75rem;"><?php echo __('db_migration_desc'); ?></div></div>
                     </a>
                 </div>
@@ -157,7 +157,7 @@ try {
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm" style="background: var(--sa-topbar-bg); border: 1px solid var(--sa-topbar-border) !important;">
             <div class="card-header bg-transparent border-bottom py-3" style="border-color: var(--sa-topbar-border) !important;">
-                <h6 class="fw-bold mb-0" style="color: var(--text-main);">🩺 <?php echo __('platform_health'); ?></h6>
+                <h6 class="fw-bold mb-0" style="color: var(--text-main);"><span class="emoji-icon">🩺</span> <?php echo __('platform_health'); ?></h6>
             </div>
             <div class="card-body p-3">
                 <div class="d-flex flex-column gap-2">
@@ -197,7 +197,7 @@ try {
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm" style="background: var(--sa-topbar-bg); border: 1px solid var(--sa-topbar-border) !important;">
             <div class="card-header bg-transparent border-bottom py-3" style="border-color: var(--sa-topbar-border) !important;">
-                <h6 class="fw-bold mb-0" style="color: var(--text-main);">🏢 <?php echo __('top_organizations'); ?></h6>
+                <h6 class="fw-bold mb-0" style="color: var(--text-main);"><span class="emoji-icon">🏢</span> <?php echo __('top_organizations'); ?></h6>
             </div>
             <div class="card-body p-3">
                 <?php if (empty($top_orgs)): ?>
@@ -221,7 +221,7 @@ try {
 <!-- Recent Activity -->
 <div class="card border-0 shadow-sm mt-4" style="background: var(--sa-topbar-bg); border: 1px solid var(--sa-topbar-border) !important;">
     <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center" style="border-color: var(--sa-topbar-border) !important;">
-        <h6 class="fw-bold mb-0" style="color: var(--text-main);">📜 <?php echo __('recent_activity'); ?></h6>
+        <h6 class="fw-bold mb-0" style="color: var(--text-main);"><span class="emoji-icon">📜</span> <?php echo __('recent_activity'); ?></h6>
         <a href="<?php echo BASE_URL; ?>admin/activity_log.php" class="small" style="color: var(--sa-sidebar-active);"><?php echo __('view_all'); ?></a>
     </div>
     <div class="card-body p-3">

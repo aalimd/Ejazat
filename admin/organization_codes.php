@@ -12,6 +12,9 @@ $message = '';
 
 // معالجة تحديث حالة العام/الخاص
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     $action = $_POST['action'];
     $org_id = intval($_POST['org_id'] ?? 0);
     
@@ -51,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $error = $result['message'];
         }
     }
+    } // end CSRF else
 }
 
 // جلب جميع المؤسسات مع أكوادها
@@ -98,7 +102,7 @@ include '../includes/superadmin_header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-0">🔐 <?php echo __('org_codes_mgmt'); ?></h1>
+        <h1 class="h3 mb-0"><i class="bi bi-shield-lock"></i> <?php echo __('org_codes_mgmt'); ?></h1>
         <p class="text-muted small mb-0"><?php echo __('org_codes_desc'); ?></p>
     </div>
 </div>
@@ -132,6 +136,9 @@ include '../includes/superadmin_header.php';
                         </tr>
                     </thead>
                     <tbody>
+                        <?php if (empty($organizations)): ?>
+                        <tr><td colspan="5" class="text-center py-4 text-muted small"><?php echo __('no_data'); ?></td></tr>
+                        <?php else: ?>
                         <?php foreach ($organizations as $org): ?>
                         <tr>
                             <td class="text-center">
@@ -164,6 +171,7 @@ include '../includes/superadmin_header.php';
                             <td class="text-center">
                                 <div class="btn-group" role="group">
                                     <form method="POST" style="display:inline;">
+                                        <?php echo csrf_field(); ?>
                                         <input type="hidden" name="action" value="toggle_visibility">
                                         <input type="hidden" name="org_id" value="<?php echo $org['id']; ?>">
                                         <?php if ($org['is_public']): ?>
@@ -177,6 +185,7 @@ include '../includes/superadmin_header.php';
                                         <?php endif; ?>
                                     </form>
                                     <form method="POST" style="display:inline;">
+                                        <?php echo csrf_field(); ?>
                                         <input type="hidden" name="action" value="regenerate_code">
                                         <input type="hidden" name="org_id" value="<?php echo $org['id']; ?>">
                                         <button type="submit" class="btn btn-sm btn-info" title="<?php echo __('new_code'); ?>" onclick="return confirm('<?php echo __('confirm_new_code'); ?>')">
@@ -187,6 +196,7 @@ include '../includes/superadmin_header.php';
                             </td>
                         </tr>
                         <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -233,15 +243,15 @@ include '../includes/superadmin_header.php';
             <h5 class="card-title fw-bold"><?php echo __('usage_steps'); ?></h5>
             <div class="row text-muted small">
                 <div class="col-md-4">
-                    <h6 class="fw-bold text-primary"><?php echo __('step1_title'); ?></h6>
+                    <h6 class="fw-bold text-primary">1 <?php echo __('step1_title'); ?></h6>
                     <p><?php echo __('step1_desc'); ?></p>
                 </div>
                 <div class="col-md-4">
-                    <h6 class="fw-bold text-success"><?php echo __('step2_title'); ?></h6>
+                    <h6 class="fw-bold text-success">2 <?php echo __('step2_title'); ?></h6>
                     <p><?php echo __('step2_desc'); ?></p>
                 </div>
                 <div class="col-md-4">
-                    <h6 class="fw-bold text-danger"><?php echo __('step3_title'); ?></h6>
+                    <h6 class="fw-bold text-danger">3 <?php echo __('step3_title'); ?></h6>
                     <p><?php echo __('step3_desc'); ?></p>
                 </div>
             </div>

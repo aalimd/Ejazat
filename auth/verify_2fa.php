@@ -103,8 +103,8 @@ include '../includes/header.php';
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <div class="fs-1 mb-3">🛡️</div>
-                        <h4 class="fw-bold"><?php echo __('2fa_title'); ?></h4>
+                        <div class="fs-1 mb-3"><span class="emoji-icon">🛡️</span></div>
+                        <h1 class="h4 fw-bold"><?php echo __('2fa_title'); ?></h1>
                         <p class="text-muted small"><?php echo __('2fa_active_desc'); ?></p>
                         <?php if ($email_code_enabled): ?>
                             <p class="text-muted x-small mt-2"><?php echo __('code_sent_to_email'); ?></p>
@@ -125,7 +125,7 @@ include '../includes/header.php';
                     </form>
 
                     <div class="text-center mt-4 border-top pt-3">
-                        <a href="logout.php" class="small text-danger text-decoration-none fw-bold">↩️ <?php echo __('cancel'); ?></a>
+                        <a href="logout.php" class="small text-danger text-decoration-none fw-bold"><span class="emoji-icon">↩️</span> <?php echo __('cancel'); ?></a>
                     </div>
                 </div>
             </div>

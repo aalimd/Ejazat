@@ -100,7 +100,7 @@ if ($_SESSION['role'] === 'super_admin') {
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-0">⚙️ <?php echo __('system_settings_title'); ?></h1>
+        <h1 class="h3 mb-0"><i class="bi bi-gear"></i> <?php echo __('system_settings_title'); ?></h1>
         <p class="text-muted small mb-0"><?php echo __('system_settings_desc'); ?></p>
     </div>
 </div>
@@ -123,7 +123,7 @@ if ($_SESSION['role'] === 'super_admin') {
     <!-- General Settings -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">🌐 <?php echo __('general_settings'); ?></h5>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-globe"></i> <?php echo __('general_settings'); ?></h5>
         </div>
         <div class="card-body">
             <div class="row">
@@ -155,7 +155,7 @@ if ($_SESSION['role'] === 'super_admin') {
     <!-- Security Settings -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">🔒 <?php echo __('security_settings'); ?></h5>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-lock"></i> <?php echo __('security_settings'); ?></h5>
         </div>
         <div class="card-body">
             <div class="row">
@@ -184,7 +184,7 @@ if ($_SESSION['role'] === 'super_admin') {
     <!-- Localization -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">🌍 <?php echo __('localization'); ?></h5>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-globe2"></i> <?php echo __('localization'); ?></h5>
         </div>
         <div class="card-body">
             <div class="row">
@@ -220,7 +220,7 @@ if ($_SESSION['role'] === 'super_admin') {
     <!-- Email Delivery (Global — Super Admin only) -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">📧 <?php echo __('email_settings'); ?></h5>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-envelope"></i> <?php echo __('email_settings'); ?></h5>
         </div>
         <div class="card-body">
             <div class="row">
@@ -228,7 +228,7 @@ if ($_SESSION['role'] === 'super_admin') {
                     <label class="form-label fw-bold small"><?php echo __('sndr_api_key'); ?></label>
                     <div class="input-group">
                         <input type="password" name="sndr_api_key" class="form-control" value="<?php echo h(ss('sndr_api_key')); ?>" autocomplete="off" id="sndrApiKey">
-                        <button class="btn btn-outline-secondary" type="button" onclick="const i=document.getElementById('sndrApiKey');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁️':'🙈'">👁️</button>
+                        <button class="btn btn-outline-secondary" type="button" onclick="const i=document.getElementById('sndrApiKey');i.type=i.type==='password'?'text':'password';this.innerHTML=i.type==='password'?'<i class=\'bi bi-eye\'></i>':'<i class=\'bi bi-eye-slash\'></i>'"><i class="bi bi-eye"></i></button>
                     </div>
                     <div class="text-muted small"><?php echo __('sndr_api_desc'); ?></div>
                 </div>
@@ -248,7 +248,7 @@ if ($_SESSION['role'] === 'super_admin') {
                     <label class="form-label fw-bold small"><?php echo __('test_email_label'); ?></label>
                     <div class="input-group">
                         <input type="email" name="test_email" class="form-control" placeholder="<?php echo __('test_email_placeholder'); ?>" value="<?php echo h(ss('contact_email')); ?>">
-                        <button type="submit" name="send_test_email" class="btn btn-outline-primary">📤 <?php echo __('send_test'); ?></button>
+                        <button type="submit" name="send_test_email" class="btn btn-outline-primary"><i class="bi bi-send"></i> <?php echo __('send_test'); ?></button>
                     </div>
                     <div class="text-muted small mt-1"><?php echo __('test_email_desc'); ?></div>
                 </div>
@@ -258,7 +258,7 @@ if ($_SESSION['role'] === 'super_admin') {
 
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-5">
         <button type="submit" name="update_settings" class="btn btn-primary px-5 py-2 fw-bold shadow-sm">
-            💾 <?php echo __('save_settings'); ?>
+            <i class="bi bi-save"></i> <?php echo __('save_settings'); ?>
         </button>
     </div>
 </form>

@@ -22,7 +22,8 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <?php endif; ?>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=2">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -288,12 +289,12 @@
             const btn = document.getElementById('saThemeToggle');
             if (btn) {
                 const t = localStorage.getItem('theme') || 'light';
-                btn.textContent = t === 'dark' ? '☀️' : '🌙';
+                btn.innerHTML = t === 'dark' ? '<span class="emoji-icon">☀️</span>' : '<span class="emoji-icon">🌙</span>';
                 btn.addEventListener('click', () => {
                     let theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
                     document.documentElement.setAttribute('data-theme', theme);
                     localStorage.setItem('theme', theme);
-                    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+                    btn.innerHTML = theme === 'dark' ? '<span class="emoji-icon">☀️</span>' : '<span class="emoji-icon">🌙</span>';
                 });
             }
             const sidebarToggle = document.getElementById('saSidebarToggle');
@@ -321,52 +322,52 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
 $super_nav = [
     'dashboard' => [
         'label' => __('dashboard'),
-        'icon' => '📊',
+        'icon' => '<span class="emoji-icon">📊</span>',
         'url' => BASE_URL . 'superadmin/dashboard.php',
         'active' => $current_page === 'dashboard.php',
     ],
     'section_platform' => ['section' => __('platform_management')],
     'organizations' => [
         'label' => __('organizations_mgmt'),
-        'icon' => '🏢',
+        'icon' => '<span class="emoji-icon">🏢</span>',
         'url' => BASE_URL . 'admin/organizations.php',
         'active' => $current_page === 'organizations.php',
     ],
     'users' => [
         'label' => __('system_users'),
-        'icon' => '👥',
+        'icon' => '<span class="emoji-icon">👥</span>',
         'url' => BASE_URL . 'admin/users.php',
         'active' => $current_page === 'users.php',
     ],
     'registration' => [
         'label' => __('registration_user_onboarding'),
-        'icon' => '📋',
+        'icon' => '<span class="emoji-icon">📋</span>',
         'url' => BASE_URL . 'admin/registration_control.php',
         'active' => $current_page === 'registration_control.php',
     ],
     'section_system' => ['section' => __('system_control')],
     'settings' => [
         'label' => __('system_settings_title'),
-        'icon' => '⚙️',
+        'icon' => '<span class="emoji-icon">⚙️</span>',
         'url' => BASE_URL . 'admin/system_settings.php',
         'active' => $current_page === 'system_settings.php',
     ],
     'section_ops' => ['section' => __('operations')],
     'health' => [
         'label' => __('site_health_title'),
-        'icon' => '🩺',
+        'icon' => '<span class="emoji-icon">🩺</span>',
         'url' => BASE_URL . 'admin/site_health.php',
         'active' => $current_page === 'site_health.php',
     ],
     'activity' => [
         'label' => __('activity_log'),
-        'icon' => '📜',
+        'icon' => '<span class="emoji-icon">📜</span>',
         'url' => BASE_URL . 'admin/activity_log.php',
         'active' => $current_page === 'activity_log.php',
     ],
     'db_migration' => [
         'label' => __('db_migration_center'),
-        'icon' => '🗄️',
+        'icon' => '<span class="emoji-icon">🗄️</span>',
         'url' => BASE_URL . 'superadmin/database_migration.php',
         'active' => $current_page === 'database_migration.php',
     ],
@@ -379,7 +380,7 @@ $super_nav = [
 <!-- Sidebar -->
 <nav id="saSidebar" class="sa-sidebar">
     <div class="sa-sidebar-brand">
-        <div class="sa-sidebar-brand-icon">🔐</div>
+        <div class="sa-sidebar-brand-icon"><span class="emoji-icon">🔐</span></div>
         <div>
             <div class="sa-sidebar-brand-text"><?php echo __('site_name'); ?></div>
             <div class="sa-sidebar-brand-sub"><?php echo __('super_admin_title'); ?></div>
@@ -400,11 +401,11 @@ $super_nav = [
     <div class="sa-sidebar-divider"></div>
     <div class="sa-sidebar-footer">
         <a class="nav-link" href="<?php echo BASE_URL; ?>auth/security.php">
-            <span class="sa-icon">🔑</span>
+            <span class="sa-icon"><span class="emoji-icon">🔑</span></span>
             <?php echo __('security_settings'); ?>
         </a>
         <a class="nav-link text-danger" href="<?php echo BASE_URL; ?>auth/logout.php">
-            <span class="sa-icon">🚪</span>
+            <span class="sa-icon"><span class="emoji-icon">🚪</span></span>
             <?php echo __('logout'); ?>
         </a>
     </div>
@@ -413,13 +414,13 @@ $super_nav = [
 <!-- Top Bar -->
 <header class="sa-topbar">
     <div class="sa-topbar-left">
-        <button id="saSidebarToggle" class="btn btn-sm btn-outline-secondary border-0 fs-5 d-md-none">☰</button>
+        <button id="saSidebarToggle" class="btn btn-sm btn-outline-secondary border-0 fs-5 d-md-none"><span class="emoji-icon">☰</span></button>
         <div class="d-none d-md-flex align-items-center gap-2">
             <span class="sa-badge-super"><?php echo __('super_admin'); ?></span>
         </div>
         <?php if (isset($show_org_switcher) && $show_org_switcher): ?>
         <div class="sa-org-switcher ms-3">
-            <span class="small text-muted">🏢</span>
+            <span class="small text-muted"><span class="emoji-icon">🏢</span></span>
             <select class="form-select-sm" onchange="if(this.value) window.location='<?php echo BASE_URL; ?>superadmin/dashboard.php?switch_org='+this.value; else window.location='<?php echo BASE_URL; ?>superadmin/dashboard.php?switch_org=0';">
                 <option value=""><?php echo __('all_organizations'); ?></option>
                 <?php
@@ -436,7 +437,7 @@ $super_nav = [
         <?php endif; ?>
     </div>
     <div class="sa-topbar-right">
-        <button id="saThemeToggle" class="btn btn-sm btn-outline-secondary border-0 fs-5">🌙</button>
+        <button id="saThemeToggle" class="btn btn-sm btn-outline-secondary border-0 fs-5"><span class="emoji-icon">🌙</span></button>
         <a class="btn btn-sm btn-outline-secondary border-0" href="?lang=<?php echo $lang == 'ar' ? 'en' : 'ar'; ?>">
             <?php echo __('language'); ?>
         </a>

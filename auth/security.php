@@ -83,19 +83,19 @@ include '../includes/header.php';
 
 <div class="mb-4 d-flex align-items-center">
     <div class="bg-primary text-white rounded p-2 me-3 fs-4">
-        🔒
+        <span class="emoji-icon">🔒</span>
     </div>
     <h1 class="h3 mb-0"><?php echo __('security_settings'); ?></h1>
 </div>
 
 <?php if ($success): ?>
     <div class="alert alert-success shadow-sm border-0 d-flex align-items-center">
-        ✅ <?php echo $success; ?>
+        <span class="emoji-icon">✅</span> <?php echo $success; ?>
     </div>
 <?php endif; ?>
 <?php if ($error): ?>
     <div class="alert alert-danger shadow-sm border-0 d-flex align-items-center">
-        ⚠️ <?php echo $error; ?>
+        <span class="emoji-icon">⚠️</span> <?php echo $error; ?>
     </div>
 <?php endif; ?>
 
@@ -104,14 +104,14 @@ include '../includes/header.php';
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-bottom py-3">
                 <div class="fw-bold text-dark fs-5">
-                    🛡️ <?php echo __('2fa_title'); ?>
+                    <span class="emoji-icon">🛡️</span> <?php echo __('2fa_title'); ?>
                 </div>
             </div>
             <div class="card-body p-4">
                 <?php if ($user['two_factor_enabled']): ?>
                     <!-- تم التفعيل بالفعل -->
                     <div class="alert alert-success border-0 shadow-sm d-flex align-items-center mb-4">
-                        <span class="fs-3 me-3">🛡️</span>
+                        <span class="fs-3 me-3"><span class="emoji-icon">🛡️</span></span>
                         <div>
                             <h6 class="fw-bold mb-1"><?php echo __('2fa_active_title'); ?></h6>
                             <p class="small mb-0 opacity-75"><?php echo __('2fa_active_desc'); ?></p>
@@ -138,7 +138,7 @@ include '../includes/header.php';
                 <?php else: ?>
                     <!-- لم يتم التفعيل، مرحلة الإعداد -->
                     <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
-                        <span class="fs-3 me-3">📲</span>
+                        <span class="fs-3 me-3"><span class="emoji-icon">📲</span></span>
                         <div>
                             <h6 class="fw-bold mb-1"><?php echo __('2fa_setup_title'); ?></h6>
                             <p class="small mb-0 opacity-75"><?php echo __('2fa_setup_desc'); ?></p>

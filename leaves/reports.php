@@ -127,7 +127,7 @@ include '../includes/header.php';
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
     <div class="d-flex align-items-center">
         <div class="bg-primary text-white rounded p-2 me-3">
-            📊
+            <i class="bi bi-bar-chart-line"></i>
         </div>
         <h1 class="h3 mb-0"><?php echo __('leave_reports'); ?></h1>
     </div>
@@ -140,7 +140,7 @@ include '../includes/header.php';
             $export_url = 'reports.php?' . http_build_query($query_params);
         ?>
         <a href="<?php echo $export_url; ?>" class="btn btn-success shadow-sm">
-            📥 <?php echo __('export_current_report'); ?>
+            <i class="bi bi-download"></i> <?php echo __('export_current_report'); ?>
         </a>
     </div>
 </div>
@@ -154,7 +154,7 @@ include '../includes/header.php';
                     <h6 class="text-muted small mb-1"><?php echo __('total_requests'); ?></h6>
                     <h3 class="fw-bold mb-0 text-primary"><?php echo $stats['total_requests']; ?></h3>
                 </div>
-                <div class="fs-2 opacity-50">📂</div>
+                <div class="fs-2 opacity-50"><i class="bi bi-archive"></i></div>
             </div>
         </div>
     </div>
@@ -165,7 +165,7 @@ include '../includes/header.php';
                     <h6 class="text-muted small mb-1"><?php echo __('total_work_days'); ?></h6>
                     <h3 class="fw-bold mb-0 text-success"><?php echo $stats['total_days']; ?></h3>
                 </div>
-                <div class="fs-2 opacity-50">📆</div>
+                <div class="fs-2 opacity-50"><i class="bi bi-calendar-event"></i></div>
             </div>
         </div>
     </div>
@@ -176,7 +176,7 @@ include '../includes/header.php';
                     <h6 class="text-muted small mb-1"><?php echo __('approved_requests_count'); ?></h6>
                     <h3 class="fw-bold mb-0 text-success"><?php echo $stats['approved_count']; ?></h3>
                 </div>
-                <div class="fs-2 opacity-50">✅</div>
+                <div class="fs-2 opacity-50"><i class="bi bi-check-circle"></i></div>
             </div>
         </div>
     </div>
@@ -187,7 +187,7 @@ include '../includes/header.php';
                     <h6 class="text-muted small mb-1"><?php echo __('pending_requests_count'); ?></h6>
                     <h3 class="fw-bold mb-0 text-warning"><?php echo $stats['pending_count']; ?></h3>
                 </div>
-                <div class="fs-2 opacity-50">⏳</div>
+                <div class="fs-2 opacity-50"><i class="bi bi-clock-history"></i></div>
             </div>
         </div>
     </div>
@@ -196,7 +196,7 @@ include '../includes/header.php';
 <!-- فلترة التقرير -->
 <div class="card shadow-sm border-0 mb-4 bg-white">
     <div class="card-body p-4">
-        <h5 class="fw-bold text-dark mb-3">🔍 <?php echo __('advanced_filter_search'); ?></h5>
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-search"></i> <?php echo __('advanced_filter_search'); ?></h5>
         <form action="reports.php" method="GET" class="row g-3">
             <div class="col-md-3">
                 <label class="form-label small fw-bold text-muted"><?php echo __('employee_name_or_code'); ?></label>
@@ -249,7 +249,7 @@ include '../includes/header.php';
             
             <div class="col-md-4 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100 shadow-sm">
-                    🔍 <?php echo __('update_filter_report'); ?>
+                    <i class="bi bi-search"></i> <?php echo __('update_filter_report'); ?>
                 </button>
             </div>
         </form>

@@ -37,6 +37,9 @@ foreach($current_balances_raw as $b) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     $full_name = trim($_POST['full_name'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $department_id = !empty($_POST['department_id']) ? $_POST['department_id'] : null;
@@ -89,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = $e->getMessage();
         }
     }
+    } // end CSRF else
 }
 
 $pageTitle = __('edit');
@@ -109,6 +113,7 @@ include '../includes/header.php';
         <?php endif; ?>
 
         <form action="edit.php?id=<?php echo $emp_id; ?>" method="POST">
+            <?php echo csrf_field(); ?>
             <div class="row">
                 <div class="col-md-12 mb-3">
                     <h5 class="border-bottom pb-2"><?php echo __('basic_info'); ?></h5>

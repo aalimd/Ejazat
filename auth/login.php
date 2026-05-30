@@ -79,8 +79,8 @@ include '../includes/header.php';
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <div class="fs-1 mb-3">🔐</div>
-                        <h4 class="fw-bold"><?php echo __('login'); ?></h4>
+                        <div class="fs-1 mb-3"><span class="emoji-icon">🔐</span></div>
+                        <h1 class="h4 fw-bold"><?php echo __('login'); ?></h1>
                         <p class="text-muted small"><?php echo __('site_name'); ?></p>
                     </div>
 
@@ -93,18 +93,18 @@ include '../includes/header.php';
                         <div class="mb-3">
                             <label for="username" class="form-label small fw-bold"><?php echo __('username'); ?></label>
                             <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0">👤</span>
+                                <span class="input-group-text bg-light border-end-0"><span class="emoji-icon">👤</span></span>
                                 <input type="text" name="username" id="username" class="form-control bg-light border-start-0" required autofocus>
                             </div>
                         </div>
                         <div class="mb-4">
                             <label for="password" class="form-label small fw-bold"><?php echo __('password'); ?></label>
                             <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0">🔒</span>
+                                <span class="input-group-text bg-light border-end-0"><span class="emoji-icon">🔒</span></span>
                                 <input type="password" name="password" id="password" class="form-control bg-light border-start-0" required>
                             </div>
                             <div class="text-end mt-2">
-                                <a href="forgot_password.php" class="btn btn-link btn-sm text-primary fw-bold text-decoration-none p-0" style="font-size: 0.95rem;">📋 <?php echo __('forgot_password'); ?></a>
+                                <a href="forgot_password.php" class="btn btn-link btn-sm text-primary fw-bold text-decoration-none p-0" style="font-size: 0.95rem;"><span class="emoji-icon">📋</span> <?php echo __('forgot_password'); ?></a>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100 py-2 fw-bold"><?php echo __('login'); ?></button>

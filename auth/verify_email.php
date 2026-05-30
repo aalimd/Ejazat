@@ -29,6 +29,9 @@ if (isset($_GET['token'])) {
 
 // Handle resend verification email request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resend_verification'])) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     $email = trim($_POST['email'] ?? '');
     
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -54,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resend_verification']
             }
         }
     }
+    } // end CSRF else
 }
 
 $pageTitle = __('email_verification');
@@ -67,16 +71,16 @@ include '../includes/header.php';
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
                         <?php if ($success): ?>
-                            <div class="fs-1 mb-3">✅</div>
+                            <div class="fs-1 mb-3"><span class="emoji-icon">✅</span></div>
                         <?php else: ?>
-                            <div class="fs-1 mb-3">✉️</div>
+                            <div class="fs-1 mb-3"><span class="emoji-icon">📧</span></div>
                         <?php endif; ?>
-                        <h4 class="fw-bold"><?php echo __('email_verification'); ?></h4>
+                        <h1 class="h4 fw-bold"><?php echo __('email_verification'); ?></h1>
                     </div>
 
                     <?php if ($error): ?>
                         <div class="alert alert-danger py-2 small">
-                            ⚠️ <?php echo $error; ?>
+                            <span class="emoji-icon">⚠️</span> <?php echo $error; ?>
                         </div>
                     <?php endif; ?>
 
@@ -87,12 +91,13 @@ include '../includes/header.php';
                         <div class="text-center mt-4">
                             <p class="mb-3 text-muted small"><?php echo __('login_now'); ?></p>
                             <a href="login.php" class="btn btn-primary px-4 shadow-sm">
-                                🔐 <?php echo __('login'); ?>
+                                <span class="emoji-icon">🔐</span> <?php echo __('login'); ?>
                             </a>
                         </div>
                     <?php else: ?>
                         <!-- Resend verification email form -->
                         <form action="verify_email.php" method="POST">
+                            <?php echo csrf_field(); ?>
                             <div class="mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('email'); ?></label>
                                 <input type="email" name="email" class="form-control bg-light" 
@@ -102,7 +107,7 @@ include '../includes/header.php';
                                 </small>
                             </div>
                             <button type="submit" name="resend_verification" class="btn btn-primary w-100 py-2 fw-bold">
-                                📧 <?php echo __('send_verification'); ?>
+                                <span class="emoji-icon">📧</span> <?php echo __('send_verification'); ?>
                             </button>
                         </form>
 

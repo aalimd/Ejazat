@@ -116,21 +116,25 @@ if ($_SESSION['role'] === 'super_admin') {
                     </tr>
                 </thead>
                 <tbody>
+                    <?php if (empty($departments)): ?>
+                        <tr><td colspan="4" class="text-center py-4 text-muted small"><?php echo __('no_data'); ?></td></tr>
+                    <?php else: ?>
                     <?php foreach ($departments as $dept): ?>
                         <tr>
                             <td><?php echo h($dept['name_ar']); ?></td>
                             <td><?php echo h($dept['name_en']); ?></td>
                             <td><span class="badge bg-info text-dark"><?php echo $dept['emp_count']; ?></span></td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editDeptModal<?php echo $dept['id']; ?>">
-                                    ✏️
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editDeptModal<?php echo $dept['id']; ?>" aria-label="<?php echo __('edit'); ?>">
+                                    <span class="emoji-icon">✏️</span>
                                 </button>
-                                <a href="?delete=<?php echo $dept['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('<?php echo __('confirm_delete'); ?>')">
-                                    🗑️
+                                <a href="?delete=<?php echo $dept['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('<?php echo __('confirm_delete'); ?>')" aria-label="<?php echo __('delete'); ?>">
+                                    <span class="emoji-icon">🗑️</span>
                                 </a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>

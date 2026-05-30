@@ -16,6 +16,9 @@ $stmtTypes->execute([CURRENT_ORG_ID]);
 $leave_types = $stmtTypes->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
     // بيانات المستخدم
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -36,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($username) || empty($password) || empty($email) || empty($full_name) || empty($employee_id_number)) {
-        $error = __('cancel'); // Can be improved
+        $error = __('fill_fields_error');
     } else {
         try {
             $pdo->beginTransaction();
@@ -72,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = $e->getMessage();
         }
     }
+    } // end else for CSRF
 }
 
 $pageTitle = __('add_new');
@@ -92,6 +96,7 @@ include '../includes/header.php';
         <?php endif; ?>
 
         <form action="add.php" method="POST">
+            <?php echo csrf_field(); ?>
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label"><?php echo __('username'); ?> *</label>

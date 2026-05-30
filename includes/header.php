@@ -36,7 +36,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Almarai:wght@400;700&family=Tajawal:wght@400;700&family=Roboto:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- Custom Modern Styles -->
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=2">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=3">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -78,12 +79,12 @@
         document.addEventListener('DOMContentLoaded', () => {
             const themeToggle = document.getElementById('themeToggle');
             if(themeToggle) {
-                themeToggle.innerText = currentTheme === 'dark' ? '☀️' : '🌙';
+                themeToggle.innerHTML = currentTheme === 'dark' ? '<span class="emoji-icon">☀️</span>' : '<span class="emoji-icon">🌙</span>';
                 themeToggle.addEventListener('click', () => {
                     let theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
                     document.documentElement.setAttribute('data-theme', theme);
                     localStorage.setItem('theme', theme);
-                    themeToggle.innerText = theme === 'dark' ? '☀️' : '🌙';
+                    themeToggle.innerHTML = theme === 'dark' ? '<span class="emoji-icon">☀️</span>' : '<span class="emoji-icon">🌙</span>';
                 });
             }
 
@@ -132,7 +133,7 @@ if (isLoggedIn()):
 
         <!-- Top Menu Toggler -->
         <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="fs-4">👤</span>
+            <span class="fs-4"><span class="emoji-icon">👤</span></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -145,7 +146,7 @@ if (isLoggedIn()):
                 <?php if (hasRole('super_admin')): ?>
                 <li class="nav-item dropdown ms-3 me-3">
                     <a class="nav-link dropdown-toggle text-white fw-bold bg-dark bg-opacity-25 rounded px-3" href="#" id="orgSwitchDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        🏢 <?php 
+                        <span class="emoji-icon">🏢</span> <?php 
                             $current_org_id = $_SESSION['organization_id'] ?? null;
                             if ($current_org_id) {
                                 $stmtSwitch = $pdo->prepare("SELECT name_ar, name_en FROM organizations WHERE id = ?");
@@ -158,19 +159,19 @@ if (isLoggedIn()):
                         ?>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="orgSwitchDropdown">
-                        <li><a class="dropdown-item small" href="?switch_org=0">🌐 <?php echo __('all_organizations'); ?></a></li>
+                        <li><a class="dropdown-item small" href="?switch_org=0"><span class="emoji-icon">🌐</span> <?php echo __('all_organizations'); ?></a></li>
                         <li><hr class="dropdown-divider"></li>
                         <?php
                         $all_orgs = $pdo->query("SELECT id, name_ar, name_en FROM organizations")->fetchAll();
                         foreach ($all_orgs as $o):
                         ?>
-                            <li><a class="dropdown-item small" href="?switch_org=<?php echo $o['id']; ?>">🏢 <?php echo $lang == 'en' ? h($o['name_en']) : h($o['name_ar']); ?></a></li>
+                            <li><a class="dropdown-item small" href="?switch_org=<?php echo $o['id']; ?>"><span class="emoji-icon">🏢</span> <?php echo $lang == 'en' ? h($o['name_en']) : h($o['name_ar']); ?></a></li>
                         <?php endforeach; ?>
                     </ul>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-white fw-bold bg-danger bg-opacity-75 rounded px-3 ms-2" href="<?php echo BASE_URL; ?>superadmin/dashboard.php" title="Super Admin Control Panel">
-                        🔐 Control Panel
+                        <span class="emoji-icon">🔐</span> Control Panel
                     </a>
                 </li>
                 <?php endif; ?>
@@ -178,7 +179,7 @@ if (isLoggedIn()):
             <ul class="navbar-nav mb-2 mb-lg-0">
                 <!-- Theme Toggle -->
                 <li class="nav-item me-2 d-flex align-items-center">
-                    <button id="themeToggle" class="btn btn-sm btn-outline-light border-0 fs-5">🌙</button>
+                    <button id="themeToggle" class="btn btn-sm btn-outline-light border-0 fs-5"><span class="emoji-icon">🌙</span></button>
                 </li>
                 <!-- Notifications Dropdown -->
                 <?php
@@ -244,14 +245,14 @@ if (isLoggedIn()):
                 <ul class="nav flex-column w-100">
                     <li class="nav-item">
                         <a class="nav-link <?php echo $current_page == 'index.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>index.php">
-                            <?php echo __('dashboard'); ?>
+                            <span class="emoji-icon">📊</span> <?php echo __('dashboard'); ?>
                         </a>
                     </li>
 
                     <?php if (hasRole('super_admin')): ?>
                     <li class="nav-item">
                         <a class="nav-link fw-bold text-warning" href="<?php echo BASE_URL; ?>superadmin/dashboard.php">
-                            🔐 <?php echo __('super_admin_title'); ?>
+                            <span class="emoji-icon">🛡️</span> <?php echo __('super_admin_title'); ?>
                         </a>
                     </li>
                 <?php endif; ?>
@@ -259,22 +260,22 @@ if (isLoggedIn()):
                     <?php if (hasRole(['admin', 'manager'])): ?>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'employees' && $current_page == 'list.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>employees/list.php">
-                            <?php echo __('employees'); ?>
+                            <span class="emoji-icon">👥</span> <?php echo __('employees'); ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'employees' && $current_page == 'approvals.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>employees/approvals.php">
-                            <?php echo __('approvals'); ?>
+                            <span class="emoji-icon">✅</span> <?php echo __('approvals'); ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'leaves' && $current_page == 'manage.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>leaves/manage.php">
-                            <?php echo __('leaves'); ?>
+                            <span class="emoji-icon">📅</span> <?php echo __('leaves'); ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'leaves' && $current_page == 'reports.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>leaves/reports.php">
-                            <?php echo __('leave_reports'); ?>
+                            <span class="emoji-icon">📋</span> <?php echo __('leave_reports'); ?>
                         </a>
                     </li>
                     <?php endif; ?>
@@ -282,12 +283,12 @@ if (isLoggedIn()):
                     <?php if (hasRole('employee')): ?>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'employees' && $current_page == 'view.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>employees/view.php">
-                            <?php echo __('my_profile'); ?>
+                            <span class="emoji-icon">👤</span> <?php echo __('my_profile'); ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'leaves' && $current_page == 'my_requests.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>leaves/my_requests.php">
-                            <?php echo __('my_requests'); ?>
+                            <span class="emoji-icon">📋</span> <?php echo __('my_requests'); ?>
                         </a>
                     </li>
                     <?php endif; ?>
@@ -298,44 +299,44 @@ if (isLoggedIn()):
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'admin' && $current_page == 'users.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>admin/users.php">
-                            <?php echo __('system_users'); ?>
+                            <span class="emoji-icon">👤</span> <?php echo __('system_users'); ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'admin' && $current_page == 'departments.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>admin/departments.php">
-                            <?php echo __('departments'); ?>
+                            <span class="emoji-icon">🏢</span> <?php echo __('departments'); ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'admin' && $current_page == 'leave_types.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>admin/leave_types.php">
-                            <?php echo __('leave_types'); ?>
+                            <span class="emoji-icon">📋</span> <?php echo __('leave_types'); ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'admin' && $current_page == 'holidays.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>admin/holidays.php">
-                            <?php echo __('holidays'); ?>
+                            <span class="emoji-icon">🎉</span> <?php echo __('holidays'); ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'admin' && $current_page == 'activity_log.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>admin/activity_log.php">
-                            <?php echo __('activity_log'); ?>
+                            <span class="emoji-icon">📜</span> <?php echo __('activity_log'); ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'admin' && $current_page == 'settings.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>admin/settings.php">
-                            <?php echo __('settings'); ?>
+                            <span class="emoji-icon">⚙️</span> <?php echo __('settings'); ?>
                         </a>
                     </li>
                     <?php endif; ?>
 
                     <li class="nav-item mt-3 border-top pt-2">
                         <a class="nav-link <?php echo ($current_dir == 'auth' && $current_page == 'security.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>auth/security.php">
-                            🔑 <?php echo __('security_settings'); ?>
+                            <span class="emoji-icon">🔑</span> <?php echo __('security_settings'); ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-danger" href="<?php echo BASE_URL; ?>auth/logout.php">
-                            <?php echo __('logout'); ?>
+                            <span class="emoji-icon">🚪</span> <?php echo __('logout'); ?>
                         </a>
                     </li>
                 </ul>
@@ -347,7 +348,7 @@ if (isLoggedIn()):
 <?php else: ?>
     <!-- Language Switcher & Theme Toggle for Login Page -->
     <div class="p-3 d-flex justify-content-end align-items-center gap-2">
-        <button id="themeToggle" class="btn btn-outline-primary btn-sm fs-5">🌙</button>
+        <button id="themeToggle" class="btn btn-outline-primary btn-sm fs-5"><span class="emoji-icon">🌙</span></button>
         <a class="btn btn-outline-primary btn-sm" href="?lang=<?php echo $lang == 'ar' ? 'en' : 'ar'; ?>">
             <?php echo __('language'); ?>
         </a>
