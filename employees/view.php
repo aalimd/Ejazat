@@ -5,11 +5,14 @@ checkAuth();
 $emp_id = $_GET['id'] ?? $_SESSION['employee_id'] ?? 0;
 
 // التحقق من الصلاحيات
-if (hasRole('employee') && $emp_id != $_SESSION['employee_id']) {
-    die("Access Denied.");
+if ($_SESSION['role'] !== 'super_admin' && hasRole('employee') && $emp_id != $_SESSION['employee_id']) {
+    die(__('access_denied'));
 }
 
 $org_id = CURRENT_ORG_ID;
+if (!$org_id) {
+    die(__('select_org_first'));
+}
 
 if ($org_id) {
     // التحقق من المؤسسة لمنع الوصول غير المصرح به (IDOR)
@@ -31,11 +34,22 @@ if ($org_id) {
 $emp = $stmt->fetch();
 
 if (!$emp) {
-    die("Not Found.");
+    die(__('employee_not_found'));
 }
 
-$stmtBalances = $pdo->prepare("SELECT e.balance, l.name_ar, l.name_en FROM employee_leave_balances e JOIN leave_types l ON e.leave_type_id = l.id WHERE e.employee_id = ?");
-$stmtBalances->execute([$emp_id]);
+if ($org_id) {
+    $stmtBalances = $pdo->prepare("SELECT e.balance, l.name_ar, l.name_en 
+                                   FROM employee_leave_balances e 
+                                   JOIN leave_types l ON e.leave_type_id = l.id 
+                                   WHERE e.employee_id = ? AND l.organization_id = ?");
+    $stmtBalances->execute([$emp_id, $org_id]);
+} else {
+    $stmtBalances = $pdo->prepare("SELECT e.balance, l.name_ar, l.name_en 
+                                   FROM employee_leave_balances e 
+                                   JOIN leave_types l ON e.leave_type_id = l.id 
+                                   WHERE e.employee_id = ?");
+    $stmtBalances->execute([$emp_id]);
+}
 $detailed_balances = $stmtBalances->fetchAll();
 
 $pageTitle = __('details');

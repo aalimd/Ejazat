@@ -14,15 +14,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_holiday'])) {
     $end_date = $_POST['end_date'];
 
     if (empty($name_ar) || empty($name_en) || empty($start_date) || empty($end_date)) {
-        $error = 'جميع الحقول مطلوبة.';
+        $error = __('fill_fields_error');
     } elseif (strtotime($start_date) > strtotime($end_date)) {
-        $error = 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية.';
+        $error = __('end_after_start');
     } else {
         try {
             $stmt = $pdo->prepare("INSERT INTO holidays (organization_id, name_ar, name_en, start_date, end_date) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$org_id, $name_ar, $name_en, $start_date, $end_date]);
             logActivity("📅 إضافة عطلة رسمية", "📅 Add Official Holiday", "Holiday: $name_ar ($start_date to $end_date)");
-            $success = __('registration_success');
+            $success = __('success_added');
         } catch (PDOException $e) {
             $error = $e->getMessage();
         }
@@ -48,7 +48,11 @@ $stmt->execute([$org_id]);
 $holidays = $stmt->fetchAll();
 
 $pageTitle = __('holidays');
-include '../includes/header.php';
+if ($_SESSION['role'] === 'super_admin') {
+    include '../includes/superadmin_header.php';
+} else {
+    include '../includes/header.php';
+}
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -129,7 +133,7 @@ include '../includes/header.php';
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted"><?php echo __('holiday_name'); ?> (AR) *</label>
-                        <input type="text" name="name_ar" class="form-control" placeholder="مثال: اليوم الوطني" required>
+                        <input type="text" name="name_ar" class="form-control" placeholder="<?php echo __('holiday_name_ar_example');?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted"><?php echo __('holiday_name'); ?> (EN) *</label>
@@ -148,11 +152,11 @@ include '../includes/header.php';
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal"><?php echo __('close'); ?></button>
-                    <button type="submit" name="add_holiday" class="btn btn-primary px-4"><?php echo __('save_btn'); ?></button>
+                    <button type="submit" name="add_holiday" class="btn btn-primary px-4"><?php echo __('save'); ?></button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php if ($_SESSION['role'] === 'super_admin') { include '../includes/superadmin_footer.php'; } else { include '../includes/footer.php'; } ?>

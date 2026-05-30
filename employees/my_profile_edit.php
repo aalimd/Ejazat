@@ -10,16 +10,18 @@ $emp_id = $_SESSION['employee_id'];
 $stmt = $pdo->prepare("SELECT e.*, u.email, u.username 
                        FROM employees e 
                        JOIN users u ON e.user_id = u.id 
-                       WHERE e.id = ?");
-$stmt->execute([$emp_id]);
+                       WHERE e.id = ? AND e.organization_id = ?");
+$stmt->execute([$emp_id, CURRENT_ORG_ID]);
 $emp = $stmt->fetch();
 
 if (!$emp) {
-    die("Not Found.");
+    die(__('employee_not_found'));
 }
 
 // جلب أنواع الإجازات وأرصدة الموظف منها
-$leave_types = $pdo->query("SELECT * FROM leave_types ORDER BY name_ar ASC")->fetchAll();
+$stmtLeaveTypes = $pdo->prepare("SELECT * FROM leave_types WHERE organization_id = ? ORDER BY name_ar ASC");
+$stmtLeaveTypes->execute([CURRENT_ORG_ID]);
+$leave_types = $stmtLeaveTypes->fetchAll();
 $stmtBalances = $pdo->prepare("SELECT * FROM employee_leave_balances WHERE employee_id = ?");
 $stmtBalances->execute([$emp_id]);
 $current_balances_raw = $stmtBalances->fetchAll();
@@ -44,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($full_name) || empty($email)) {
-        $error = __('Fill required fields.');
+        $error = __('fill_fields_error');
     } else {
         try {
             $pdo->beginTransaction();
@@ -54,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmtUser->execute([$email, $emp['user_id']]);
 
             // 2. تحديث بيانات الموظف (فقط البيانات المسموح بها)
-            $stmtEmp = $pdo->prepare("UPDATE employees SET full_name = ?, phone = ?, initial_leave_balance = ? WHERE id = ?");
-            $stmtEmp->execute([$full_name, $phone, $new_total_balance, $emp_id]);
+            $stmtEmp = $pdo->prepare("UPDATE employees SET full_name = ?, phone = ?, initial_leave_balance = ? WHERE id = ? AND organization_id = ?");
+            $stmtEmp->execute([$full_name, $phone, $new_total_balance, $emp_id, CURRENT_ORG_ID]);
 
             if (!$emp['leave_balance_verified']) {
                 $pdo->prepare("DELETE FROM employee_leave_balances WHERE employee_id = ?")->execute([$emp_id]);
@@ -73,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = __('success_updated');
             
             // إعادة جلب البيانات وتحديث الجلسة
-            $stmt->execute([$emp_id]);
+            $stmt->execute([$emp_id, CURRENT_ORG_ID]);
             $emp = $stmt->fetch();
             $_SESSION['full_name'] = $emp['full_name'];
         } catch (PDOException $e) {

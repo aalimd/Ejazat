@@ -7,11 +7,18 @@ $error_msg = '';
 
 // معالجة القرار السريع للإجازات من لوحة التحكم
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_dashboard'])) {
+    $active_org = CURRENT_ORG_ID;
+    
+    // Require admin/manager role — prevent employee privilege escalation
+    if (!hasRole(['admin', 'manager'])) {
+        $error_msg = __('access_denied');
+    } elseif (!$active_org) {
+        $error_msg = __('select_org_first');
+    } else {
     $request_id = $_POST['request_id'];
     $action = $_POST['action']; // approve or reject
     $note = trim($_POST['manager_note'] ?? '');
     $status = ($action === 'approve') ? 'approved' : 'rejected';
-    $active_org = CURRENT_ORG_ID;
     
     try {
         $pdo->beginTransaction();
@@ -20,46 +27,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_dashboard'])) 
                                        FROM leave_requests lr 
                                        JOIN leave_types lt ON lr.leave_type_id = lt.id 
                                        JOIN employees e ON lr.employee_id = e.id
-                                       WHERE lr.id = ? AND e.organization_id = ?");
+                                       WHERE lr.id = ? AND e.organization_id = ? AND lr.status = 'pending'");
             $stmt_req->execute([$request_id, $active_org]);
         } else {
             $stmt_req = $pdo->prepare("SELECT lr.*, lt.deduct_from_balance 
                                        FROM leave_requests lr 
                                        JOIN leave_types lt ON lr.leave_type_id = lt.id 
-                                       WHERE lr.id = ?");
+                                       WHERE lr.id = ? AND lr.status = 'pending'");
             $stmt_req->execute([$request_id]);
         }
         $req_data = $stmt_req->fetch();
 
         if ($req_data) {
-            $stmt = $pdo->prepare("UPDATE leave_requests SET status = ?, manager_note = ?, action_at = NOW() WHERE id = ?");
-            $stmt->execute([$status, $note, $request_id]);
+            if ($active_org) {
+                $stmt = $pdo->prepare("UPDATE leave_requests SET status = ?, manager_note = ?, action_at = NOW() WHERE id = ? AND organization_id = ? AND status = 'pending'");
+                $stmt->execute([$status, $note, $request_id, $active_org]);
+            } else {
+                $stmt = $pdo->prepare("UPDATE leave_requests SET status = ?, manager_note = ?, action_at = NOW() WHERE id = ? AND status = 'pending'");
+                $stmt->execute([$status, $note, $request_id]);
+            }
 
             // خصم الرصيد إذا تمت الموافقة وكان النوع يتطلب ذلك
             if ($status === 'approved' && $req_data['deduct_from_balance']) {
                 $days = calculateLeaveDays($req_data['start_date'], $req_data['end_date'], $active_org);
-                $stmt_deduct = $pdo->prepare("UPDATE employees SET initial_leave_balance = initial_leave_balance - ? WHERE id = ?");
-                $stmt_deduct->execute([$days, $req_data['employee_id']]);
+                if ($active_org) {
+                    $stmt_deduct = $pdo->prepare("UPDATE employees SET initial_leave_balance = initial_leave_balance - ? WHERE id = ? AND organization_id = ?");
+                    $stmt_deduct->execute([$days, $req_data['employee_id'], $active_org]);
+                } else {
+                    $stmt_deduct = $pdo->prepare("UPDATE employees SET initial_leave_balance = initial_leave_balance - ? WHERE id = ?");
+                    $stmt_deduct->execute([$days, $req_data['employee_id']]);
+                }
             }
 
-            $stmt_user = $pdo->prepare("SELECT user_id FROM employees WHERE id = ?");
-            $stmt_user->execute([$req_data['employee_id']]);
+            if ($active_org) {
+                $stmt_user = $pdo->prepare("SELECT user_id FROM employees WHERE id = ? AND organization_id = ?");
+                $stmt_user->execute([$req_data['employee_id'], $active_org]);
+            } else {
+                $stmt_user = $pdo->prepare("SELECT user_id FROM employees WHERE id = ?");
+                $stmt_user->execute([$req_data['employee_id']]);
+            }
             $user_id = $stmt_user->fetchColumn();
+
+            $approved_ar = $translations['ar']['leave_request_approved'] ?? __('leave_request_approved');
+            $approved_en = $translations['en']['leave_request_approved'] ?? __('leave_request_approved');
+            $rejected_ar = $translations['ar']['leave_request_rejected'] ?? __('leave_request_rejected');
+            $rejected_en = $translations['en']['leave_request_rejected'] ?? __('leave_request_rejected');
 
             if ($status === 'approved') {
                 logActivity("✅ الموافقة على إجازة (سريع)", "✅ Approve Leave Request (Quick)", "Request ID: $request_id");
-                addNotification($user_id, __('leave_request_approved'), __('leave_request_approved'));
+                addNotification($user_id, $approved_ar, $approved_en);
             } else {
                 logActivity("❌ رفض طلب إجازة (سريع)", "❌ Reject Leave Request (Quick)", "Request ID: $request_id, Note: $note");
-                addNotification($user_id, __('leave_request_rejected') . ": " . $note, __('leave_request_rejected') . ": " . $note);
+                addNotification($user_id, $rejected_ar . ": " . $note, $rejected_en . ": " . $note);
             }
 
             $pdo->commit();
             $success_msg = __('success_updated');
+        } else {
+            $pdo->rollBack();
+            $error_msg = __('access_denied');
         }
     } catch (Exception $e) {
         $pdo->rollBack();
         $error_msg = 'Error: ' . $e->getMessage();
+    }
     }
 }
 
@@ -170,8 +201,13 @@ if (hasRole('super_admin') && $org_id === null) {
 
 } else {
     $emp_id = $_SESSION['employee_id'] ?? 0;
-    $stats['my_pending_leaves'] = $pdo->query("SELECT COUNT(*) FROM leave_requests WHERE employee_id = $emp_id AND status = 'pending'")->fetchColumn();
-    $stats['my_approved_leaves'] = $pdo->query("SELECT COUNT(*) FROM leave_requests WHERE employee_id = $emp_id AND status = 'approved'")->fetchColumn();
+    $stmt_pending = $pdo->prepare("SELECT COUNT(*) FROM leave_requests WHERE employee_id = ? AND status = 'pending'");
+    $stmt_pending->execute([$emp_id]);
+    $stats['my_pending_leaves'] = $stmt_pending->fetchColumn();
+    
+    $stmt_approved = $pdo->prepare("SELECT COUNT(*) FROM leave_requests WHERE employee_id = ? AND status = 'approved'");
+    $stmt_approved->execute([$emp_id]);
+    $stats['my_approved_leaves'] = $stmt_approved->fetchColumn();
 
     // جلب أرصدة الإجازات التفصيلية للمؤسسة
     $stmtBalances = $pdo->prepare("

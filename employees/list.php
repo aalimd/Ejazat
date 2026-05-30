@@ -75,16 +75,16 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     fputs($output, "\xEF\xBB\xBF");
     
     // Headers
-    fputcsv($output, ['المعرف الخاص', 'الرقم الوظيفي', 'الاسم الكامل', 'القسم', 'المسمى الوظيفي', 'تاريخ التوظيف', 'حالة الحساب']);
+    fputcsv($output, [__('export_system_id'), __('export_employee_id'), __('export_full_name'), __('export_department'), __('export_job_title'), __('export_hire_date'), __('export_account_status')]);
     
     // Data
     foreach ($employees as $emp) {
-        $status_text = $emp['status'] == 'approved' ? 'مفعل' : ($emp['status'] == 'rejected' ? 'مرفوض' : 'معلق');
+        $status_text = $emp['status'] == 'approved' ? __('status_active') : ($emp['status'] == 'rejected' ? __('status_rejected') : __('status_pending'));
         fputcsv($output, [
             $emp['system_id'],
             $emp['employee_id_number'],
             $emp['full_name'],
-            $emp['dept_ar'],
+            get_name(['name_ar' => $emp['dept_ar'], 'name_en' => $emp['dept_en']]),
             $emp['job_title'],
             $emp['hire_date'],
             $status_text
@@ -103,7 +103,7 @@ include '../includes/header.php';
     <h1 class="h3 mb-3 mb-md-0"><?php echo __('employees'); ?></h1>
     <div>
         <a href="?<?php echo http_build_query(array_merge($_GET, ['export' => 'excel'])); ?>" class="btn btn-success shadow-sm me-2">
-            📊 <?php echo __('export_excel') ?? 'تصدير إكسل'; ?>
+            📊 <?php echo __('export_excel'); ?>
         </a>
         <a href="add.php" class="btn btn-primary shadow-sm">
             <?php echo __('add_new'); ?>
@@ -124,7 +124,7 @@ include '../includes/header.php';
                 <select name="department_id" class="form-select">
                     <option value=""><?php echo __('all_departments'); ?></option>
                     <?php foreach ($departments as $dept): ?>
-                        <option value="<?php echo $dept['id']; ?>" <?php echo (($_GET['department_id'] ?? '') == $dept['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($dept['name_ar']); ?></option>
+                        <option value="<?php echo $dept['id']; ?>" <?php echo (($_GET['department_id'] ?? '') == $dept['id']) ? 'selected' : ''; ?>><?php echo h(get_name($dept)); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>

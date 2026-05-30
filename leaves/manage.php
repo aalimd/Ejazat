@@ -20,12 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $stmt_req = $pdo->prepare("SELECT lr.*, lt.deduct_from_balance 
                                    FROM leave_requests lr 
                                    JOIN leave_types lt ON lr.leave_type_id = lt.id 
-                                   WHERE lr.id = ? AND lr.organization_id = ?");
+                                   WHERE lr.id = ? AND lr.organization_id = ? AND lr.status = 'pending'");
         $stmt_req->execute([$request_id, CURRENT_ORG_ID]);
         $req_data = $stmt_req->fetch();
 
         if ($req_data) {
-            $stmt = $pdo->prepare("UPDATE leave_requests SET status = ?, manager_note = ?, action_at = NOW() WHERE id = ? AND organization_id = ?");
+            $stmt = $pdo->prepare("UPDATE leave_requests SET status = ?, manager_note = ?, action_at = NOW() WHERE id = ? AND organization_id = ? AND status = 'pending'");
             $stmt->execute([$status, $note, $request_id, CURRENT_ORG_ID]);
 
             // خصم الرصيد إذا تمت الموافقة وكان النوع يتطلب ذلك
@@ -40,16 +40,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt_user->execute([$req_data['employee_id'], CURRENT_ORG_ID]);
             $user_id = $stmt_user->fetchColumn();
 
+            $approved_ar = $translations['ar']['leave_request_approved'] ?? __('leave_request_approved');
+            $approved_en = $translations['en']['leave_request_approved'] ?? __('leave_request_approved');
+            $rejected_ar = $translations['ar']['leave_request_rejected'] ?? __('leave_request_rejected');
+            $rejected_en = $translations['en']['leave_request_rejected'] ?? __('leave_request_rejected');
+
             if ($status === 'approved') {
                 logActivity("✅ الموافقة على إجازة", "✅ Approve Leave Request", "Request ID: $request_id, Deducted: " . ($req_data['deduct_from_balance'] ? 'Yes' : 'No'), CURRENT_ORG_ID);
-                addNotification($user_id, __('leave_request_approved'), __('leave_request_approved'), CURRENT_ORG_ID);
+                addNotification($user_id, $approved_ar, $approved_en, CURRENT_ORG_ID);
             } else {
                 logActivity("❌ رفض طلب إجازة", "❌ Reject Leave Request", "Request ID: $request_id, Note: $note", CURRENT_ORG_ID);
-                addNotification($user_id, __('leave_request_rejected') . ": " . $note, __('leave_request_rejected') . ": " . $note, CURRENT_ORG_ID);
+                addNotification($user_id, $rejected_ar . ": " . $note, $rejected_en . ": " . $note, CURRENT_ORG_ID);
             }
 
             $pdo->commit();
             $success = __('success_updated');
+        } else {
+            $pdo->rollBack();
+            $error = __('access_denied');
         }
     } catch (Exception $e) {
         $pdo->rollBack();
@@ -104,22 +112,22 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     fputs($output, "\xEF\xBB\xBF");
     
     // Headers
-    fputcsv($output, ['الموظف', 'الرقم الوظيفي', 'نوع الإجازة', 'من تاريخ', 'إلى تاريخ', 'تاريخ التقديم', 'الحالة', 'تاريخ القرار', 'السبب', 'رابط الإثبات']);
+    fputcsv($output, [__('export_employee_name'), __('export_employee_id'), __('export_leave_type'), __('export_from_date'), __('export_to_date'), __('export_submitted_on'), __('export_status'), __('export_decision_date'), __('export_reason'), __('export_attachment')]);
     
     // Data
     foreach ($requests as $req) {
-        $status_text = $req['status'] == 'approved' ? 'مقبول' : ($req['status'] == 'rejected' ? 'مرفوض' : 'معلق');
+        $status_text = $req['status'] == 'approved' ? __('status_approved_leave') : ($req['status'] == 'rejected' ? __('status_rejected_leave') : __('status_pending_leave'));
         fputcsv($output, [
             $req['full_name'],
             $req['employee_id_number'],
-            $req['type_ar'],
+            get_name(['name_ar' => $req['type_ar'], 'name_en' => $req['type_en']]),
             $req['start_date'],
             $req['end_date'],
             date('Y-m-d', strtotime($req['created_at'])),
             $status_text,
             $req['action_at'] ? date('Y-m-d', strtotime($req['action_at'])) : '-',
             $req['reason'],
-            $req['attachment_url'] ? $req['attachment_url'] : 'لا يوجد'
+            $req['attachment_url'] ? $req['attachment_url'] : __('no_attachment')
         ]);
     }
     fclose($output);
@@ -135,7 +143,7 @@ include '../includes/header.php';
 <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
     <h1 class="h3 mb-3 mb-md-0"><?php echo __('leaves'); ?></h1>
     <a href="?<?php echo http_build_query(array_merge($_GET, ['export' => 'excel'])); ?>" class="btn btn-success shadow-sm">
-        📊 <?php echo __('export_excel') ?? 'تصدير إكسل'; ?>
+        📊 <?php echo __('export_excel'); ?>
     </a>
 </div>
 
@@ -161,7 +169,7 @@ include '../includes/header.php';
                 <select name="type" class="form-select">
                     <option value=""><?php echo __('all'); ?></option>
                     <?php foreach ($leave_types as $lt): ?>
-                        <option value="<?php echo $lt['id']; ?>" <?php echo (($_GET['type'] ?? '') == $lt['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($lt['name_ar']); ?></option>
+                        <option value="<?php echo $lt['id']; ?>" <?php echo (($_GET['type'] ?? '') == $lt['id']) ? 'selected' : ''; ?>><?php echo h(get_name($lt)); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -225,7 +233,7 @@ include '../includes/header.php';
                                     <?php if (!empty($req['attachment_url'])): ?>
                                         <div class="mt-2">
                                             <a href="<?php echo htmlspecialchars($req['attachment_url']); ?>" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
-                                                <i class="fas fa-file-alt"></i> عرض الإثبات
+                                                <i class="fas fa-file-alt"></i> <?php echo __('view_attachment'); ?>
                                             </a>
                                         </div>
                                     <?php endif; ?>

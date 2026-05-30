@@ -7,27 +7,34 @@ $error = '';
 
 // إضافة مستخدم جديد (Admin or Manager)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $email = trim($_POST['email'] ?? '');
-    $role = $_POST['role'] ?? 'manager';
-
-    if (empty($username) || empty($password) || empty($email)) {
-        $error = 'All fields are required.';
+    if (!verify_csrf()) {
+        $error = __('access_denied');
     } else {
-        try {
-            // إضافة المستخدم مع ربطه بالمؤسسة الحالية حصراً
-            $stmt = $pdo->prepare("INSERT INTO users (username, password, email, role, organization_id) VALUES (?, ?, ?, ?, ?)");
-            $hash = password_hash($password, PASSWORD_DEFAULT);
-            if ($stmt->execute([$username, $hash, $email, $role, CURRENT_ORG_ID])) {
-                logActivity("➕ إضافة مستخدم نظام جديد", "➕ Add New System User", "Username: $username, Role: $role");
-                $success = __('success_added');
-            }
-        } catch (PDOException $e) {
-            if ($e->getCode() == 23000) {
-                $error = 'Username or email already exists.';
-            } else {
-                $error = 'Error: ' . $e->getMessage();
+        $username = trim($_POST['username'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $email = trim($_POST['email'] ?? '');
+        $role = $_POST['role'] ?? 'manager';
+        $allowed_roles = ($_SESSION['role'] === 'super_admin') ? ['super_admin', 'admin', 'manager'] : ['admin', 'manager'];
+
+        if (!in_array($role, $allowed_roles, true)) {
+            $error = __('access_denied');
+        } elseif (empty($username) || empty($password) || empty($email)) {
+            $error = __('fill_fields_error');
+        } else {
+            try {
+                $stmt = $pdo->prepare("INSERT INTO users (username, password, email, role, organization_id) VALUES (?, ?, ?, ?, ?)");
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $org_id = ($role === 'super_admin') ? null : CURRENT_ORG_ID;
+                if ($stmt->execute([$username, $hash, $email, $role, $org_id])) {
+                    logActivity("➕ إضافة مستخدم نظام جديد", "➕ Add New System User", "Username: $username, Role: $role");
+                    $success = __('success_added');
+                }
+            } catch (PDOException $e) {
+                if ($e->getCode() == 23000) {
+                    $error = __('user_exists_error');
+                } else {
+                    $error = 'Error: ' . $e->getMessage();
+                }
             }
         }
     }
@@ -39,11 +46,15 @@ $stmt->execute([CURRENT_ORG_ID]);
 $users = $stmt->fetchAll();
 
 $pageTitle = __('system_users');
-include '../includes/header.php';
+if ($_SESSION['role'] === 'super_admin') {
+    include '../includes/superadmin_header.php';
+} else {
+    include '../includes/header.php';
+}
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3"><?php echo __('system_users'); ?></h1>
+    <h1 class="h3">👥 <?php echo __('system_users'); ?></h1>
     <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
         <?php echo __('add_user'); ?>
     </button>
@@ -121,9 +132,13 @@ include '../includes/header.php';
                         <label class="form-label small fw-bold"><?php echo __('password'); ?> *</label>
                         <input type="password" name="password" class="form-control" required>
                     </div>
+                    <?php echo csrf_field(); ?>
                     <div class="mb-3">
                         <label class="form-label small fw-bold"><?php echo __('role'); ?> *</label>
                         <select name="role" class="form-select" required>
+                            <?php if ($_SESSION['role'] === 'super_admin'): ?>
+                            <option value="super_admin"><?php echo __('super_admin'); ?></option>
+                            <?php endif; ?>
                             <option value="manager"><?php echo __('manager'); ?></option>
                             <option value="admin"><?php echo __('admin'); ?></option>
                         </select>
@@ -138,4 +153,4 @@ include '../includes/header.php';
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php if ($_SESSION['role'] === 'super_admin') { include '../includes/superadmin_footer.php'; } else { include '../includes/footer.php'; } ?>

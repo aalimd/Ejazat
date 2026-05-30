@@ -25,18 +25,50 @@ if (!$user || empty($user['two_factor_secret'])) {
     redirect('auth/login.php');
 }
 
+// Send 2FA code via email on first page load
+if (!isset($_SESSION['2fa_email_sent'])) {
+    // Generate a temporary email code (different from TOTP)
+    $email_code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+    $_SESSION['2fa_email_code'] = $email_code;
+    $_SESSION['2fa_email_code_time'] = time();
+    $_SESSION['2fa_email_sent'] = true;
+    
+    try {
+        $stmt_email = $pdo->prepare("SELECT email FROM users WHERE id = ?");
+        $stmt_email->execute([$user_id]);
+        $email_user = $stmt_email->fetch();
+        
+        if ($email_user && getSetting('email_notifications_enabled', '1', $user['organization_id']) == '1') {
+            $email_helper = new EmailHelper($pdo, $user['organization_id']);
+            $res = $email_helper->send2FACode($email_user['email'], $email_code, $user['username'], getSetting('site_name_ar', 'HR System', $user['organization_id']));
+            if (!$res['success']) {
+                error_log('Failed to send 2FA email code: ' . ($res['message'] ?? 'unknown'));
+            }
+        }
+    } catch (Exception $e) {
+        error_log('Error sending 2FA email: ' . $e->getMessage());
+    }
+}
+
+$email_code_enabled = getSetting('email_notifications_enabled', '1', $user['organization_id']) == '1';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf()) {
+        $error = __('fill_fields_error');
+    } else {
     $code = trim($_POST['code'] ?? '');
     
     if (empty($code)) {
         $error = __('fill_fields_error');
     } else {
         if (TotpHelper::verifyCode($user['two_factor_secret'], $code)) {
+            session_regenerate_id(true);
             // Success: log the user in officially
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['organization_id'] = $user['organization_id'];
+            $_SESSION['2fa_verified'] = true;
 
             // Fetch employee info if available
             $stmtEmp = $pdo->prepare("SELECT id, full_name FROM employees WHERE user_id = ?");
@@ -45,8 +77,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['employee_id'] = $emp ? $emp['id'] : null;
             $_SESSION['full_name'] = $emp && !empty($emp['full_name']) ? $emp['full_name'] : $user['username'];
 
-            // Clear temporary variable
+            // Clear temporary variables
             unset($_SESSION['temp_2fa_user_id']);
+            unset($_SESSION['2fa_email_code']);
+            unset($_SESSION['2fa_email_code_time']);
+            unset($_SESSION['2fa_email_sent']);
 
             logActivity("🔐 تسجيل الدخول (ثنائي)", "🔐 Login (2FA)", "User logged in successfully via 2FA");
             redirect('index.php');
@@ -54,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = __('2fa_invalid_code');
             logActivity("⚠️ فشل التحقق الثنائي", "⚠️ Failed 2FA Attempt", "Username: " . $user['username']);
         }
+    }
     }
 }
 
@@ -70,6 +106,9 @@ include '../includes/header.php';
                         <div class="fs-1 mb-3">🛡️</div>
                         <h4 class="fw-bold"><?php echo __('2fa_title'); ?></h4>
                         <p class="text-muted small"><?php echo __('2fa_active_desc'); ?></p>
+                        <?php if ($email_code_enabled): ?>
+                            <p class="text-muted x-small mt-2"><?php echo __('code_sent_to_email'); ?></p>
+                        <?php endif; ?>
                     </div>
 
                     <?php if ($error): ?>
@@ -77,6 +116,7 @@ include '../includes/header.php';
                     <?php endif; ?>
 
                     <form action="verify_2fa.php" method="POST" autocomplete="off">
+                        <?php echo csrf_field(); ?>
                         <div class="mb-4">
                             <label class="form-label small fw-bold text-center d-block mb-3"><?php echo __('2fa_code_label'); ?></label>
                             <input type="text" name="code" class="form-control text-center fs-3 letter-spacing-lg fw-bold" placeholder="000000" maxlength="6" pattern="\d{6}" required autofocus autocomplete="one-time-code">

@@ -7,12 +7,15 @@ $error = '';
 
 // إضافة قسم جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_department'])) {
+    if (!verify_csrf()) {
+        $error = __('access_denied');
+    } else {
     $name_ar = trim($_POST['name_ar'] ?? '');
     $name_en = trim($_POST['name_en'] ?? '');
     $org_id = CURRENT_ORG_ID ?? 1; // استخدام المعرف من الجلسة
     
     if (empty($name_ar) || empty($name_en)) {
-        $error = 'All fields are required.';
+        $error = __('fill_fields_error');
     } else {
         try {
             $stmt = $pdo->prepare("INSERT INTO departments (name_ar, name_en, organization_id) VALUES (?, ?, ?)");
@@ -21,20 +24,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_department'])) {
                 $success = __('success_added');
             }
         } catch (PDOException $e) {
-            $error = 'Error: ' . $e->getMessage();
+            $error = __('db_error') . ': ' . $e->getMessage();
         }
+    }
     }
 }
 
 // تعديل قسم
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_department'])) {
+    if (!verify_csrf()) {
+        $error = __('access_denied');
+    } else {
     $id = $_POST['dept_id'];
     $name_ar = trim($_POST['name_ar'] ?? '');
     $name_en = trim($_POST['name_en'] ?? '');
     $org_id = CURRENT_ORG_ID ?? 1;
 
     if (empty($name_ar) || empty($name_en)) {
-        $error = 'All fields are required.';
+        $error = __('fill_fields_error');
     } else {
         try {
             // التحقق من ملكية القسم للمؤسسة للأمان
@@ -44,13 +51,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_department'])) {
                 $success = __('success_updated');
             }
         } catch (PDOException $e) {
-            $error = 'Error: ' . $e->getMessage();
+            $error = __('db_error') . ': ' . $e->getMessage();
         }
+    }
     }
 }
 
 // حذف قسم
 if (isset($_GET['delete'])) {
+    if (!isset($_GET['csrf_token']) || !verify_csrf($_GET['csrf_token'])) {
+        $error = __('access_denied');
+    } else {
     $id = $_GET['delete'];
     $org_id = CURRENT_ORG_ID ?? 1;
     try {
@@ -59,10 +70,11 @@ if (isset($_GET['delete'])) {
             logActivity("🗑️ حذف قسم", "🗑️ Delete Department", "ID: $id");
             $success = __('success_updated');
         }
-    } catch (PDOException $e) {
-        $error = 'Cannot delete department with existing employees.';
+        } catch (PDOException $e) {
+            $error = 'Cannot delete department with existing employees.';
+        }
     }
-}
+    }
 
 $org_id = CURRENT_ORG_ID ?? 1;
 $stmt = $pdo->prepare("SELECT d.*, (SELECT COUNT(*) FROM employees WHERE department_id = d.id) as emp_count FROM departments d WHERE d.organization_id = ? ORDER BY d.name_ar ASC");
@@ -70,7 +82,11 @@ $stmt->execute([$org_id]);
 $departments = $stmt->fetchAll();
 
 $pageTitle = __('departments');
-include '../includes/header.php';
+if ($_SESSION['role'] === 'super_admin') {
+    include '../includes/superadmin_header.php';
+} else {
+    include '../includes/header.php';
+}
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -109,7 +125,7 @@ include '../includes/header.php';
                                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editDeptModal<?php echo $dept['id']; ?>">
                                     ✏️
                                 </button>
-                                <a href="?delete=<?php echo $dept['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('<?php echo __('confirm_delete'); ?>')">
+                                <a href="?delete=<?php echo $dept['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('<?php echo __('confirm_delete'); ?>')">
                                     🗑️
                                 </a>
                             </td>
@@ -130,6 +146,7 @@ include '../includes/header.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="departments.php" method="POST">
+                <?php echo csrf_field(); ?>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label small fw-bold"><?php echo __('dept_name'); ?> *</label>
@@ -159,6 +176,7 @@ include '../includes/header.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="departments.php" method="POST">
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="dept_id" value="<?php echo $dept['id']; ?>">
                 <div class="modal-body">
                     <div class="mb-3">
@@ -180,4 +198,4 @@ include '../includes/header.php';
 </div>
 <?php endforeach; ?>
 
-<?php include '../includes/footer.php'; ?>
+<?php if ($_SESSION['role'] === 'super_admin') { include '../includes/superadmin_footer.php'; } else { include '../includes/footer.php'; } ?>

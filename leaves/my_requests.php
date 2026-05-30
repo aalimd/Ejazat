@@ -6,11 +6,11 @@ checkAuth();
 $emp_id = $_SESSION['employee_id'] ?? 0;
 $stmtCheck = $pdo->prepare("SELECT status, can_request_leave, leave_balance_verified, initial_leave_balance FROM employees WHERE id = ?");
 $stmtCheck->execute([$emp_id]);
-$emp_data = $stmtCheck->fetch();
+$emp_data = $stmtCheck->fetch() ?: [];
 $emp_status = $emp_data['status'] ?? 'pending';
 $can_request_leave = $emp_data['can_request_leave'] ?? 0;
 $balance_verified = $emp_data['leave_balance_verified'] ?? 0;
-$has_balance = ($emp_data['initial_leave_balance'] !== null);
+$has_balance = array_key_exists('initial_leave_balance', $emp_data) && $emp_data['initial_leave_balance'] !== null;
 
 $global_allow_leaves = getSetting('allow_leave_requests') === '1';
 
@@ -19,6 +19,8 @@ $is_restricted = ($emp_status !== 'approved' || !$balance_verified || !$has_bala
 
 $error = '';
 $success = '';
+$op_code = '';
+$op_time = '';
 
 // جلب أنواع الإجازات للجهة الحالية
 $org_id = CURRENT_ORG_ID ?? 1;
@@ -48,13 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
         $attachment_url = $leave_attachment_visible ? trim($_POST['attachment_url'] ?? '') : '';
 
         if (empty($type_id) || empty($start_date) || empty($end_date)) {
-            $error = 'Fill required fields.';
+            $error = __('fill_fields_error');
         } elseif ($leave_reason_visible && $leave_reason_required && empty($reason)) {
-            $error = 'سبب الإجازة مطلوب إجبارياً.';
+            $error = __('reason_required');
         } elseif ($leave_attachment_visible && $leave_attachment_required && empty($attachment_url)) {
-            $error = 'إرفاق إثبات نظام الوزارة مطلوب إجبارياً.';
+            $error = __('attachment_required');
         } elseif (strtotime($start_date) > strtotime($end_date)) {
-            $error = 'End date must be after start date.';
+            $error = __('end_after_start');
         } else {
             // التحقق من تاريخ الإجازة بأثر رجعي
             $allow_past = getSetting('allow_past_leaves', '0') === '1';
@@ -83,24 +85,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
                 // التحقق من توفر الرصيد والحد الأقصى (نظام أوراكل)
                 $days_requested = calculateLeaveDays($start_date, $end_date, CURRENT_ORG_ID);
                 
-                $stmt_type = $pdo->prepare("SELECT deduct_from_balance, max_days_per_year FROM leave_types WHERE id = ?");
-                $stmt_type->execute([$type_id]);
+                $stmt_type = $pdo->prepare("SELECT id, deduct_from_balance, max_days_per_year FROM leave_types WHERE id = ? AND organization_id = ?");
+                $stmt_type->execute([$type_id, $org_id]);
                 $type_info = $stmt_type->fetch();
 
-                if ($type_info['deduct_from_balance'] && $days_requested > $emp_data['initial_leave_balance']) {
+                if (!$type_info) {
+                    $error = __('access_denied');
+                } elseif ($type_info['deduct_from_balance'] && $days_requested > ($emp_data['initial_leave_balance'] ?? 0)) {
                     $error = __('insufficient_balance');
                 } elseif ($days_requested > $type_info['max_days_per_year']) {
                     $error = __('max_days_per_year_error') . ": " . $type_info['max_days_per_year'];
                 } else {
                     $request_code = generateOperationCode('LV');
-                    $stmt = $pdo->prepare("INSERT INTO leave_requests (employee_id, leave_type_id, start_date, end_date, reason, attachment_url, status, request_code) 
-                                           VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)");
-                    if ($stmt->execute([$emp_id, $type_id, $start_date, $end_date, $reason, $attachment_url, $request_code])) {
-                        $success = __('registration_success'); 
+                    $stmt = $pdo->prepare("INSERT INTO leave_requests (organization_id, employee_id, leave_type_id, start_date, end_date, reason, attachment_url, status, request_code) 
+                                           VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
+                    if ($stmt->execute([$org_id, $emp_id, $type_id, $start_date, $end_date, $reason, $attachment_url, $request_code])) {
+                        $success = __('success_added'); 
                         $op_code = $request_code;
                         $op_time = date('Y-m-d H:i:s');
                     } else {
-                        $error = 'Error.';
+                        $error = __('db_error');
                     }
                 }
             }
@@ -223,7 +227,7 @@ include '../includes/header.php';
                                     <?php if (!empty($req['attachment_url'])): ?>
                                         <div class="mt-2">
                                             <a href="<?php echo htmlspecialchars($req['attachment_url']); ?>" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
-                                                <i class="fas fa-file-alt"></i> عرض الإثبات
+                                                <i class="fas fa-file-alt"></i> <?php echo __('view_attachment'); ?>
                                             </a>
                                         </div>
                                     <?php endif; ?>
@@ -272,14 +276,14 @@ include '../includes/header.php';
                     </div>
                     <?php if ($leave_attachment_visible): ?>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">إثبات نظام الوزارة <?php echo $leave_attachment_required ? '*' : '(اختياري)'; ?></label>
+                        <label class="form-label small fw-bold"><?php echo __('attachment_field'); ?> <?php echo $leave_attachment_required ? '*' : '(اختياري)'; ?></label>
                         <div class="d-grid">
                             <button type="button" id="upload_widget" class="btn btn-outline-secondary border-dashed text-primary shadow-sm" style="border-style: dashed; border-width: 2px;">
-                                <i class="fas fa-cloud-upload-alt me-2"></i> إرفاق صورة أو PDF من النظام
+                                <i class="fas fa-cloud-upload-alt me-2"></i> <?php echo __('upload_attachment'); ?>
                             </button>
                         </div>
                         <input type="hidden" name="attachment_url" id="attachment_url" <?php echo $leave_attachment_required ? 'required' : ''; ?>>
-                        <small id="upload_success_msg" class="text-success d-none mt-1 fw-bold"><i class="fas fa-check-circle"></i> تم إرفاق الملف بنجاح!</small>
+                        <small id="upload_success_msg" class="text-success d-none mt-1 fw-bold"><i class="fas fa-check-circle"></i> <?php echo __('file_uploaded'); ?></small>
                     </div>
                     <?php endif; ?>
 
@@ -323,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 daysDisplay.classList.remove('d-none');
                 
                 // إضافة لمسة جمالية للإشارة أن الحسبة تقويمية
-                const suffix = ' (<?php echo __('calendar_days'); ?>)';
+                const suffix = '<?php echo __('calendar_days_suffix'); ?>';
                 daysCount.textContent += ' ' + suffix;
             } else {
                 daysDisplay.classList.add('d-none');
@@ -375,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const uploadBtn = document.getElementById('upload_widget');
             uploadBtn.classList.remove('btn-outline-secondary', 'text-primary');
             uploadBtn.classList.add('btn-success', 'text-white');
-            uploadBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> تم إرفاق الملف';
+            uploadBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> <?php echo __('file_uploaded_btn'); ?>';
             
             document.getElementById('upload_success_msg').classList.remove('d-none');
         }

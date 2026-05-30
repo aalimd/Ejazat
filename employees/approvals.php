@@ -12,19 +12,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $emp_id = $_POST['employee_id'];
     $action = $_POST['action']; // approved or rejected
     $reason = $_POST['rejection_reason'] ?? '';
-    $verify_balance = isset($_POST['verify_balance']) ? 1 : 0;
+    $verify_balance = ($action === 'approve' && isset($_POST['verify_balance'])) ? 1 : 0;
 
     $status = ($action === 'approve') ? 'approved' : 'rejected';
+
+    if ($action === 'approve' && !$verify_balance) {
+        $error = __('verify_balance');
+    } else {
+    
+    $notification_ar = ($translations['ar']['profile_approved'] ?? __('profile_approved'));
+    $notification_en = ($translations['en']['profile_approved'] ?? __('profile_approved'));
+
+    if ($status === 'rejected') {
+        $notification_ar = ($translations['ar']['profile_rejected'] ?? __('profile_rejected')) . ($reason ? ': ' . $reason : '');
+        $notification_en = ($translations['en']['profile_rejected'] ?? __('profile_rejected')) . ($reason ? ': ' . $reason : '');
+    }
     
     if ($org_id) {
-        $stmt = $pdo->prepare("UPDATE employees SET status = ?, rejection_reason = ?, leave_balance_verified = ?, decision_date = NOW() WHERE id = ? AND organization_id = ?");
+        $stmt = $pdo->prepare("UPDATE employees SET status = ?, rejection_reason = ?, leave_balance_verified = ?, decision_date = NOW() WHERE id = ? AND organization_id = ? AND status = 'pending'");
         $exec_success = $stmt->execute([$status, $reason, $verify_balance, $emp_id, $org_id]);
     } else {
-        $stmt = $pdo->prepare("UPDATE employees SET status = ?, rejection_reason = ?, leave_balance_verified = ?, decision_date = NOW() WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE employees SET status = ?, rejection_reason = ?, leave_balance_verified = ?, decision_date = NOW() WHERE id = ? AND status = 'pending'");
         $exec_success = $stmt->execute([$status, $reason, $verify_balance, $emp_id]);
     }
 
-    if ($exec_success) {
+    if ($exec_success && $stmt->rowCount() > 0) {
         // إضافة إشعار للموظف
         if ($org_id) {
             $stmt_user = $pdo->prepare("SELECT user_id, full_name FROM employees WHERE id = ? AND organization_id = ?");
@@ -38,16 +50,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($emp_data) {
             if ($status === 'approved') {
                 logActivity("✅ اعتماد موظف", "✅ Approve Employee", "Employee: " . $emp_data['full_name'] . " (ID: $emp_id)");
-                addNotification($emp_data['user_id'], __('profile_approved'), __('profile_approved'));
+                addNotification($emp_data['user_id'], $notification_ar, $notification_en);
             } else {
                 logActivity("❌ رفض اعتماد موظف", "❌ Reject Employee", "Employee: " . $emp_data['full_name'] . " (ID: $emp_id), Reason: $reason");
-                addNotification($emp_data['user_id'], __('leave_request_rejected') . ": " . $reason, __('leave_request_rejected') . ": " . $reason);
+                addNotification($emp_data['user_id'], $notification_ar, $notification_en);
             }
         }
         
         $success = __('success_updated');
     } else {
-        $error = 'Error updating record.';
+        $error = __('access_denied');
+    }
     }
 }
 
@@ -124,8 +137,8 @@ include '../includes/header.php';
                             </div>
                             <div class="col-12 mb-2 small">
                                 <?php 
-                                $stmtB = $pdo->prepare("SELECT e.balance, l.name_ar, l.name_en FROM employee_leave_balances e JOIN leave_types l ON e.leave_type_id = l.id WHERE e.employee_id = ?");
-                                $stmtB->execute([$emp['id']]);
+                                $stmtB = $pdo->prepare("SELECT e.balance, l.name_ar, l.name_en FROM employee_leave_balances e JOIN leave_types l ON e.leave_type_id = l.id WHERE e.employee_id = ? AND l.organization_id = ?");
+                                $stmtB->execute([$emp['id'], CURRENT_ORG_ID]);
                                 foreach($stmtB->fetchAll() as $db): ?>
                                     <span class="badge bg-info text-dark"><?php echo h(get_name(['name_ar'=>$db['name_ar'], 'name_en'=>$db['name_en']])); ?>: <?php echo $db['balance']; ?></span>
                                 <?php endforeach; ?>
@@ -138,7 +151,7 @@ include '../includes/header.php';
                             <input type="hidden" name="employee_id" value="<?php echo $emp['id']; ?>">
                             
                             <div class="form-check mb-3">
-                                <input class="form-check-input border-primary" type="checkbox" name="verify_balance" id="verify<?php echo $emp['id']; ?>" required>
+                                <input class="form-check-input border-primary" type="checkbox" name="verify_balance" id="verify<?php echo $emp['id']; ?>">
                                 <label class="form-check-label fw-bold text-primary small" for="verify<?php echo $emp['id']; ?>">
                                     <?php echo __('verify_balance'); ?>
                                 </label>

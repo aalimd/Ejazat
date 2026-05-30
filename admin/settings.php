@@ -18,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_general'])) {
         'prevent_overlapping_leaves' => isset($_POST['prevent_overlapping_leaves']) ? '1' : '0',
         'allow_past_leaves' => isset($_POST['allow_past_leaves']) ? '1' : '0',
         'weekend_days' => $_POST['weekend_days'] ?? 'Friday,Saturday',
-        'footer_text_ar' => $_POST['footer_text_ar'],
-        'footer_text_en' => $_POST['footer_text_en'],
+            'footer_text_ar' => $_POST['footer_text_ar'],
+            'footer_text_en' => $_POST['footer_text_en'],
         
         // تخصيص حقول طلب التسجيل
         'reg_field_phone_visible' => isset($_POST['reg_field_phone_visible']) ? '1' : '0',
@@ -60,7 +60,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_general'])) {
 }
 
 $pageTitle = __('settings');
-include '../includes/header.php';
+if ($_SESSION['role'] === 'super_admin') {
+    include '../includes/superadmin_header.php';
+} else {
+    include '../includes/header.php';
+}
 ?>
 
 <div class="mb-4 d-flex align-items-center">
@@ -103,14 +107,14 @@ include '../includes/header.php';
                             </h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted"><?php echo __('dept_name'); ?> (AR)</label>
+                                    <label class="form-label small fw-bold text-muted"><?php echo __('site_name_ar_setting'); ?> (AR)</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light">🅰️</span>
                                         <input type="text" name="site_name_ar" class="form-control" value="<?php echo h(getSetting('site_name_ar')); ?>" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted"><?php echo __('dept_name_en'); ?> (EN)</label>
+                                    <label class="form-label small fw-bold text-muted"><?php echo __('site_name_en_setting'); ?> (EN)</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light">🌐</span>
                                         <input type="text" name="site_name_en" class="form-control" value="<?php echo h(getSetting('site_name_en')); ?>" required>
@@ -223,72 +227,72 @@ include '../includes/header.php';
                         <!-- تخصيص حقول النماذج -->
                         <div class="col-md-12 mt-4">
                             <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
-                                📋 تخصيص حقول النماذج (التحكم بالخيارات الظاهرة والمطلوبة)
+                                <?php echo __('form_fields_customization'); ?>
                             </h6>
-                            <p class="text-muted small">يمكنك تفعيل أو تعطيل ظهور الحقول في فورم التسجيل وفورم طلب الإجازة، وتحديد ما إذا كانت مطلوبة إجبارياً أم اختيارية.</p>
+                            <p class="text-muted small"><?php echo __('form_fields_desc'); ?></p>
                             
                             <div class="row g-4">
                                 <!-- حقول طلب التسجيل -->
                                 <div class="col-md-6">
                                     <div class="card border shadow-sm h-100">
-                                        <div class="card-header bg-light fw-bold py-3">📋 حقول فورم طلب التسجيل الجديد</div>
+                                        <div class="card-header bg-light fw-bold py-3"><?php echo __('reg_form_fields'); ?></div>
                                         <div class="card-body">
                                             <!-- رقم الجوال -->
                                             <div class="border-bottom pb-3 mb-3">
-                                                <div class="fw-bold mb-2">📞 رقم الجوال (Phone)</div>
+                                                <div class="fw-bold mb-2"><?php echo __('phone_field'); ?></div>
                                                 <div class="d-flex gap-4">
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="reg_field_phone_visible" id="regPhoneVis" <?php echo getSetting('reg_field_phone_visible', '1') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small" for="regPhoneVis">ظاهر في الفورم</label>
+                                                        <label class="form-check-label small" for="regPhoneVis"><?php echo __('visible_in_form'); ?></label>
                                                     </div>
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="reg_field_phone_required" id="regPhoneReq" <?php echo getSetting('reg_field_phone_required', '0') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small text-danger fw-bold" for="regPhoneReq">مطلوب إجباري *</label>
+                                                        <label class="form-check-label small text-danger fw-bold" for="regPhoneReq"><?php echo __('required_field'); ?></label>
                                                     </div>
                                                 </div>
                                             </div>
                                             
                                             <!-- القسم -->
                                             <div class="border-bottom pb-3 mb-3">
-                                                <div class="fw-bold mb-2">🏢 القسم (Department)</div>
+                                                <div class="fw-bold mb-2"><?php echo __('dept_field'); ?></div>
                                                 <div class="d-flex gap-4">
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="reg_field_dept_visible" id="regDeptVis" <?php echo getSetting('reg_field_dept_visible', '1') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small" for="regDeptVis">ظاهر في الفورم</label>
+                                                        <label class="form-check-label small" for="regDeptVis"><?php echo __('visible_in_form'); ?></label>
                                                     </div>
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="reg_field_dept_required" id="regDeptReq" <?php echo getSetting('reg_field_dept_required', '0') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small text-danger fw-bold" for="regDeptReq">مطلوب إجباري *</label>
+                                                        <label class="form-check-label small text-danger fw-bold" for="regDeptReq"><?php echo __('required_field'); ?></label>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- المسمى الوظيفي -->
                                             <div class="border-bottom pb-3 mb-3">
-                                                <div class="fw-bold mb-2">💼 المسمى الوظيفي (Job Title)</div>
+                                                <div class="fw-bold mb-2"><?php echo __('job_field'); ?></div>
                                                 <div class="d-flex gap-4">
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="reg_field_job_visible" id="regJobVis" <?php echo getSetting('reg_field_job_visible', '1') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small" for="regJobVis">ظاهر في الفورم</label>
+                                                        <label class="form-check-label small" for="regJobVis"><?php echo __('visible_in_form'); ?></label>
                                                     </div>
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="reg_field_job_required" id="regJobReq" <?php echo getSetting('reg_field_job_required', '0') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small text-danger fw-bold" for="regJobReq">مطلوب إجباري *</label>
+                                                        <label class="form-check-label small text-danger fw-bold" for="regJobReq"><?php echo __('required_field'); ?></label>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- الأرصدة الافتتاحية -->
                                             <div>
-                                                <div class="fw-bold mb-2">💰 الأرصدة الافتتاحية للإجازات</div>
+                                                <div class="fw-bold mb-2"><?php echo __('balance_field'); ?></div>
                                                 <div class="d-flex gap-4">
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="reg_field_balance_visible" id="regBalVis" <?php echo getSetting('reg_field_balance_visible', '1') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small" for="regBalVis">ظاهر في الفورم</label>
+                                                        <label class="form-check-label small" for="regBalVis"><?php echo __('visible_in_form'); ?></label>
                                                     </div>
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="reg_field_balance_required" id="regBalReq" <?php echo getSetting('reg_field_balance_required', '0') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small text-danger fw-bold" for="regBalReq">مطلوب إجباري *</label>
+                                                        <label class="form-check-label small text-danger fw-bold" for="regBalReq"><?php echo __('required_field'); ?></label>
                                                     </div>
                                                 </div>
                                             </div>
@@ -299,34 +303,34 @@ include '../includes/header.php';
                                 <!-- حقول طلب الإجازة -->
                                 <div class="col-md-6">
                                     <div class="card border shadow-sm h-100">
-                                        <div class="card-header bg-light fw-bold py-3">✈️ حقول فورم طلب الإجازة للموظف</div>
+                                        <div class="card-header bg-light fw-bold py-3"><?php echo __('leave_form_fields'); ?></div>
                                         <div class="card-body">
                                             <!-- سبب الإجازة -->
                                             <div class="border-bottom pb-3 mb-3">
-                                                <div class="fw-bold mb-2">💬 سبب الإجازة (Reason)</div>
+                                                <div class="fw-bold mb-2"><?php echo __('reason_field'); ?></div>
                                                 <div class="d-flex gap-4">
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="leave_field_reason_visible" id="leaveReasonVis" <?php echo getSetting('leave_field_reason_visible', '1') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small" for="leaveReasonVis">ظاهر في الفورم</label>
+                                                        <label class="form-check-label small" for="leaveReasonVis"><?php echo __('visible_in_form'); ?></label>
                                                     </div>
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="leave_field_reason_required" id="leaveReasonReq" <?php echo getSetting('leave_field_reason_required', '0') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small text-danger fw-bold" for="leaveReasonReq">مطلوب إجباري *</label>
+                                                        <label class="form-check-label small text-danger fw-bold" for="leaveReasonReq"><?php echo __('required_field'); ?></label>
                                                     </div>
                                                 </div>
                                             </div>
                                             
                                             <!-- مرفق الإثبات -->
                                             <div>
-                                                <div class="fw-bold mb-2">📎 إثبات نظام الوزارة (Attachment)</div>
+                                                <div class="fw-bold mb-2"><?php echo __('attachment_field'); ?></div>
                                                 <div class="d-flex gap-4">
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="leave_field_attachment_visible" id="leaveAttachVis" <?php echo getSetting('leave_field_attachment_visible', '1') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small" for="leaveAttachVis">ظاهر في الفورم</label>
+                                                        <label class="form-check-label small" for="leaveAttachVis"><?php echo __('visible_in_form'); ?></label>
                                                     </div>
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" name="leave_field_attachment_required" id="leaveAttachReq" <?php echo getSetting('leave_field_attachment_required', '0') == '1' ? 'checked' : ''; ?>>
-                                                        <label class="form-check-label small text-danger fw-bold" for="leaveAttachReq">مطلوب إجباري *</label>
+                                                        <label class="form-check-label small text-danger fw-bold" for="leaveAttachReq"><?php echo __('required_field'); ?></label>
                                                     </div>
                                                 </div>
                                             </div>
@@ -345,13 +349,13 @@ include '../includes/header.php';
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted"><?php echo __('weekend_days'); ?></label>
                                     <select name="weekend_days" class="form-select bg-light">
-                                        <option value="Friday,Saturday" <?php echo getSetting('weekend_days', 'Friday,Saturday') == 'Friday,Saturday' ? 'selected' : ''; ?>>الجمعة والسبت (الافتراضي)</option>
-                                        <option value="Friday" <?php echo getSetting('weekend_days', 'Friday,Saturday') == 'Friday' ? 'selected' : ''; ?>>الجمعة فقط</option>
-                                        <option value="Saturday,Sunday" <?php echo getSetting('weekend_days', 'Friday,Saturday') == 'Saturday,Sunday' ? 'selected' : ''; ?>>السبت والأحد</option>
-                                        <option value="Sunday" <?php echo getSetting('weekend_days', 'Friday,Saturday') == 'Sunday' ? 'selected' : ''; ?>>الأحد فقط</option>
-                                        <option value="None" <?php echo getSetting('weekend_days', 'Friday,Saturday') == 'None' ? 'selected' : ''; ?>>لا توجد عطلات نهاية أسبوع</option>
+                                        <option value="Friday,Saturday" <?php echo getSetting('weekend_days', 'Friday,Saturday') == 'Friday,Saturday' ? 'selected' : ''; ?>><?php echo __('weekend_friday_saturday'); ?></option>
+                                        <option value="Friday" <?php echo getSetting('weekend_days', 'Friday,Saturday') == 'Friday' ? 'selected' : ''; ?>><?php echo __('weekend_friday'); ?></option>
+                                        <option value="Saturday,Sunday" <?php echo getSetting('weekend_days', 'Friday,Saturday') == 'Saturday,Sunday' ? 'selected' : ''; ?>><?php echo __('weekend_saturday_sunday'); ?></option>
+                                        <option value="Sunday" <?php echo getSetting('weekend_days', 'Friday,Saturday') == 'Sunday' ? 'selected' : ''; ?>><?php echo __('weekend_sunday'); ?></option>
+                                        <option value="None" <?php echo getSetting('weekend_days', 'Friday,Saturday') == 'None' ? 'selected' : ''; ?>><?php echo __('weekend_none'); ?></option>
                                     </select>
-                                    <small class="text-muted d-block mt-1">سيتم استبعاد هذه الأيام تلقائياً عند حساب الخصم من رصيد إجازات الموظفين.</small>
+                                    <small class="text-muted d-block mt-1"><?php echo __('weekend_desc'); ?></small>
                                 </div>
                             </div>
                         </div>
@@ -377,6 +381,8 @@ include '../includes/header.php';
             </div>
         </div>
     </div>
+
+
 </form>
 
 <style>
@@ -389,7 +395,7 @@ include '../includes/header.php';
         color: var(--primary-color);
     }
     .form-control, .form-select {
-        border: 1px solid #eee;
+        border: 1px solid var(--border-color, #eee);
     }
     .form-control:focus, .form-select:focus {
         box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.1);
@@ -397,4 +403,4 @@ include '../includes/header.php';
     }
 </style>
 
-<?php include '../includes/footer.php'; ?>
+<?php if ($_SESSION['role'] === 'super_admin') { include '../includes/superadmin_footer.php'; } else { include '../includes/footer.php'; } ?>
