@@ -280,7 +280,7 @@ function check_authentication() {
 
     // Login attempts
     try {
-        $stmt = $pdo->query("SELECT COUNT(*) FROM login_attempts WHERE attempted_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+        $stmt = $pdo->query("SELECT COUNT(*) FROM login_attempts WHERE last_attempt > DATE_SUB(NOW(), INTERVAL 24 HOUR)");
         $recent_attempts = (int)$stmt->fetchColumn();
         $results[] = $recent_attempts < 100
             ? status_healthy('Login Activity', "{$recent_attempts} attempts in last 24h", "{$recent_attempts}")
@@ -291,7 +291,7 @@ function check_authentication() {
 
     // Locked accounts
     try {
-        $stmt = $pdo->query("SELECT COUNT(DISTINCT username) FROM login_attempts WHERE attempts >= 5 AND attempted_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+        $stmt = $pdo->query("SELECT COUNT(DISTINCT username) FROM login_attempts WHERE failed_attempts >= 5 AND last_attempt > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
         $locked = (int)$stmt->fetchColumn();
         $results[] = $locked === 0
             ? status_healthy('Locked Accounts', 'No accounts currently locked')
@@ -521,7 +521,7 @@ try {
 
 // Failed login attempts today
 try {
-    $stmt = $pdo->query("SELECT COUNT(*) FROM login_attempts WHERE DATE(attempted_at) = CURDATE()");
+    $stmt = $pdo->query("SELECT COUNT(*) FROM login_attempts WHERE DATE(last_attempt) = CURDATE()");
     $diagnostics['login_failures_today'] = (int)$stmt->fetchColumn();
 } catch (Exception $e) {
     $diagnostics['login_failures_today'] = -1;
