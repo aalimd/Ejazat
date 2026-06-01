@@ -437,9 +437,9 @@ $super_nav = [
         <?php endif; ?>
     </div>
     <div class="sa-topbar-right">
-        <button id="saThemeToggle" class="btn btn-sm btn-outline-secondary border-0 fs-5"><span class="emoji-icon">🌙</span></button>
+        <button id="saThemeToggle" class="btn btn-sm btn-outline-secondary border-0"><span class="emoji-icon">🌙</span></button>
         <a class="btn btn-sm btn-outline-secondary border-0" href="?lang=<?php echo $lang == 'ar' ? 'en' : 'ar'; ?>">
-            <?php echo __('language'); ?>
+            <span class="emoji-icon"><?php echo __('language'); ?></span>
         </a>
         <div class="sa-topbar-user dropdown">
             <div class="sa-topbar-avatar"><?php echo strtoupper(substr($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'SA', 0, 2)); ?></div>

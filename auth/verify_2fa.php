@@ -107,12 +107,12 @@ include '../includes/header.php';
                         <h1 class="h4 fw-bold"><?php echo __('2fa_title'); ?></h1>
                         <p class="text-muted small"><?php echo __('2fa_active_desc'); ?></p>
                         <?php if ($email_code_enabled): ?>
-                            <p class="text-muted x-small mt-2"><?php echo __('code_sent_to_email'); ?></p>
+                            <p class="text-muted small mt-2"><span class="emoji-icon">📧</span> <?php echo __('code_sent_to_email'); ?></p>
                         <?php endif; ?>
                     </div>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger py-2 small text-center shadow-sm border-0 mb-4"><?php echo $error; ?></div>
+                        <div class="alert alert-danger d-flex align-items-center py-2 small text-center shadow-sm border-0 mb-4"><span class="emoji-icon me-2">⚠️</span> <?php echo $error; ?></div>
                     <?php endif; ?>
 
                     <form action="verify_2fa.php" method="POST" autocomplete="off">
@@ -121,11 +121,11 @@ include '../includes/header.php';
                             <label class="form-label small fw-bold text-center d-block mb-3"><?php echo __('2fa_code_label'); ?></label>
                             <input type="text" name="code" class="form-control text-center fs-3 letter-spacing-lg fw-bold" placeholder="000000" maxlength="6" pattern="\d{6}" required autofocus autocomplete="one-time-code">
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"><?php echo __('submit'); ?></button>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"><span class="emoji-icon">🛡️</span> <?php echo __('submit'); ?></button>
                     </form>
 
                     <div class="text-center mt-4 border-top pt-3">
-                        <a href="logout.php" class="small text-danger text-decoration-none fw-bold"><span class="emoji-icon">↩️</span> <?php echo __('cancel'); ?></a>
+                        <a href="logout.php" class="small text-danger text-decoration-none fw-bold"><span class="emoji-icon">❌</span> <?php echo __('cancel'); ?></a>
                     </div>
                 </div>
             </div>

@@ -59,20 +59,20 @@ include '../includes/header.php';
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <div class="display-4 text-primary mb-2"><span class="emoji-icon">🏢➕</span></div>
+                        <div class="fs-1 mb-3"><span class="emoji-icon">🏢</span></div>
                         <h1 class="h4 fw-bold"><?php echo __('request_new_org_title'); ?></h1>
                         <p class="text-muted small"><?php echo __('request_org_desc'); ?></p>
                     </div>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger shadow-sm border-0"><span class="emoji-icon">⚠️</span> <?php echo $error; ?></div>
+                        <div class="alert alert-danger d-flex align-items-center shadow-sm border-0"><span class="emoji-icon me-2">⚠️</span> <?php echo $error; ?></div>
                     <?php endif; ?>
                     
                     <?php if ($success): ?>
                         <div class="alert alert-success shadow-sm border-0 text-center py-4">
-                            <h5 class="fw-bold mb-3"><span class="emoji-icon">✅</span> <?php echo $success; ?></h5>
+                            <h5 class="fw-bold mb-3"><span class="emoji-icon me-2">✅</span> <?php echo $success; ?></h5>
                             <p class="mb-0 text-muted small"><?php echo __('follow_up_email'); ?></p>
-                            <a href="login.php" class="btn btn-primary mt-4 px-5 shadow-sm"><?php echo __('login'); ?></a>
+                            <a href="login.php" class="btn btn-primary mt-4 px-5 shadow-sm"><span class="emoji-icon">🔐</span> <?php echo __('login'); ?></a>
                         </div>
                     <?php else: ?>
 
@@ -80,55 +80,76 @@ include '../includes/header.php';
                         <?php echo csrf_field(); ?>
                         <div class="row">
                             <div class="col-md-12 mb-3">
-                                <h6 class="fw-bold border-bottom pb-2 text-primary"><?php echo __('org_info'); ?></h6>
+                                <h6 class="fw-bold border-bottom pb-2"><span class="emoji-icon">🏢</span> <?php echo __('org_info'); ?></h6>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('org_name_ar'); ?></label>
-                                <input type="text" name="name_ar" class="form-control bg-light" placeholder="<?php echo __('org_name_ar_example'); ?>" required value="<?php echo h($_POST['name_ar'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">🌐</span></span>
+                                    <input type="text" name="name_ar" class="form-control bg-light" placeholder="<?php echo __('org_name_ar_example'); ?>" required value="<?php echo h($_POST['name_ar'] ?? ''); ?>">
+                                </div>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('org_name_en'); ?></label>
-                                <input type="text" name="name_en" class="form-control bg-light" placeholder="<?php echo __('org_name_en_example'); ?>" required value="<?php echo h($_POST['name_en'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">🌐</span></span>
+                                    <input type="text" name="name_en" class="form-control bg-light" placeholder="<?php echo __('org_name_en_example'); ?>" required value="<?php echo h($_POST['name_en'] ?? ''); ?>">
+                                </div>
                             </div>
                             
                             <div class="col-md-12 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('org_slug'); ?></label>
-                                <input type="text" name="slug" class="form-control bg-light" placeholder="<?php echo __('org_slug_example'); ?>" required pattern="^[a-z0-9\-]+$" value="<?php echo h($_POST['slug'] ?? ''); ?>">
-                                <div class="form-text small opacity-75"><?php echo __('slug_tip'); ?></div>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">🔗</span></span>
+                                    <input type="text" name="slug" class="form-control bg-light" placeholder="<?php echo __('org_slug_example'); ?>" required pattern="^[a-z0-9\-]+$" value="<?php echo h($_POST['slug'] ?? ''); ?>">
+                                </div>
+                                <div class="form-text small opacity-75"><span class="emoji-icon">ℹ️</span> <?php echo __('slug_tip'); ?></div>
                             </div>
 
                             <div class="col-md-12 mb-3 mt-3">
-                                <h6 class="fw-bold border-bottom pb-2 text-success"><?php echo __('manager_info'); ?></h6>
+                                <h6 class="fw-bold border-bottom pb-2"><span class="emoji-icon">👤</span> <?php echo __('manager_info'); ?></h6>
                             </div>
                             
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('manager_full_name_label'); ?> *</label>
-                                <input type="text" name="manager_name" class="form-control bg-light" required placeholder="<?php echo __('full_name_placeholder'); ?>" value="<?php echo h($_POST['manager_name'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">👤</span></span>
+                                    <input type="text" name="manager_name" class="form-control bg-light" required placeholder="<?php echo __('full_name_placeholder'); ?>" value="<?php echo h($_POST['manager_name'] ?? ''); ?>">
+                                </div>
                             </div>
                             
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('manager_email_label'); ?> *</label>
-                                <input type="email" name="manager_email" class="form-control bg-light" required placeholder="<?php echo __('email_placeholder'); ?>" value="<?php echo h($_POST['manager_email'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">📧</span></span>
+                                    <input type="email" name="manager_email" class="form-control bg-light" required placeholder="<?php echo __('email_placeholder'); ?>" value="<?php echo h($_POST['manager_email'] ?? ''); ?>">
+                                </div>
                             </div>
                             
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('manager_phone_label'); ?> *</label>
-                                <input type="text" name="manager_phone" class="form-control bg-light" required placeholder="<?php echo __('phone_placeholder'); ?>" value="<?php echo h($_POST['manager_phone'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">📞</span></span>
+                                    <input type="text" name="manager_phone" class="form-control bg-light" required placeholder="<?php echo __('phone_placeholder'); ?>" value="<?php echo h($_POST['manager_phone'] ?? ''); ?>">
+                                </div>
                             </div>
                             
                             <div class="col-md-12 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('notes_label');?></label>
-                                <textarea name="notes" class="form-control bg-light" rows="3" placeholder="<?php echo __('notes_placeholder'); ?>"><?php echo h($_POST['notes'] ?? ''); ?></textarea>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">💬</span></span>
+                                    <textarea name="notes" class="form-control bg-light" rows="3" placeholder="<?php echo __('notes_placeholder'); ?>"><?php echo h($_POST['notes'] ?? ''); ?></textarea>
+                                </div>
                             </div>
                         </div>
 
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"><?php echo __('submit_request'); ?></button>
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"><span class="emoji-icon">📤</span> <?php echo __('submit_request'); ?></button>
                         </div>
                         <div class="text-center mt-3">
-                            <a href="login.php" class="small fw-bold text-decoration-none"><?php echo __('login'); ?></a>
+                            <a href="login.php" class="small fw-bold text-decoration-none"><span class="emoji-icon">🔐</span> <?php echo __('login'); ?></a>
                         </div>
                     </form>
                     <?php endif; ?>

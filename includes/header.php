@@ -179,7 +179,7 @@ if (isLoggedIn()):
             <ul class="navbar-nav mb-2 mb-lg-0">
                 <!-- Theme Toggle -->
                 <li class="nav-item me-2 d-flex align-items-center">
-                    <button id="themeToggle" class="btn btn-sm btn-outline-light border-0 fs-5"><span class="emoji-icon">🌙</span></button>
+                    <button id="themeToggle" class="btn btn-sm btn-outline-light border-0"><span class="emoji-icon">🌙</span></button>
                 </li>
                 <!-- Notifications Dropdown -->
                 <?php
@@ -218,9 +218,9 @@ if (isLoggedIn()):
                     </ul>
                 </li>
 
-                <li class="nav-item">
+                <li class="nav-item d-flex align-items-center">
                     <a class="nav-link text-white fw-bold px-3" href="?lang=<?php echo $lang == 'ar' ? 'en' : 'ar'; ?>">
-                        <?php echo __('language'); ?>
+                        <span class="emoji-icon"><?php echo __('language'); ?></span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -347,10 +347,10 @@ if (isLoggedIn()):
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
 <?php else: ?>
     <!-- Language Switcher & Theme Toggle for Login Page -->
-    <div class="p-3 d-flex justify-content-end align-items-center gap-2">
-        <button id="themeToggle" class="btn btn-outline-primary btn-sm fs-5"><span class="emoji-icon">🌙</span></button>
-        <a class="btn btn-outline-primary btn-sm" href="?lang=<?php echo $lang == 'ar' ? 'en' : 'ar'; ?>">
-            <?php echo __('language'); ?>
+    <div class="position-absolute top-0 end-0 p-3 d-flex align-items-center gap-2" style="z-index: 1050;">
+        <button id="themeToggle" class="btn border-0 p-1 fs-5 lh-1 bg-transparent" title="<?php echo __('settings'); ?>"><span class="emoji-icon">🌙</span></button>
+        <a class="text-decoration-none p-1 fs-5 lh-1" href="?lang=<?php echo $lang == 'ar' ? 'en' : 'ar'; ?>" title="<?php echo __('language'); ?>">
+            <span class="emoji-icon"><?php echo __('language'); ?></span>
         </a>
     </div>
 <?php endif; ?>

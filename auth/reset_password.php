@@ -96,14 +96,14 @@ include '../includes/header.php';
                     </div>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger py-2 small">
-                            <span class="emoji-icon">⚠️</span> <?php echo $error; ?>
+                        <div class="alert alert-danger d-flex align-items-center py-2 small">
+                            <span class="emoji-icon me-2">⚠️</span> <?php echo $error; ?>
                         </div>
                     <?php endif; ?>
 
                     <?php if ($success): ?>
                         <div class="alert alert-success py-3 small text-center">
-                            <strong><?php echo $success; ?></strong>
+                            <span class="emoji-icon me-2">✅</span> <strong><?php echo $success; ?></strong>
                         </div>
                         <div class="text-center mt-4">
                             <a href="login.php" class="btn btn-primary px-4 shadow-sm">
@@ -121,7 +121,7 @@ include '../includes/header.php';
                                     <span class="input-group-text bg-light"><span class="emoji-icon">🔒</span></span>
                                     <input type="password" name="new_password" id="new_password" class="form-control bg-light" required>
                                 </div>
-                                <small class="text-muted d-block mt-1"><?php echo __('password_reset_instruction'); ?></small>
+                                <small class="text-muted d-block mt-1"><span class="emoji-icon">ℹ️</span> <?php echo __('password_reset_instruction'); ?></small>
                             </div>
 
                             <div class="mb-4">
@@ -132,13 +132,13 @@ include '../includes/header.php';
                                 </div>
                             </div>
 
-                            <button type="submit" name="reset_password" class="btn btn-primary w-100 py-2 fw-bold">
+                            <button type="submit" name="reset_password" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
                                 <span class="emoji-icon">✅</span> <?php echo __('reset_password'); ?>
                             </button>
                         </form>
                     <?php else: ?>
-                        <div class="alert alert-warning text-center py-4">
-                            <?php echo __('request_reset_link'); ?>
+                        <div class="alert alert-warning text-center py-4 d-flex align-items-center justify-content-center">
+                            <span class="emoji-icon me-2">⚠️</span> <?php echo __('request_reset_link'); ?>
                         </div>
                         <div class="text-center">
                             <a href="forgot_password.php" class="btn btn-primary px-4 shadow-sm">

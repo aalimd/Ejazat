@@ -79,14 +79,14 @@ include '../includes/header.php';
                     </div>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger py-2 small">
-                            <span class="emoji-icon">⚠️</span> <?php echo $error; ?>
+                        <div class="alert alert-danger d-flex align-items-center py-2 small">
+                            <span class="emoji-icon me-2">⚠️</span> <?php echo $error; ?>
                         </div>
                     <?php endif; ?>
 
                     <?php if ($success): ?>
-                        <div class="alert alert-success py-3 small text-center">
-                            <strong><?php echo $success; ?></strong>
+                        <div class="alert alert-success py-3 small text-center d-flex align-items-center justify-content-center">
+                            <span class="emoji-icon me-2">✅</span> <strong><?php echo $success; ?></strong>
                         </div>
                         <div class="text-center mt-4">
                             <p class="mb-3 text-muted small"><?php echo __('login_now'); ?></p>
@@ -95,27 +95,29 @@ include '../includes/header.php';
                             </a>
                         </div>
                     <?php else: ?>
-                        <!-- Resend verification email form -->
                         <form action="verify_email.php" method="POST">
                             <?php echo csrf_field(); ?>
                             <div class="mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('email'); ?></label>
-                                <input type="email" name="email" class="form-control bg-light" 
-                                       value="<?php echo h($email_to_verify); ?>" required>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">📧</span></span>
+                                    <input type="email" name="email" class="form-control bg-light" 
+                                           value="<?php echo h($email_to_verify); ?>" required>
+                                </div>
                                 <small class="text-muted d-block mt-1">
-                                    <?php echo __('enter_email_for_verification'); ?>
+                                    <span class="emoji-icon">ℹ️</span> <?php echo __('enter_email_for_verification'); ?>
                                 </small>
                             </div>
-                            <button type="submit" name="resend_verification" class="btn btn-primary w-100 py-2 fw-bold">
+                            <button type="submit" name="resend_verification" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
                                 <span class="emoji-icon">📧</span> <?php echo __('send_verification'); ?>
                             </button>
                         </form>
 
                         <div class="text-center mt-4 border-top pt-3">
                             <p class="text-muted small mb-2"><?php echo __('didnt_receive_email'); ?></p>
-                            <a href="register.php" class="small fw-bold text-decoration-none"><?php echo __('register'); ?></a>
+                            <a href="register.php" class="small fw-bold text-decoration-none"><span class="emoji-icon">👤</span> <?php echo __('register'); ?></a>
                             <span class="text-muted small"> | </span>
-                            <a href="login.php" class="small fw-bold text-decoration-none"><?php echo __('login'); ?></a>
+                            <a href="login.php" class="small fw-bold text-decoration-none"><span class="emoji-icon">🔐</span> <?php echo __('login'); ?></a>
                         </div>
                     <?php endif; ?>
                 </div>

@@ -59,14 +59,14 @@ include '../includes/header.php';
                     </div>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger py-2 small">
-                            <span class="emoji-icon">⚠️</span> <?php echo $error; ?>
+                        <div class="alert alert-danger d-flex align-items-center py-2 small">
+                            <span class="emoji-icon me-2">⚠️</span> <?php echo $error; ?>
                         </div>
                     <?php endif; ?>
 
                     <?php if ($success): ?>
                         <div class="alert alert-success py-3 small">
-                            <span class="emoji-icon">✅</span> <strong><?php echo $success; ?></strong>
+                            <span class="emoji-icon me-2">✅</span> <strong><?php echo $success; ?></strong>
                         </div>
                         <div class="text-center mt-4">
                             <p class="text-muted small mb-3"><?php echo __('check_email_instruction'); ?></p>
@@ -84,20 +84,20 @@ include '../includes/header.php';
                                     <input type="email" name="email" class="form-control bg-light" required autofocus>
                                 </div>
                                 <small class="text-muted d-block mt-1">
-                                    <?php echo __('enter_email_instruction'); ?>
+                                    <span class="emoji-icon">ℹ️</span> <?php echo __('enter_email_instruction'); ?>
                                 </small>
                             </div>
-                            <button type="submit" name="forgot_password" class="btn btn-primary w-100 py-2 fw-bold">
-                                <?php echo __('send_reset_link'); ?>
+                            <button type="submit" name="forgot_password" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                                <span class="emoji-icon">📤</span> <?php echo __('send_reset_link'); ?>
                             </button>
                         </form>
 
                         <div class="text-center mt-4 border-top pt-3">
                             <span class="text-muted small"><?php echo __('remember_password'); ?></span>
-                            <a href="login.php" class="small fw-bold text-decoration-none"><?php echo __('login'); ?></a>
+                            <a href="login.php" class="small fw-bold text-decoration-none"><span class="emoji-icon">🔐</span> <?php echo __('login'); ?></a>
                             <div class="mt-2">
                                 <span class="text-muted small"><?php echo __('no_account'); ?></span>
-                                <a href="register.php" class="small fw-bold text-decoration-none text-success"><?php echo __('register'); ?></a>
+                                <a href="register.php" class="small fw-bold text-decoration-none text-success"><span class="emoji-icon">👤</span> <?php echo __('register'); ?></a>
                             </div>
                         </div>
                     <?php endif; ?>

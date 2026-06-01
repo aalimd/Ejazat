@@ -194,17 +194,17 @@ include '../includes/header.php';
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <span class="emoji-icon">👤➕</span>
+                        <div class="fs-1 mb-3"><span class="emoji-icon">👤</span></div>
                         <h1 class="h4 fw-bold"><?php echo __('register'); ?></h1>
                         <p class="text-muted small"><?php echo __('site_name'); ?></p>
                     </div>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger shadow-sm border-0"><span class="emoji-icon">⚠️</span> <?php echo $error; ?></div>
+                        <div class="alert alert-danger d-flex align-items-center shadow-sm border-0"><span class="emoji-icon me-2">⚠️</span> <?php echo $error; ?></div>
                     <?php endif; ?>
                     <?php if ($success): ?>
                         <div class="alert alert-success shadow-sm border-0">
-                            <h5 class="fw-bold"><span class="emoji-icon">✅</span> <?php echo $success; ?></h5>
+                            <h5 class="fw-bold"><span class="emoji-icon me-2">✅</span> <?php echo $success; ?></h5>
                             <hr>
                             <div class="row text-start small">
                                 <div class="col-6 mb-2"><strong><?php echo __('operation_code'); ?>:</strong></div>
@@ -223,38 +223,42 @@ include '../includes/header.php';
                         <!-- Organization Selection - Public List -->
                         <div class="row">
                             <div class="col-md-12 mb-4">
-                                <label class="form-label small fw-bold text-primary"><?php echo __('choose_org'); ?></label>
-                                <select name="organization_id" class="form-select bg-light border-primary fw-bold" onchange="this.form.submit();">
-                                    <option value=""><?php echo __('choose_from_list'); ?></option>
-                                    <?php foreach ($public_orgs as $org): ?>
-                                        <option value="<?php echo $org['id']; ?>" <?php echo $selected_org_id === intval($org['id']) && !$code_used ? 'selected' : ''; ?>>
-                                            <?php echo get_name($org); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <small class="text-muted d-block mt-2"><?php echo __('org_not_listed'); ?></small>
+                                <label class="form-label small fw-bold text-primary"><span class="emoji-icon">🏢</span> <?php echo __('choose_org'); ?></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">🏢</span></span>
+                                    <select name="organization_id" class="form-select bg-light border-primary fw-bold" onchange="this.form.submit();">
+                                        <option value=""><?php echo __('choose_from_list'); ?></option>
+                                        <?php foreach ($public_orgs as $org): ?>
+                                            <option value="<?php echo $org['id']; ?>" <?php echo $selected_org_id === intval($org['id']) && !$code_used ? 'selected' : ''; ?>>
+                                                <?php echo get_name($org); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <small class="text-muted d-block mt-2"><span class="emoji-icon">ℹ️</span> <?php echo __('org_not_listed'); ?></small>
                             </div>
 
                             <!-- Alternative: Private Organization with Code -->
-                            <div class="col-md-12 mb-4 pt-2 border-top">
-                                <h6 class="text-muted fw-bold mb-3"><?php echo __('have_invite_code'); ?></h6>
+                            <div class="col-md-12 mb-4 pt-3 border-top">
+                                <h6 class="text-muted fw-bold mb-3"><span class="emoji-icon">🔑</span> <?php echo __('have_invite_code'); ?></h6>
                                 <div class="input-group">
-                                    <input type="text" name="invitation_code" class="form-control bg-light text-center fw-bold" placeholder="<?php echo __('enter_code_placeholder'); ?>" value="<?php echo h($_POST['invitation_code'] ?? $_GET['code'] ?? ''); ?>">
-                                    <button class="btn btn-success" type="submit"><?php echo __('verify_code'); ?></button>
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">🔑</span></span>
+                                    <input type="text" name="invitation_code" class="form-control bg-light fw-bold" placeholder="<?php echo __('enter_code_placeholder'); ?>" value="<?php echo h($_POST['invitation_code'] ?? $_GET['code'] ?? ''); ?>">
+                                    <button class="btn btn-success" type="submit"><span class="emoji-icon">✅</span><?php echo __('verify_code'); ?></button>
                                 </div>
                                 <?php if ($code_used && $org_by_code): ?>
-                                    <div class="alert alert-info mt-2 py-2 small">
-                                        <?php echo __('code_verified'); ?>: <strong><?php echo h($org_by_code['org_name']); ?></strong>
+                                    <div class="alert alert-info mt-2 py-2 small d-flex align-items-center">
+                                        <span class="emoji-icon me-2">✅</span> <?php echo __('code_verified'); ?>: <strong class="ms-1"><?php echo h($org_by_code['org_name']); ?></strong>
                                     </div>
                                 <?php endif; ?>
-                                <small class="text-muted d-block mt-2"><?php echo __('code_description'); ?></small>
+                                <small class="text-muted d-block mt-2"><span class="emoji-icon">ℹ️</span> <?php echo __('code_description'); ?></small>
                             </div>
                         </div>
 
                         <?php if (!$selected_org_id || !$is_reg_enabled): ?>
                         <div class="col-md-12 mb-3">
                             <div class="alert alert-warning text-center py-4 shadow-sm border-0">
-                                <span class="emoji-icon">⚠️</span> <h5 class="fw-bold mb-2"><?php echo __('no_org_selected'); ?></h5>
+                                <span class="emoji-icon">🏢</span> <h5 class="fw-bold mb-2"><?php echo __('no_org_selected'); ?></h5>
                                 <p class="mb-0 text-muted small"><?php echo __('select_org_instruction'); ?></p>
                             </div>
                         </div>
@@ -266,73 +270,100 @@ include '../includes/header.php';
 
                         <div class="row">
                             <div class="col-md-12 mb-3">
-                                <h6 class="fw-bold border-bottom pb-2"><?php echo __('account_info'); ?></h6>
+                                <h6 class="fw-bold border-bottom pb-2"><span class="emoji-icon">🆔</span> <?php echo __('account_info'); ?></h6>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('username'); ?> *</label>
-                                <input type="text" name="username" class="form-control bg-light" required value="<?php echo h($_POST['username'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">👤</span></span>
+                                    <input type="text" name="username" class="form-control bg-light" required value="<?php echo h($_POST['username'] ?? ''); ?>">
+                                </div>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('password'); ?> *</label>
-                                <input type="password" name="password" class="form-control bg-light" required>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">🔒</span></span>
+                                    <input type="password" name="password" class="form-control bg-light" required>
+                                </div>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('email'); ?> *</label>
-                                <input type="email" name="email" class="form-control bg-light" required value="<?php echo h($_POST['email'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">📧</span></span>
+                                    <input type="email" name="email" class="form-control bg-light" required value="<?php echo h($_POST['email'] ?? ''); ?>">
+                                </div>
                             </div>
 
                             <div class="col-md-12 mb-3 mt-3">
-                                <h6 class="fw-bold border-bottom pb-2"><?php echo __('basic_info'); ?></h6>
+                                <h6 class="fw-bold border-bottom pb-2"><span class="emoji-icon">📋</span> <?php echo __('basic_info'); ?></h6>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('employee_id'); ?> *</label>
-                                <input type="text" name="employee_id_number" class="form-control bg-light" required value="<?php echo h($_POST['employee_id_number'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">🆔</span></span>
+                                    <input type="text" name="employee_id_number" class="form-control bg-light" required value="<?php echo h($_POST['employee_id_number'] ?? ''); ?>">
+                                </div>
                             </div>
                             <div class="col-md-8 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('full_name'); ?> *</label>
-                                <input type="text" name="full_name" class="form-control bg-light" required value="<?php echo h($_POST['full_name'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">👤</span></span>
+                                    <input type="text" name="full_name" class="form-control bg-light" required value="<?php echo h($_POST['full_name'] ?? ''); ?>">
+                                </div>
                             </div>
 
-                            <!-- حقل رقم الجوال التفاعلي -->
+                            <!-- Phone Field -->
                             <?php if ($reg_phone_visible): ?>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('phone'); ?> <?php echo $reg_phone_required ? '*' : ''; ?></label>
-                                <input type="text" name="phone" class="form-control bg-light" <?php echo $reg_phone_required ? 'required' : ''; ?> value="<?php echo h($_POST['phone'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">📞</span></span>
+                                    <input type="text" name="phone" class="form-control bg-light" <?php echo $reg_phone_required ? 'required' : ''; ?> value="<?php echo h($_POST['phone'] ?? ''); ?>">
+                                </div>
                             </div>
                             <?php endif; ?>
 
-                            <!-- حقل القسم التفاعلي -->
+                            <!-- Department Field -->
                             <?php if ($reg_dept_visible): ?>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('department'); ?> <?php echo $reg_dept_required ? '*' : ''; ?></label>
-                                <select name="department_id" class="form-select bg-light" <?php echo $reg_dept_required ? 'required' : ''; ?>>
-                                    <option value="">-- <?php echo __('department'); ?> --</option>
-                                    <?php foreach ($departments as $dept): ?>
-                                        <option value="<?php echo $dept['id']; ?>" <?php echo (isset($_POST['department_id']) && $_POST['department_id'] == $dept['id']) ? 'selected' : ''; ?>>
-                                            <?php echo h(get_name($dept)); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">🏛️</span></span>
+                                    <select name="department_id" class="form-select bg-light" <?php echo $reg_dept_required ? 'required' : ''; ?>>
+                                        <option value="">-- <?php echo __('department'); ?> --</option>
+                                        <?php foreach ($departments as $dept): ?>
+                                            <option value="<?php echo $dept['id']; ?>" <?php echo (isset($_POST['department_id']) && $_POST['department_id'] == $dept['id']) ? 'selected' : ''; ?>>
+                                                <?php echo h(get_name($dept)); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
                             <?php endif; ?>
 
-                            <!-- حقل المسمى الوظيفي التفاعلي -->
+                            <!-- Job Title Field -->
                             <?php if ($reg_job_visible): ?>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold"><?php echo __('job_title'); ?> <?php echo $reg_job_required ? '*' : ''; ?></label>
-                                <input type="text" name="job_title" class="form-control bg-light" <?php echo $reg_job_required ? 'required' : ''; ?> value="<?php echo h($_POST['job_title'] ?? ''); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><span class="emoji-icon">💼</span></span>
+                                    <input type="text" name="job_title" class="form-control bg-light" <?php echo $reg_job_required ? 'required' : ''; ?> value="<?php echo h($_POST['job_title'] ?? ''); ?>">
+                                </div>
                             </div>
                             <?php endif; ?>
 
-                            <!-- حقول الأرصدة الافتتاحية التفاعلية -->
+                            <!-- Leave Balances Fields -->
                             <?php if ($reg_balance_visible && !empty($leave_types)): ?>
                             <div class="col-md-12 mb-3 mt-3">
-                                <h6 class="fw-bold border-bottom pb-2"><?php echo __('initial_balances_per_type'); ?> <?php echo $reg_balance_required ? '*' : ''; ?></h6>
+                                <h6 class="fw-bold border-bottom pb-2"><span class="emoji-icon">📊</span> <?php echo __('initial_balances_per_type'); ?> <?php echo $reg_balance_required ? '*' : ''; ?></h6>
                             </div>
                             <?php foreach ($leave_types as $type): ?>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label small fw-bold text-primary"><?php echo h(get_name($type)); ?></label>
-                                <input type="number" name="leave_balances[<?php echo $type['id']; ?>]" class="form-control border-primary" <?php echo $reg_balance_required ? 'required' : ''; ?> min="0" value="<?php echo h($_POST['leave_balances'][$type['id']] ?? 0); ?>">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-primary"><span class="emoji-icon">📅</span></span>
+                                    <input type="number" name="leave_balances[<?php echo $type['id']; ?>]" class="form-control border-primary" <?php echo $reg_balance_required ? 'required' : ''; ?> min="0" value="<?php echo h($_POST['leave_balances'][$type['id']] ?? 0); ?>">
+                                </div>
                             </div>
                             <?php endforeach; ?>
                             <?php endif; ?>
@@ -341,13 +372,13 @@ include '../includes/header.php';
 
                         <?php if ($is_reg_enabled): ?>
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"><?php echo __('submit'); ?></button>
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"><span class="emoji-icon">📤</span> <?php echo __('submit'); ?></button>
                         </div>
                         <?php endif; ?>
 
                         <div class="text-center mt-3">
                             <span class="text-muted small"><?php echo __('already_have_account'); ?></span>
-                            <a href="login.php" class="small fw-bold text-decoration-none"><?php echo __('login'); ?></a>
+                            <a href="login.php" class="small fw-bold text-decoration-none"><span class="emoji-icon">🔐</span> <?php echo __('login'); ?></a>
                         </div>
                     </form>
                     <?php endif; ?>

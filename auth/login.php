@@ -85,7 +85,7 @@ include '../includes/header.php';
                     </div>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger py-2 small"><?php echo $error; ?></div>
+                        <div class="alert alert-danger d-flex align-items-center py-2 small"><span class="emoji-icon me-2">⚠️</span> <?php echo $error; ?></div>
                     <?php endif; ?>
 
                     <form action="login.php" method="POST">
@@ -104,18 +104,18 @@ include '../includes/header.php';
                                 <input type="password" name="password" id="password" class="form-control bg-light border-start-0" required>
                             </div>
                             <div class="text-end mt-2">
-                                <a href="forgot_password.php" class="btn btn-link btn-sm text-primary fw-bold text-decoration-none p-0" style="font-size: 0.95rem;"><span class="emoji-icon">📋</span> <?php echo __('forgot_password'); ?></a>
+                                <a href="forgot_password.php" class="btn btn-link btn-sm text-primary fw-bold text-decoration-none p-0" style="font-size: 0.95rem;"><span class="emoji-icon">❓</span> <?php echo __('forgot_password'); ?></a>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold"><?php echo __('login'); ?></button>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"><span class="emoji-icon">🔐</span> <?php echo __('login'); ?></button>
                     </form>
 
                     <div class="text-center mt-4 border-top pt-3">
                         <span class="text-muted small"><?php echo __('dont_have_account'); ?></span>
-                        <a href="register.php" class="small fw-bold text-decoration-none"><?php echo __('register'); ?></a>
+                        <a href="register.php" class="small fw-bold text-decoration-none"><span class="emoji-icon">👤</span> <?php echo __('register'); ?></a>
                         <div class="mt-2">
                             <span class="text-muted small"><?php echo __('want_new_org'); ?></span>
-                            <a href="request_org.php" class="small fw-bold text-decoration-none text-success"><?php echo __('request_org'); ?></a>
+                            <a href="request_org.php" class="small fw-bold text-decoration-none text-success"><span class="emoji-icon">🏢</span> <?php echo __('request_org'); ?></a>
                         </div>
                     </div>
                 </div>
