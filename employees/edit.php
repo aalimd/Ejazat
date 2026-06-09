@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $emp = $stmt->fetch();
         } catch (PDOException $e) {
             $pdo->rollBack();
-            $error = $e->getMessage();
+            $error = __('error_generic');
         }
     }
     } // end CSRF else

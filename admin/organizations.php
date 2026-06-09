@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
-            $error = __('db_error') . ': ' . $e->getMessage();
+            $error = __('db_error');
         }
     }
     }
@@ -193,7 +193,7 @@ if (isset($_GET['approve_req_id']) && isset($_GET['csrf_token'])) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        $error = __('db_error') . ': ' . $e->getMessage();
+        $error = __('db_error');
     }
     }
 }
@@ -210,7 +210,7 @@ if (isset($_GET['reject_req_id']) && isset($_GET['csrf_token'])) {
         logActivity("🏢 رفض طلب جهة عمل", "🏢 Rejected Organization Request", "Rejected request ID $req_id");
         $success = __('rejected_success');
     } catch (Exception $e) {
-        $error = __('db_error') . ': ' . $e->getMessage();
+        $error = __('db_error');
     }
     }
 }
@@ -228,7 +228,7 @@ if (isset($_GET['toggle_email']) && isset($_GET['org_id']) && isset($_GET['csrf_
         logActivity("📧 تغيير حالة البريد", "📧 Toggle Org Email", "Organization ID $org_id email_enabled=$new_val");
         $success = __('success_updated');
     } catch (Exception $e) {
-        $error = __('db_error') . ': ' . $e->getMessage();
+        $error = __('db_error');
     }
     }
 }
@@ -248,7 +248,7 @@ if (isset($_GET['toggle_status']) && isset($_GET['org_id']) && isset($_GET['csrf
             logActivity("🔄 تعديل حالة جهة عمل", "🔄 Toggled Organization Status", "Organization ID $org_id status updated to $new_status");
             $success = __('success_updated');
         } catch (Exception $e) {
-            $error = __('db_error') . ': ' . $e->getMessage();
+            $error = __('db_error');
         }
     } else {
         $error = __('cannot_suspend_default');
@@ -271,7 +271,7 @@ try {
     ";
     $orgs = $pdo->query($query)->fetchAll();
 } catch (Exception $e) {
-    $error = __('db_error') . ': ' . $e->getMessage();
+    $error = __('db_error');
 }
 
 // Fetch pending organization requests

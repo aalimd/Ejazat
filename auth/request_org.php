@@ -43,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         } catch (PDOException $e) {
-            $error = __('request_error') . ': ' . $e->getMessage();
+            $error = __('request_error');
+            error_log('Organization request error: ' . $e->getMessage());
         }
     }
     }

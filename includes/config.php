@@ -15,7 +15,7 @@ loadDotEnv();
 $is_local_environment = !isset($_SERVER['HTTP_HOST']) || $_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1';
 ini_set('display_errors', $is_local_environment ? '1' : '0');
 ini_set('display_startup_errors', $is_local_environment ? '1' : '0');
-error_reporting(E_ALL);
+error_reporting($is_local_environment ? E_ALL : E_ALL & ~E_DEPRECATED & ~E_STRICT);
 
 if ($is_local_environment) {
     define('DB_HOST', env('DB_HOST_LOCAL', '127.0.0.1'));
@@ -27,8 +27,18 @@ if ($is_local_environment) {
     define('DB_HOST', env('DB_HOST_PROD', 'localhost'));
     define('DB_NAME', env('DB_NAME_PROD', '********_ejazat'));
     define('DB_USER', env('DB_USER_PROD', '********_ejazatuser'));
-    define('DB_PASS', env('DB_PASS_PROD', '********'));
+    define('DB_PASS', env('DB_PASS_PROD', ''));
     define('BASE_URL', env('BASE_URL_PROD', '/'));
+}
+
+// Auto-detect absolute URL for emails if BASE_URL is relative
+if (defined('BASE_URL') && strpos(BASE_URL, '://') === false) {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $path = rtrim(BASE_URL, '/');
+    define('ABSOLUTE_BASE_URL', "$protocol://$host$path/");
+} else {
+    define('ABSOLUTE_BASE_URL', rtrim(BASE_URL, '/') . '/');
 }
 
 // بدء الجلسة
@@ -176,6 +186,29 @@ try {
     // في حال عدم وجود الجدول بعد
 }
 
+// ========================================
+// SECURITY HEADERS
+// ========================================
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
+// ========================================
+// SESSION TIMEOUT ENFORCEMENT
+// ========================================
+if (isLoggedIn()) {
+    $session_timeout = getSetting('session_lifetime_minutes', '120');
+    $session_timeout_seconds = (int)$session_timeout * 60;
+    $last_activity = $_SESSION['last_activity'] ?? 0;
+    if ($last_activity > 0 && (time() - $last_activity) > $session_timeout_seconds) {
+        $_SESSION = [];
+        session_destroy();
+        redirect('auth/login.php?error=session_expired');
+    }
+    $_SESSION['last_activity'] = time();
+}
+
 // دوال مساعدة عامة
 function redirect($path) {
     header("Location: " . BASE_URL . $path);
@@ -319,7 +352,7 @@ function sendVerificationEmail($user_id, $email, $username = '') {
     }
     
     // Generate verification link
-    $verification_link = BASE_URL . 'auth/verify_email.php?token=' . $verification_token;
+    $verification_link = ABSOLUTE_BASE_URL . 'auth/verify_email.php?token=' . $verification_token;
     
     // Send email
     try {
@@ -430,7 +463,7 @@ function sendPasswordResetEmailToUser($email, $username = '', $reset_token = '')
     }
     
     // Generate reset link
-    $reset_link = BASE_URL . 'auth/reset_password.php?token=' . $reset_token;
+    $reset_link = ABSOLUTE_BASE_URL . 'auth/reset_password.php?token=' . $reset_token;
     
     // Send email
     try {
@@ -452,7 +485,7 @@ function sendWelcomeEmailToUser($email, $username, $full_name = '', $org_id = nu
     try {
         $email_helper = new EmailHelper($pdo, $org_id ?? CURRENT_ORG_ID);
         $site_name = getSetting('site_name_ar', 'HR System', $org_id);
-        $result = $email_helper->sendWelcomeEmail($email, $username, $full_name, $site_name, BASE_URL . 'auth/login.php');
+        $result = $email_helper->sendWelcomeEmail($email, $username, $full_name, $site_name, ABSOLUTE_BASE_URL . 'auth/login.php');
         return $result;
     } catch (Exception $e) {
         error_log('Error sending welcome email: ' . $e->getMessage());

@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_holiday'])) {
             logActivity("📅 إضافة عطلة رسمية", "📅 Add Official Holiday", "Holiday: $name_ar ($start_date to $end_date)");
             $success = __('success_added');
         } catch (PDOException $e) {
-            $error = $e->getMessage();
+            $error = __('error_generic');
         }
     }
     } // end CSRF else
@@ -45,7 +45,7 @@ if (isset($_GET['delete'])) {
         logActivity("🗑️ حذف عطلة رسمية", "🗑️ Delete Official Holiday", "Holiday ID: $holiday_id deleted");
         $success = __('success_deleted');
     } catch (PDOException $e) {
-        $error = $e->getMessage();
+        $error = __('error_generic');
     }
     }
 }

@@ -23,13 +23,12 @@ if ($org_id) {
                            WHERE e.id = ? AND e.organization_id = ?");
     $stmt->execute([$emp_id, $org_id]);
 } else {
-    // المدير العام (Super Admin) يرى الجميع في حال عدم اختيار منشأة
     $stmt = $pdo->prepare("SELECT e.*, d.name_ar as dept_ar, d.name_en as dept_en, u.email as user_email, u.username 
                            FROM employees e 
                            LEFT JOIN departments d ON e.department_id = d.id 
                            LEFT JOIN users u ON e.user_id = u.id 
-                           WHERE e.id = ?");
-    $stmt->execute([$emp_id]);
+                           WHERE e.id = ? AND e.organization_id = ?");
+    $stmt->execute([$emp_id, CURRENT_ORG_ID]);
 }
 $emp = $stmt->fetch();
 

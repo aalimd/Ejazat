@@ -1,25 +1,38 @@
 <?php
 require_once '../includes/config.php';
-checkAuth(['admin']); // فقط مدير النظام يمكنه رؤية السجل
+checkAuth(['admin']);
 
 $org_id = CURRENT_ORG_ID;
 
+// Pagination
+$page = max(1, (int)($_GET['p'] ?? 1));
+$per_page = 100;
+$offset = ($page - 1) * $per_page;
+
 if ($_SESSION['role'] === 'super_admin' && empty($org_id)) {
-    // الـ Super Admin يرى كل السجلات إذا لم يحدد منشأة
+    $countQuery = "SELECT COUNT(*) FROM activity_log al";
+    $total_records = (int)$pdo->query($countQuery)->fetchColumn();
+    $total_pages = max(1, (int)ceil($total_records / $per_page));
+
     $query = "SELECT al.*, u.username 
               FROM activity_log al 
               LEFT JOIN users u ON al.user_id = u.id 
               ORDER BY al.created_at DESC 
-              LIMIT 500";
+              LIMIT $per_page OFFSET $offset";
     $logs = $pdo->query($query)->fetchAll();
 } else {
-    // مدير المنشأة أو الـ Super Admin المتقمص لجهة معينة يرى فقط سجلات هذه المنشأة
+    $countQuery = "SELECT COUNT(*) FROM activity_log al WHERE al.organization_id = ?";
+    $stmtCount = $pdo->prepare($countQuery);
+    $stmtCount->execute([$org_id]);
+    $total_records = (int)$stmtCount->fetchColumn();
+    $total_pages = max(1, (int)ceil($total_records / $per_page));
+
     $query = "SELECT al.*, u.username 
               FROM activity_log al 
               LEFT JOIN users u ON al.user_id = u.id 
               WHERE al.organization_id = ?
               ORDER BY al.created_at DESC 
-              LIMIT 500";
+              LIMIT $per_page OFFSET $offset";
     $stmt = $pdo->prepare($query);
     $stmt->execute([$org_id]);
     $logs = $stmt->fetchAll();
@@ -35,7 +48,7 @@ if ($_SESSION['role'] === 'super_admin') {
 
 <div class="mb-4">
     <h1 class="h3"><i class="bi bi-journal-text"></i> <?php echo __('activity_log'); ?></h1>
-    <p class="text-muted small"><?php echo __('showing_last_500_actions'); ?></p>
+    <p class="text-muted small"><?php echo __('total_records'); ?>: <?php echo $total_records; ?></p>
 </div>
 
 <div class="card shadow-sm border-0">
@@ -84,5 +97,23 @@ if ($_SESSION['role'] === 'super_admin') {
         </div>
     </div>
 </div>
+
+<?php if ($total_pages > 1): ?>
+<nav aria-label="Activity log pagination" class="mt-4">
+    <ul class="pagination pagination-sm justify-content-center mb-0">
+        <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['p' => $page - 1])); ?>"><?php echo __('prev'); ?></a>
+        </li>
+        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['p' => $i])); ?>"><?php echo $i; ?></a>
+            </li>
+        <?php endfor; ?>
+        <li class="page-item <?php echo $page >= $total_pages ? 'disabled' : ''; ?>">
+            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['p' => $page + 1])); ?>"><?php echo __('next'); ?></a>
+        </li>
+    </ul>
+</nav>
+<?php endif; ?>
 
 <?php if ($_SESSION['role'] === 'super_admin') { include '../includes/superadmin_footer.php'; } else { include '../includes/footer.php'; } ?>

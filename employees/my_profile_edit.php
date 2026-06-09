@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['full_name'] = $emp['full_name'];
         } catch (PDOException $e) {
             $pdo->rollBack();
-            $error = $e->getMessage();
+            $error = __('error_generic');
         }
     }
     } // end CSRF else

@@ -34,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             // خصم الرصيد إذا تمت الموافقة وكان النوع يتطلب ذلك
             if ($status === 'approved' && $req_data['deduct_from_balance']) {
                 $days = calculateLeaveDays($req_data['start_date'], $req_data['end_date'], CURRENT_ORG_ID);
-                $stmt_deduct = $pdo->prepare("UPDATE employees SET initial_leave_balance = initial_leave_balance - ? WHERE id = ? AND organization_id = ?");
-                $stmt_deduct->execute([$days, $req_data['employee_id'], CURRENT_ORG_ID]);
+                $stmtBal = $pdo->prepare("UPDATE employee_leave_balances SET balance = GREATEST(balance - ?, 0) WHERE employee_id = ? AND leave_type_id = ?");
+                $stmtBal->execute([$days, $req_data['employee_id'], $req_data['leave_type_id']]);
             }
 
             // جلب بيانات الموظف لإرسال إشعار
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
         } catch (Exception $e) {
         $pdo->rollBack();
-        $error = 'Error: ' . $e->getMessage();
+        $error = __('error_generic');
         }
     } // end CSRF else
 }
@@ -75,8 +75,12 @@ $where = ["lr.organization_id = ?"];
 $params = [CURRENT_ORG_ID];
 
 if (!empty($_GET['status'])) {
-    $where[] = "lr.status = ?";
-    $params[] = $_GET['status'];
+    $allowed_statuses = ['pending', 'approved', 'rejected'];
+    $status = $_GET['status'];
+    if (in_array($status, $allowed_statuses)) {
+        $where[] = "lr.status = ?";
+        $params[] = $status;
+    }
 }
 if (!empty($_GET['employee'])) {
     $where[] = "(e.full_name LIKE ? OR e.employee_id_number LIKE ?)";
@@ -85,17 +89,29 @@ if (!empty($_GET['employee'])) {
 }
 if (!empty($_GET['type'])) {
     $where[] = "lr.leave_type_id = ?";
-    $params[] = $_GET['type'];
+    $params[] = (int)$_GET['type'];
 }
 
 $whereClause = "WHERE " . implode(" AND ", $where);
+
+// Pagination
+$page = max(1, (int)($_GET['p'] ?? 1));
+$per_page = 50;
+$offset = ($page - 1) * $per_page;
+
+$countQuery = "SELECT COUNT(*) FROM leave_requests lr JOIN employees e ON lr.employee_id = e.id $whereClause";
+$stmtCount = $pdo->prepare($countQuery);
+$stmtCount->execute($params);
+$total_records = (int)$stmtCount->fetchColumn();
+$total_pages = max(1, (int)ceil($total_records / $per_page));
 
 $query = "SELECT lr.*, lt.name_ar as type_ar, lt.name_en as type_en, e.full_name, e.employee_id_number 
           FROM leave_requests lr 
           JOIN leave_types lt ON lr.leave_type_id = lt.id 
           JOIN employees e ON lr.employee_id = e.id 
           $whereClause
-          ORDER BY CASE WHEN lr.status = 'pending' THEN 1 ELSE 2 END, lr.created_at DESC";
+          ORDER BY CASE WHEN lr.status = 'pending' THEN 1 ELSE 2 END, lr.created_at DESC
+          LIMIT $per_page OFFSET $offset";
           
 $stmt = $pdo->prepare($query);
 $stmt->execute($params);
@@ -300,5 +316,23 @@ include '../includes/header.php';
         </div>
     </div>
 </div>
+
+<?php if ($total_pages > 1): ?>
+<nav aria-label="Leave requests pagination" class="mt-4">
+    <ul class="pagination pagination-sm justify-content-center mb-0">
+        <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['p' => $page - 1])); ?>"><?php echo __('prev'); ?></a>
+        </li>
+        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['p' => $i])); ?>"><?php echo $i; ?></a>
+            </li>
+        <?php endfor; ?>
+        <li class="page-item <?php echo $page >= $total_pages ? 'disabled' : ''; ?>">
+            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['p' => $page + 1])); ?>"><?php echo __('next'); ?></a>
+        </li>
+    </ul>
+</nav>
+<?php endif; ?>
 
 <?php include '../includes/footer.php'; ?>

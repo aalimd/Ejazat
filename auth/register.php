@@ -115,6 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (empty($username) || empty($password) || empty($email) || empty($full_name) || empty($employee_id_number)) {
             $error = __('fill_fields_error');
+        } elseif (strlen($password) < 8) {
+            $error = __('password_min_length');
         } elseif ($reg_phone_visible && $reg_phone_required && empty($phone)) {
             $error = __('phone_required_org');
         } elseif ($reg_dept_visible && $reg_dept_required && empty($department_id)) {
@@ -170,14 +172,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                 } catch (Exception $e) {
-                    error_log('Error sending post-registration email: ' . $e->getMessage());
+                    error_log('Error sending post-registration email');
                 }
             } catch (PDOException $e) {
                 $pdo->rollBack();
                 if ($e->getCode() == 23000) {
                     $error = __('user_exists_error');
                 } else {
-                    $error = __('db_error') . ': ' . $e->getMessage();
+                    $error = __('db_error');
                 }
             }
         }

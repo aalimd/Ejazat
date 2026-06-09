@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
                 if ($e->getCode() == 23000) {
                     $error = __('user_exists_error');
                 } else {
-                    $error = 'Error: ' . $e->getMessage();
+                    $error = __('error_generic');
                 }
             }
         }

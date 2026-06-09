@@ -4,7 +4,7 @@ checkAuth();
 
 // التحقق من أن الموظف معتمد ومن صلاحية طلب الإجازة وتأكيد الرصيد
 $emp_id = $_SESSION['employee_id'] ?? 0;
-$stmtCheck = $pdo->prepare("SELECT status, can_request_leave, leave_balance_verified, initial_leave_balance FROM employees WHERE id = ?");
+$stmtCheck = $pdo->prepare("SELECT status, can_request_leave, leave_balance_verified, initial_leave_balance, full_name FROM employees WHERE id = ?");
 $stmtCheck->execute([$emp_id]);
 $emp_data = $stmtCheck->fetch() ?: [];
 $emp_status = $emp_data['status'] ?? 'pending';
@@ -99,17 +99,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
                     $error = __('max_days_per_year_error') . ": " . $type_info['max_days_per_year'];
                 } else {
                     $request_code = generateOperationCode('LV');
-                    $stmt = $pdo->prepare("INSERT INTO leave_requests (organization_id, employee_id, leave_type_id, start_date, end_date, reason, attachment_url, status, request_code) 
-                                           VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
-                    if ($stmt->execute([$org_id, $emp_id, $type_id, $start_date, $end_date, $reason, $attachment_url, $request_code])) {
+                    $stmt = $pdo->prepare("INSERT INTO leave_requests (organization_id, employee_id, leave_type_id, start_date, end_date, reason, status, request_code) 
+                                           VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)");
+                    if ($stmt->execute([$org_id, $emp_id, $type_id, $start_date, $end_date, $reason, $request_code])) {
                         $success = __('success_added'); 
                         $op_code = $request_code;
                         $op_time = date('Y-m-d H:i:s');
+
+                        // Notify managers/admins about the new leave request
+                        $stmtMgrs = $pdo->prepare("SELECT u.id, u.email, u.username FROM users u 
+                                                   WHERE u.organization_id = ? AND u.role IN ('admin', 'manager')");
+                        $stmtMgrs->execute([$org_id]);
+                        $managers = $stmtMgrs->fetchAll();
+                        $emp_name = $_SESSION['employee_name'] ?? h(get_name(['name_ar' => $emp_data['full_name'], 'name_en' => $emp_data['full_name']]));
+                        foreach ($managers as $mgr) {
+                            $msg_ar = "طلب إجازة جديد من $emp_name";
+                            $msg_en = "New leave request from $emp_name";
+                            addNotification($mgr['id'], $msg_ar, $msg_en, $org_id);
+                            if (!empty($mgr['email'])) {
+                                try {
+                                    $email_helper = new EmailHelper($pdo, $org_id);
+                                    if ($email_helper->isConfigured()) {
+                                        $site_name = getSetting('site_name_ar', 'HR System', $org_id);
+                                        $type_name = get_name(['name_ar' => $type_info['name_ar'] ?? '', 'name_en' => $type_info['name_en'] ?? '']);
+                                        $link = BASE_URL . 'leaves/manage.php';
+                                        $email_helper->send(
+                                            $mgr['email'],
+                                            "New Leave Request - $emp_name",
+                                            "<p>Employee <strong>$emp_name</strong> has submitted a new leave request.</p>
+                                             <p>Type: $type_name<br>From: $start_date To: $end_date<br>Code: $request_code</p>
+                                             <p><a href='$link'>Review in system</a></p>",
+                                            "New leave request from $emp_name. Code: $request_code"
+                                        );
+                                    }
+                                } catch (Exception $e) {
+                                    error_log('Failed to send leave notification email to ' . $mgr['email'] . ': ' . $e->getMessage());
+                                }
+                            }
+                        }
+                        logActivity("📋 تقديم طلب إجازة", "📋 Submit Leave Request", "Code: $request_code", $org_id);
                     } else {
                         $error = __('db_error');
                     }
                 }
             }
+        }
+    }
+}
+
+// إلغاء طلب إجازة معلق
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_request'])) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } else {
+        $cancel_id = (int)$_POST['request_id'];
+        $stmt = $pdo->prepare("UPDATE leave_requests SET status = 'cancelled' WHERE id = ? AND employee_id = ? AND status = 'pending'");
+        if ($stmt->execute([$cancel_id, $emp_id]) && $stmt->rowCount() > 0) {
+            $success = __('request_cancelled');
+            logActivity("❌ إلغاء طلب إجازة", "❌ Cancel Leave Request", "Request ID: $cancel_id", $org_id);
+        } else {
+            $error = __('request_cancel_failed');
         }
     }
 }
@@ -186,12 +235,13 @@ include '../includes/header.php';
                         <th><?php echo __('request_dates'); ?></th>
                         <th><?php echo __('status'); ?></th>
                         <th><?php echo __('manager_note'); ?></th>
+                        <th><?php echo __('actions'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($my_requests)): ?>
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted small"><?php echo __('no_data'); ?></td>
+                            <td colspan="7" class="text-center py-4 text-muted small"><?php echo __('no_data'); ?></td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($my_requests as $req): 
@@ -214,6 +264,8 @@ include '../includes/header.php';
                                         <div class="mb-1"><span class="badge bg-success"><?php echo __('approved'); ?></span></div>
                                     <?php elseif ($req['status'] == 'pending'): ?>
                                         <div class="mb-1"><span class="badge bg-warning text-dark"><?php echo __('pending'); ?></span></div>
+                                    <?php elseif ($req['status'] == 'cancelled'): ?>
+                                        <div class="mb-1"><span class="badge bg-secondary"><?php echo __('cancelled'); ?></span></div>
                                     <?php else: ?>
                                         <div class="mb-1"><span class="badge bg-danger"><?php echo __('rejected'); ?></span></div>
                                     <?php endif; ?>
@@ -232,6 +284,19 @@ include '../includes/header.php';
                                                 <i class="fas fa-file-alt"></i> <?php echo __('view_attachment'); ?>
                                             </a>
                                         </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($req['status'] == 'pending'): ?>
+                                        <form action="my_requests.php" method="POST" onsubmit="return confirm('<?php echo __('confirm_cancel_leave'); ?>');">
+                                            <?php echo csrf_field(); ?>
+                                            <input type="hidden" name="request_id" value="<?php echo $req['id']; ?>">
+                                            <button type="submit" name="cancel_request" class="btn btn-sm btn-outline-danger">
+                                                <?php echo __('cancel_request'); ?>
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="text-muted small">--</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>

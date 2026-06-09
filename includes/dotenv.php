@@ -1,7 +1,10 @@
 <?php
 function loadDotenv($path = null) {
     if ($path === null) {
-        $path = dirname(__DIR__) . '/.env';
+        $path = dirname(dirname(__DIR__)) . '/.env';
+        if (!file_exists($path)) {
+            $path = dirname(__DIR__) . '/.env';
+        }
     }
     if (!file_exists($path)) {
         return false;

@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt->execute([$is_public, $requires_code, $org_id]);
             $success = __('org_settings_updated');
         } catch (PDOException $e) {
-            $error = __('db_error') . ': ' . $e->getMessage();
+            $error = __('db_error');
         }
     }
     

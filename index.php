@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_dashboard'])) 
         }
     } catch (Exception $e) {
         $pdo->rollBack();
-        $error_msg = 'Error: ' . $e->getMessage();
+        $error_msg = __('error_generic');
     }
     }
     } // end CSRF else

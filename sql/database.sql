@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS organizations (
     is_public TINYINT(1) DEFAULT 0,
     is_active TINYINT(1) DEFAULT 1,
     email_enabled TINYINT(1) DEFAULT 1,
+    requires_invitation_code TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY (name_ar),
     UNIQUE KEY (name_en),
@@ -72,6 +73,8 @@ CREATE TABLE IF NOT EXISTS leave_types (
     max_days_per_year INT DEFAULT 30,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     KEY (organization_id),
+    UNIQUE KEY unique_org_leave_ar (organization_id, name_ar),
+    UNIQUE KEY unique_org_leave_en (organization_id, name_en),
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -103,6 +106,7 @@ CREATE TABLE IF NOT EXISTS employees (
     KEY (user_id),
     KEY (department_id),
     KEY (organization_id),
+    KEY (status),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
@@ -128,6 +132,9 @@ CREATE TABLE IF NOT EXISTS leave_requests (
     KEY (organization_id),
     KEY (employee_id),
     KEY (leave_type_id),
+    KEY (status),
+    KEY (start_date),
+    KEY (end_date),
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
     FOREIGN KEY (leave_type_id) REFERENCES leave_types(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
@@ -173,6 +180,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     KEY (organization_id),
     KEY (user_id),
+    KEY (is_read),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -238,6 +246,7 @@ CREATE TABLE IF NOT EXISTS email_logs (
     KEY (organization_id),
     KEY (recipient),
     KEY (created_at),
+    KEY (status),
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

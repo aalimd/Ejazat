@@ -293,7 +293,7 @@ class EmailHelper {
             'username' => $username,
             'full_name' => $full_name,
             'org_name' => $org_name,
-            'login_url' => $login_url ?: BASE_URL . 'auth/login.php'
+            'login_url' => $login_url ?: (defined('ABSOLUTE_BASE_URL') ? ABSOLUTE_BASE_URL . 'auth/login.php' : BASE_URL . 'auth/login.php')
         ]);
         
         return $this->send($email, $subject, $body_html);
@@ -303,15 +303,25 @@ class EmailHelper {
      * Get email template with substitution
      */
     private function getEmailTemplate($template_type, $variables = []) {
-        $templates = [
-            'verification' => $this->getVerificationTemplate($variables),
-            'password_reset' => $this->getPasswordResetTemplate($variables),
-            '2fa_code' => $this->get2FATemplate($variables),
-            'notification' => $this->getNotificationTemplate($variables),
-            'welcome' => $this->getWelcomeTemplate($variables),
-        ];
-        
-        return $templates[$template_type] ?? '<p>Email template not found</p>';
+        $template = '';
+        switch ($template_type) {
+            case 'verification':
+                $template = $this->getVerificationTemplate($variables);
+                break;
+            case 'password_reset':
+                $template = $this->getPasswordResetTemplate($variables);
+                break;
+            case '2fa_code':
+                $template = $this->get2FATemplate($variables);
+                break;
+            case 'notification':
+                $template = $this->getNotificationTemplate($variables);
+                break;
+            case 'welcome':
+                $template = $this->getWelcomeTemplate($variables);
+                break;
+        }
+        return $template ?: '<p>Email template not found</p>';
     }
     
     private function getVerificationTemplate($vars) {
@@ -402,7 +412,7 @@ class EmailHelper {
                 <p>{$vars['message_ar']}</p>
                 <p style='color: #666; font-size: 12px; margin-top: 30px;'>{$vars['message_en']}</p>
                 <div style='text-align: center; margin-top: 30px;'>
-                    <a href='" . BASE_URL . "' style='background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;'>الذهاب إلى النظام</a>
+                    <a href='" . (defined('ABSOLUTE_BASE_URL') ? ABSOLUTE_BASE_URL : BASE_URL) . "' style='background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;'>الذهاب إلى النظام</a>
                 </div>
             </div>
         </div>";

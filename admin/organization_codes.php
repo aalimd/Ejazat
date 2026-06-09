@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $error = __('org_not_found');
             }
         } catch (PDOException $e) {
-            $error = __('error_generic') . ': ' . $e->getMessage();
+            $error = __('error_generic');
         }
     } elseif ($action === 'regenerate_code') {
         $result = regenerateOrganizationCode($org_id, $_SESSION['user_id']);

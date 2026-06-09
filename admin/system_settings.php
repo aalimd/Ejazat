@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_settings'])) {
         logActivity("⚙️ تحديث إعدادات النظام", "⚙️ Update System Settings", "Updated " . count($settings_map) . " settings");
     } catch (PDOException $e) {
         $pdo->rollBack();
-        $error = $e->getMessage();
+        $error = __('error_generic');
     }
     }
 }

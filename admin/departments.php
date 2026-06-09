@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_department'])) {
                 $success = __('success_added');
             }
         } catch (PDOException $e) {
-            $error = __('db_error') . ': ' . $e->getMessage();
+            $error = __('db_error');
         }
     }
     }
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_department'])) {
                 $success = __('success_updated');
             }
         } catch (PDOException $e) {
-            $error = __('db_error') . ': ' . $e->getMessage();
+            $error = __('db_error');
         }
     }
     }

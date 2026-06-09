@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_password'])) {
                 
             } catch (PDOException $e) {
                 $pdo->rollBack();
-                $error = 'Error resetting password: ' . $e->getMessage();
+                $error = __('error_generic');
             }
         }
     }
@@ -113,7 +113,7 @@ include '../includes/header.php';
                     <?php elseif ($show_form): ?>
                         <form action="reset_password.php" method="POST">
                             <?php echo csrf_field(); ?>
-                            <input type="hidden" name="token" value="<?php echo h($_GET['token']); ?>">
+                            <input type="hidden" name="token" value="<?php echo h($_GET['token'] ?? ''); ?>">
                             
                             <div class="mb-3">
                                 <label for="new_password" class="form-label small fw-bold"><?php echo __('new_password'); ?></label>

@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = __('success_added');
         } catch (PDOException $e) {
             $pdo->rollBack();
-            $error = $e->getMessage();
+            $error = __('error_generic');
         }
     }
     } // end else for CSRF

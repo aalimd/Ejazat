@@ -33,13 +33,13 @@
     <?php endif; ?>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Almarai:wght@400;700&family=Tajawal:wght@400;700&family=Roboto:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- Custom Modern Styles -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=3">
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
     <style>
         :root {
@@ -72,7 +72,9 @@
         }
     </style>
     <script>
-        const currentTheme = localStorage.getItem('theme') || 'light';
+        const storedTheme = localStorage.getItem('theme');
+        const osDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const currentTheme = storedTheme || (osDark ? 'dark' : 'light');
         if (currentTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
@@ -264,6 +266,11 @@ if (isLoggedIn()):
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link <?php echo ($current_dir == 'employees' && $current_page == 'team.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>employees/team.php">
+                            <span class="emoji-icon">👤</span> <?php echo __('my_team'); ?>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'employees' && $current_page == 'approvals.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>employees/approvals.php">
                             <span class="emoji-icon">✅</span> <?php echo __('approvals'); ?>
                         </a>
@@ -278,6 +285,11 @@ if (isLoggedIn()):
                             <span class="emoji-icon">📋</span> <?php echo __('leave_reports'); ?>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo ($current_dir == 'leaves' && $current_page == 'calendar.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>leaves/calendar.php">
+                            <span class="emoji-icon">📅</span> <?php echo __('leave_calendar'); ?>
+                        </a>
+                    </li>
                     <?php endif; ?>
 
                     <?php if (hasRole('employee')): ?>
@@ -289,6 +301,14 @@ if (isLoggedIn()):
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($current_dir == 'leaves' && $current_page == 'my_requests.php') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>leaves/my_requests.php">
                             <span class="emoji-icon">📋</span> <?php echo __('my_requests'); ?>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
+                    <?php if (hasRole(['employee', 'admin', 'manager'])): ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?php echo $current_page == 'notifications.php' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>notifications.php">
+                            <span class="emoji-icon">🔔</span> <?php echo __('notifications_page'); ?>
                         </a>
                     </li>
                     <?php endif; ?>
