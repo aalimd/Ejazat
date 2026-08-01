@@ -185,8 +185,10 @@ if (hasRole('super_admin') && $org_id === null) {
     
     $months_labels = [];
     $months_data = [];
+    $arabic_months = [1 => 'يناير', 2 => 'فبراير', 3 => 'مارس', 4 => 'أبريل', 5 => 'مايو', 6 => 'يونيو',
+                      7 => 'يوليو', 8 => 'أغسطس', 9 => 'سبتمبر', 10 => 'أكتوبر', 11 => 'نوفمبر', 12 => 'ديسمبر'];
     foreach ($monthly_stats as $ms) {
-        $months_labels[] = date("F", mktime(0, 0, 0, $ms['month'], 10));
+        $months_labels[] = ($lang == 'ar') ? ($arabic_months[(int)$ms['month']] ?? $ms['month']) : date("F", mktime(0, 0, 0, $ms['month'], 10));
         $months_data[] = $ms['count'];
     }
 
@@ -328,7 +330,7 @@ if (hasRole('super_admin') && $org_id === null) {
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+            <div class="col-md-3">
         <div class="card bg-success text-white h-100 shadow-sm border-0">
             <div class="card-body d-flex align-items-center">
                 <div class="flex-grow-1">
@@ -338,6 +340,7 @@ if (hasRole('super_admin') && $org_id === null) {
                 <div class="fs-1 opacity-50"><i class="bi bi-check-circle"></i></div>
             </div>
         </div>
+    </div>
 </div>
 
 <?php if ($success_msg): ?>
@@ -383,7 +386,7 @@ if (hasRole('super_admin') && $org_id === null) {
                             </td>
                             <td><?php echo h(get_name(['name_ar' => $req['type_ar'], 'name_en' => $req['type_en']])); ?></td>
                             <td>
-                                <div class="small text-dark"><?php echo h($req['start_date']); ?> إلى <?php echo h($req['end_date']); ?></div>
+                                <div class="small text-dark"><?php echo h($req['start_date']); ?> <?php echo __('date_to'); ?> <?php echo h($req['end_date']); ?></div>
                             </td>
                             <td>
                                 <span class="badge bg-light text-dark border"><?php echo $days; ?> <?php echo __('days'); ?></span>
@@ -436,6 +439,9 @@ if (hasRole('super_admin') && $org_id === null) {
                 <i class="bi bi-pie-chart"></i> <?php echo __('top_leave_types'); ?>
             </div>
             <div class="card-body">
+                <?php if (empty($top_leave_types)): ?>
+                    <p class="text-muted small text-center py-4 mb-0"><?php echo __('no_data'); ?></p>
+                <?php else: ?>
                 <ul class="list-group list-group-flush">
                     <?php foreach ($top_leave_types as $type): ?>
                         <li class="list-group-item d-flex justify-content-between align-items-center px-0">
@@ -444,6 +450,7 @@ if (hasRole('super_admin') && $org_id === null) {
                         </li>
                     <?php endforeach; ?>
                 </ul>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -455,6 +462,9 @@ if (hasRole('super_admin') && $org_id === null) {
                 <i class="bi bi-trophy"></i> <?php echo __('top_employees_leaves'); ?>
             </div>
             <div class="card-body p-0">
+                <?php if (empty($top_employees)): ?>
+                    <p class="text-muted small text-center py-4 mb-0"><?php echo __('no_data'); ?></p>
+                <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
@@ -486,6 +496,7 @@ if (hasRole('super_admin') && $org_id === null) {
                         </tbody>
                     </table>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -493,33 +504,47 @@ if (hasRole('super_admin') && $org_id === null) {
 
 <script>
     // رسم بياني للطلبات الشهرية
-    const ctx = document.getElementById('monthlyChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: <?php echo json_encode($months_labels); ?>,
-            datasets: [{
-                label: '<?php echo __('requests'); ?>',
-                data: <?php echo json_encode($months_data); ?>,
-                borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#0d6efd',
-                backgroundColor: (getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#0d6efd').replace(/^#/, 'rgba(') + ', 0.1)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#0d6efd'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
+    const monthlyChartEl = document.getElementById('monthlyChart');
+    if (monthlyChartEl) {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const axisColor = isDark ? '#94a3b8' : '#666';
+        const gridColor = isDark ? 'rgba(148, 163, 184, 0.15)' : 'rgba(0,0,0,0.08)';
+        const ctx = monthlyChartEl.getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: <?php echo json_encode($months_labels); ?>,
+                datasets: [{
+                    label: '<?php echo __('requests'); ?>',
+                    data: <?php echo json_encode($months_data); ?>,
+                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#0d6efd',
+                    backgroundColor: (getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#0d6efd').replace(/^#/, 'rgba(') + ', 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#0d6efd'
+                }]
             },
-            scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, color: axisColor },
+                        grid: { color: gridColor }
+                    },
+                    x: {
+                        ticks: { color: axisColor },
+                        grid: { color: gridColor }
+                    }
+                }
             }
-        }
-    });
+        });
+    }
 </script>
 <?php else: ?>
 <!-- واجهة الموظف البسيطة -->

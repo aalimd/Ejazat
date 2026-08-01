@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php
-    $primary_hex = '#0d6efd';
-    list($r, $g, $b) = sscanf($primary_hex, "#%02x%02x%02x");
+    $primary_hex = sanitizeCssValue(getSetting('primary_color', '#0d6efd'));
+    if (preg_match('/^#[0-9a-fA-F]{6}$/', $primary_hex)) {
+        list($r, $g, $b) = sscanf($primary_hex, "#%02x%02x%02x");
+    } else {
+        $r = 13; $g = 110; $b = 253;
+    }
     $primary_rgb = "$r, $g, $b";
     ?>
     <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' . __('site_name') : __('site_name'); ?></title>
     <link rel="manifest" href="<?php echo BASE_URL; ?>manifest.php">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="<?php echo h($primary_hex); ?>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="<?php echo h(SITE_NAME); ?>">
@@ -21,10 +25,14 @@
     <?php else: ?>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <?php endif; ?>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <?php if (__('dir') == 'rtl'): ?>
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php else: ?>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php endif; ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=3">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=5">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --primary-color: <?php echo $primary_hex; ?>;
@@ -215,6 +223,12 @@
             letter-spacing: 0.04em;
             color: #f59e0b;
         }
+        .sa-topbar-user .dropdown-menu {
+            top: 100%;
+            margin-top: 0.5rem;
+        }
+        [dir="rtl"] .sa-topbar-user .dropdown-menu { right: auto; left: 0; }
+        [dir="ltr"] .sa-topbar-user .dropdown-menu { left: auto; right: 0; }
         .sa-org-switcher {
             display: flex;
             align-items: center;
@@ -282,7 +296,9 @@
     </style>
     <script>
         (function() {
-            const t = localStorage.getItem('theme') || 'light';
+            const storedTheme = localStorage.getItem('theme');
+            const osDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const t = storedTheme || (osDark ? 'dark' : 'light');
             if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
         })();
         document.addEventListener('DOMContentLoaded', () => {
@@ -319,6 +335,14 @@ global $lang;
 $current_page = basename($_SERVER['PHP_SELF']);
 $current_dir = basename(dirname($_SERVER['PHP_SELF']));
 
+// Avatar initials
+$user_display = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Super Admin';
+$initials = '';
+foreach (preg_split('/\s+/', trim($user_display)) as $word) {
+    $initials .= mb_substr($word, 0, 1);
+}
+$initials = mb_strtoupper(mb_substr($initials, 0, 2));
+
 $super_nav = [
     'dashboard' => [
         'label' => __('dashboard'),
@@ -344,6 +368,12 @@ $super_nav = [
         'icon' => '<span class="emoji-icon">📋</span>',
         'url' => BASE_URL . 'admin/registration_control.php',
         'active' => $current_page === 'registration_control.php',
+    ],
+    'org_codes' => [
+        'label' => __('invitation_codes'),
+        'icon' => '<span class="emoji-icon">🎟️</span>',
+        'url' => BASE_URL . 'admin/organization_codes.php',
+        'active' => $current_page === 'organization_codes.php',
     ],
     'section_system' => ['section' => __('system_control')],
     'settings' => [
@@ -404,27 +434,30 @@ $super_nav = [
             <span class="sa-icon"><span class="emoji-icon">🔑</span></span>
             <?php echo __('security_settings'); ?>
         </a>
-        <a class="nav-link text-danger" href="<?php echo BASE_URL; ?>auth/logout.php">
-            <span class="sa-icon"><span class="emoji-icon">🚪</span></span>
-            <?php echo __('logout'); ?>
-        </a>
+        <form action="<?php echo BASE_URL; ?>auth/logout.php" method="POST" class="m-0">
+            <?php echo csrf_field(); ?>
+            <button type="submit" class="nav-link text-danger border-0 bg-transparent w-100 text-start px-0 py-2 d-flex align-items-center gap-2" style="font-size: 0.8rem;">
+                <span class="sa-icon"><span class="emoji-icon">🚪</span></span>
+                <?php echo __('logout'); ?>
+            </button>
+        </form>
     </div>
 </nav>
 
 <!-- Top Bar -->
 <header class="sa-topbar">
     <div class="sa-topbar-left">
-        <button id="saSidebarToggle" class="btn btn-sm btn-outline-secondary border-0 fs-5 d-md-none"><span class="emoji-icon">☰</span></button>
+        <button id="saSidebarToggle" type="button" class="btn btn-sm btn-outline-secondary border-0 fs-5 d-md-none" aria-label="<?php echo __('menu'); ?>"><span class="emoji-icon">☰</span></button>
         <div class="d-none d-md-flex align-items-center gap-2">
             <span class="sa-badge-super"><?php echo __('super_admin'); ?></span>
         </div>
         <?php if (isset($show_org_switcher) && $show_org_switcher): ?>
-        <div class="sa-org-switcher ms-3">
+        <div class="sa-org-switcher ms-3 d-none d-md-flex">
             <span class="small text-muted"><span class="emoji-icon">🏢</span></span>
-            <select class="form-select-sm" onchange="if(this.value) window.location='<?php echo BASE_URL; ?>superadmin/dashboard.php?switch_org='+this.value; else window.location='<?php echo BASE_URL; ?>superadmin/dashboard.php?switch_org=0';">
+            <select class="form-select-sm" aria-label="<?php echo __('switch_org'); ?>" onchange="if(this.value) window.location='<?php echo BASE_URL; ?>superadmin/dashboard.php?switch_org='+this.value; else window.location='<?php echo BASE_URL; ?>superadmin/dashboard.php?switch_org=0';">
                 <option value=""><?php echo __('all_organizations'); ?></option>
                 <?php
-                $all_orgs = $pdo->query("SELECT id, name_ar, name_en FROM organizations ORDER BY name_ar")->fetchAll();
+                $all_orgs = $pdo->query("SELECT id, name_ar, name_en FROM organizations WHERE is_active = 1 ORDER BY name_ar")->fetchAll();
                 $current_sel = $_SESSION['organization_id'] ?? '';
                 foreach ($all_orgs as $o):
                 ?>
@@ -437,16 +470,31 @@ $super_nav = [
         <?php endif; ?>
     </div>
     <div class="sa-topbar-right">
-        <button id="saThemeToggle" class="btn btn-sm btn-outline-secondary border-0"><span class="emoji-icon">🌙</span></button>
+        <button id="saThemeToggle" type="button" class="btn btn-sm btn-outline-secondary border-0" aria-label="<?php echo __('theme_toggle'); ?>"><span class="emoji-icon">🌙</span></button>
         <a class="btn btn-sm btn-outline-secondary border-0" href="?lang=<?php echo $lang == 'ar' ? 'en' : 'ar'; ?>">
             <span class="emoji-icon"><?php echo __('language'); ?></span>
         </a>
         <div class="sa-topbar-user dropdown">
-            <div class="sa-topbar-avatar"><?php echo strtoupper(substr($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'SA', 0, 2)); ?></div>
-            <div class="d-none d-md-block">
-                <div class="sa-topbar-user-name"><?php echo h($_SESSION['full_name'] ?? $_SESSION['username']); ?></div>
-                <div class="sa-topbar-user-role">Super Admin</div>
-            </div>
+            <a class="d-flex align-items-center gap-2 text-decoration-none" href="#" id="saUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="sa-topbar-avatar"><?php echo h($initials); ?></div>
+                <div class="d-none d-md-block">
+                    <div class="sa-topbar-user-name"><?php echo h($_SESSION['full_name'] ?? $_SESSION['username']); ?></div>
+                    <div class="sa-topbar-user-role"><?php echo __('super_admin'); ?></div>
+                </div>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 user-menu mt-2" aria-labelledby="saUserDropdown">
+                <li><a class="dropdown-item small py-2" href="<?php echo BASE_URL; ?>index.php"><span class="emoji-icon">🏠</span> <?php echo __('back_to_app'); ?></a></li>
+                <li><a class="dropdown-item small py-2" href="<?php echo BASE_URL; ?>auth/security.php"><span class="emoji-icon">🔑</span> <?php echo __('security_settings'); ?></a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form action="<?php echo BASE_URL; ?>auth/logout.php" method="POST" class="m-0">
+                        <?php echo csrf_field(); ?>
+                        <button type="submit" class="dropdown-item small py-2 text-danger">
+                            <span class="emoji-icon">🚪</span> <?php echo __('logout'); ?>
+                        </button>
+                    </form>
+                </li>
+            </ul>
         </div>
     </div>
 </header>

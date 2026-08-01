@@ -36,26 +36,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resend_verification']
     
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = __('enter_valid_email');
+    } elseif (!checkIpRateLimit('resend_verification', 5, 60)) {
+        // رسالة موحدة أيضاً لمنع التعداد
+        $success = __('verification_email_sent');
+        $email_to_verify = $email;
     } else {
-        // Find user by email
+        // رسالة موحّدة في كل الحالات: لا نكشف ما إذا كان البريد مسجلاً أم لا
         $stmt = $pdo->prepare("SELECT id, username FROM users WHERE email = ? AND id NOT IN (SELECT user_id FROM email_verifications WHERE verified_at IS NOT NULL)");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
         
-        if (!$user) {
-            $error = __('email_not_found_or_verified');
-        } else {
+        if ($user) {
             // Send verification email again
             $res = sendVerificationEmail($user['id'], $email, $user['username']);
-            
             if ($res['success']) {
-                $success = __('verification_email_sent') . ' ' . h($email) . __('check_inbox');
-                $email_to_verify = $email;
                 logActivity("🔄 إعادة إرسال بريد التحقق", "🔄 Resend Verification Email", "Email: $email");
             } else {
-                $error = __('verification_failed') . ': ' . ($res['message'] ?? 'Unknown error');
+                error_log('Verification email failed: ' . ($res['message'] ?? 'unknown'));
             }
         }
+        $success = __('verification_email_sent');
+        $email_to_verify = $email;
     }
     } // end CSRF else
 }

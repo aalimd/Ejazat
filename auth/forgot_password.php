@@ -4,16 +4,6 @@ require_once '../includes/config.php';
 $error = '';
 $success = '';
 
-// Rate limiting: max 5 requests per 15 minutes per session
-$rate_limit_key = 'password_reset_attempts';
-$rate_limit_window = 900; // 15 minutes
-if (!isset($_SESSION[$rate_limit_key])) {
-    $_SESSION[$rate_limit_key] = ['count' => 0, 'first_attempt' => time()];
-}
-if (time() - $_SESSION[$rate_limit_key]['first_attempt'] > $rate_limit_window) {
-    $_SESSION[$rate_limit_key] = ['count' => 0, 'first_attempt' => time()];
-}
-
 // If already logged in, redirect
 if (isLoggedIn()) {
     redirect('index.php');
@@ -28,14 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['forgot_password'])) {
     
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = __('enter_valid_email');
+    } elseif (!checkIpRateLimit('forgot_password', 5, 15)) {
+        $error = __('rate_limit_exceeded');
+        error_log("Rate limit hit for password reset from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
     } else {
-        // Rate limit check
-        if ($_SESSION[$rate_limit_key]['count'] >= 5) {
-            $error = __('rate_limit_exceeded');
-            error_log("Rate limit hit for password reset from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
-        } else {
-        $_SESSION[$rate_limit_key]['count']++;
-        
         // Find user by email (don't reveal if email exists or not for security)
         $stmt = $pdo->prepare("SELECT id, username FROM users WHERE email = ?");
         $stmt->execute([$email]);
@@ -58,7 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['forgot_password'])) {
         }  // ends find-user logic
     }  // ends rate-limit not-hit block
     }  // ends valid-email block
-    }  // ends CSRF-valid block
 }  // ends main POST handler
 
 $pageTitle = __('forgot_password');

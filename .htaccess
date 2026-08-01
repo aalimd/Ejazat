@@ -1,0 +1,53 @@
+# =============================================
+# HR-App Security .htaccess
+# =============================================
+
+# حماية الملفات الحساسة والمخفية (.env, .git, ...)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "(^\.env$|\.env\.|\.sql$|\.md$|\.log$|\.bak$|\.ini$|\.yml$|\.yaml$|\.pem$|\.key$|\.p12$)">
+    Require all denied
+</FilesMatch>
+
+# حماية الملفات الحساسة في الجذر
+<FilesMatch "(composer\.json|package\.json|webpack\.config\.js|\.gitignore$|\.env\.example$)">
+    Require all denied
+</FilesMatch>
+
+# منع الوصول إلى مجلدات git
+RedirectMatch 403 /\.git(/|$)
+RedirectMatch 403 /\.hg(/|$)
+RedirectMatch 403 /\.svn(/|$)
+
+# منع الوصول إلى مجلد الترحيلات وقواعد البيانات
+RedirectMatch 403 /database(/|$)
+
+# خيارات أمان أساسية
+Options -Indexes -MultiViews
+ServerSignature Off
+
+# منع تنفيذ PHP داخل مجلدات التحميل
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^uploads/.*\.(php|phtml|php3|php4|php5|php7|phar|pl|py|cgi|asp|sh|htaccess)$ - [F,L]
+</IfModule>
+
+# رؤوس أمان إضافية
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# حماية ملفات PHP من التنفيذ المباشر في مجلدات الـ includes
+<FilesMatch "\.(inc|class)\.php$">
+    Require all denied
+</FilesMatch>
+
+# منع الوصول المباشر لملفات PHP داخل includes (إلا عبر require)
+<IfModule mod_rewrite.c>
+    RewriteRule ^includes/(dotenv|TotpHelper|EmailHelper|MigrationService)\.php$ - [F,L]
+</IfModule>

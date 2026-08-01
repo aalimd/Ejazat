@@ -14,8 +14,16 @@ if (!isset($_SESSION['temp_2fa_user_id'])) {
 $user_id = $_SESSION['temp_2fa_user_id'];
 $error = '';
 
+// قفل bruteforce: 5 محاولات فاشلة = 15 دقيقة
+if (!isset($_SESSION['2fa_attempts'])) {
+    $_SESSION['2fa_attempts'] = ['count' => 0, 'first_attempt' => time()];
+}
+if (time() - $_SESSION['2fa_attempts']['first_attempt'] > 900) {
+    $_SESSION['2fa_attempts'] = ['count' => 0, 'first_attempt' => time()];
+}
+
 // Fetch the user's secret
-$stmt = $pdo->prepare("SELECT id, username, password, role, two_factor_secret, organization_id FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT id, username, password, role, two_factor_secret, organization_id, auth_version FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 
@@ -28,7 +36,7 @@ if (!$user || empty($user['two_factor_secret'])) {
 // Send 2FA code via email on first page load
 if (!isset($_SESSION['2fa_email_sent'])) {
     // Generate a temporary email code (different from TOTP)
-    $email_code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+    $email_code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     $_SESSION['2fa_email_code'] = $email_code;
     $_SESSION['2fa_email_code_time'] = time();
     $_SESSION['2fa_email_sent'] = true;
@@ -60,8 +68,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($code)) {
         $error = __('fill_fields_error');
+    } elseif ($_SESSION['2fa_attempts']['count'] >= 5) {
+        $error = __('2fa_too_many_attempts');
+        logActivity("🚫 تجاوز حد محاولات التحقق الثنائي", "🚫 2FA Attempts Exceeded", "Username: " . $user['username']);
     } else {
-        if (TotpHelper::verifyCode($user['two_factor_secret'], $code)) {
+        // صلاحية كود البريد: 10 دقائق
+        $email_code_valid = isset($_SESSION['2fa_email_code'])
+            && isset($_SESSION['2fa_email_code_time'])
+            && (time() - $_SESSION['2fa_email_code_time']) <= 600
+            && hash_equals($_SESSION['2fa_email_code'], $code);
+
+        if (TotpHelper::verifyCode($user['two_factor_secret'], $code) || $email_code_valid) {
             session_regenerate_id(true);
             // Success: log the user in officially
             $_SESSION['user_id'] = $user['id'];
@@ -69,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['role'] = $user['role'];
             $_SESSION['organization_id'] = $user['organization_id'];
             $_SESSION['2fa_verified'] = true;
+            $_SESSION['auth_version'] = (int)($user['auth_version'] ?? 0);
 
             // Fetch employee info if available
             $stmtEmp = $pdo->prepare("SELECT id, full_name FROM employees WHERE user_id = ?");
@@ -82,10 +100,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             unset($_SESSION['2fa_email_code']);
             unset($_SESSION['2fa_email_code_time']);
             unset($_SESSION['2fa_email_sent']);
+            unset($_SESSION['2fa_attempts']);
 
             logActivity("🔐 تسجيل الدخول (ثنائي)", "🔐 Login (2FA)", "User logged in successfully via 2FA");
             redirect('index.php');
         } else {
+            $_SESSION['2fa_attempts']['count']++;
+            if ($_SESSION['2fa_attempts']['count'] === 1) {
+                $_SESSION['2fa_attempts']['first_attempt'] = time();
+            }
             $error = __('2fa_invalid_code');
             logActivity("⚠️ فشل التحقق الثنائي", "⚠️ Failed 2FA Attempt", "Username: " . $user['username']);
         }

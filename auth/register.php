@@ -37,18 +37,42 @@ if ($selected_org_id === null) {
     if (!empty($_GET['org_id'])) {
         $selected_org_id = intval($_GET['org_id']);
         // تحقق أن المؤسسة عامة
-        $stmt = $pdo->prepare("SELECT id FROM organizations WHERE id = ? AND is_public = 1 AND is_active = 1");
+        $stmt = $pdo->prepare("SELECT id, requires_invitation_code FROM organizations WHERE id = ? AND is_public = 1 AND is_active = 1");
         $stmt->execute([$selected_org_id]);
-        if (!$stmt->fetch()) {
+        $org_check = $stmt->fetch();
+        if (!$org_check) {
             $selected_org_id = null;
+        } elseif ((int)$org_check['requires_invitation_code'] === 1) {
+            // مؤسسة تتطلب كود دعوة: يجب تقديم كود صحيح يخصّها
+            $code = trim($_POST['invitation_code'] ?? $_GET['code'] ?? '');
+            $code_result = validateInvitationCode($code);
+            if ($code_result['success'] && $code_result['org_id'] === $selected_org_id) {
+                $code_used = true;
+                $org_by_code = $code_result;
+            } else {
+                $selected_org_id = null;
+                $error = __('code_required_for_org');
+            }
         }
     } elseif (!empty($_POST['organization_id'])) {
         $selected_org_id = intval($_POST['organization_id']);
         // تحقق أن المؤسسة عامة
-        $stmt = $pdo->prepare("SELECT id FROM organizations WHERE id = ? AND is_public = 1 AND is_active = 1");
+        $stmt = $pdo->prepare("SELECT id, requires_invitation_code FROM organizations WHERE id = ? AND is_public = 1 AND is_active = 1");
         $stmt->execute([$selected_org_id]);
-        if (!$stmt->fetch()) {
+        $org_check = $stmt->fetch();
+        if (!$org_check) {
             $selected_org_id = null;
+        } elseif ((int)$org_check['requires_invitation_code'] === 1) {
+            // مؤسسة تتطلب كود دعوة: يجب تقديم كود صحيح يخصّها
+            $code = trim($_POST['invitation_code'] ?? $_GET['code'] ?? '');
+            $code_result = validateInvitationCode($code);
+            if ($code_result['success'] && $code_result['org_id'] === $selected_org_id) {
+                $code_used = true;
+                $org_by_code = $code_result;
+            } else {
+                $selected_org_id = null;
+                $error = __('code_required_for_org');
+            }
         }
     }
 }
@@ -92,11 +116,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = __('no_org_selected');
     } elseif (!$is_reg_enabled) {
         $error = __('registration_disabled');
+    } elseif (!checkIpRateLimit('register', 5, 60)) {
+        $error = __('rate_limit_exceeded');
     } else {
         // بيانات المستخدم
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
-        $email = trim($_POST['email'] ?? '');
+        $email = strtolower(trim($_POST['email'] ?? ''));
+        $min_length = (int)getSystemSetting('min_password_length', 8);
+        if ($min_length < 6) $min_length = 6;
         
         // بيانات الموظف
         $employee_id_number = trim($_POST['employee_id_number'] ?? '');
@@ -113,9 +141,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // فحص البريد الإلكتروني المحظور
+        $blocked_check = $pdo->prepare("SELECT setting_value FROM settings WHERE organization_id = 1 AND setting_key = ?");
+        $blocked_check->execute(['blocked_email_' . $email]);
+        $email_blocked = $blocked_check->fetch();
+
         if (empty($username) || empty($password) || empty($email) || empty($full_name) || empty($employee_id_number)) {
             $error = __('fill_fields_error');
-        } elseif (strlen($password) < 8) {
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = __('enter_valid_email');
+        } elseif (mb_strlen($username) > 50 || mb_strlen($email) > 100 || mb_strlen($full_name) > 150 || mb_strlen($employee_id_number) > 20) {
+            $error = __('fill_fields_error');
+        } elseif ($email_blocked) {
+            $error = __('email_blocked');
+            logActivity("🚫 تسجيل بحساب محظور", "🚫 Blocked Email Registration", "Email: $email");
+        } elseif (strlen($password) < $min_length) {
             $error = __('password_min_length');
         } elseif ($reg_phone_visible && $reg_phone_required && empty($phone)) {
             $error = __('phone_required_org');

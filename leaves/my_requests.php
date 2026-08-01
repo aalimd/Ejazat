@@ -4,13 +4,18 @@ checkAuth();
 
 // التحقق من أن الموظف معتمد ومن صلاحية طلب الإجازة وتأكيد الرصيد
 $emp_id = $_SESSION['employee_id'] ?? 0;
-$stmtCheck = $pdo->prepare("SELECT status, can_request_leave, leave_balance_verified, initial_leave_balance, full_name FROM employees WHERE id = ?");
+$stmtCheck = $pdo->prepare("SELECT status, can_request_leave, leave_balance_verified, initial_leave_balance, full_name, organization_id FROM employees WHERE id = ?");
 $stmtCheck->execute([$emp_id]);
 $emp_data = $stmtCheck->fetch() ?: [];
 $emp_status = $emp_data['status'] ?? 'pending';
 $can_request_leave = $emp_data['can_request_leave'] ?? 0;
 $balance_verified = $emp_data['leave_balance_verified'] ?? 0;
 $has_balance = array_key_exists('initial_leave_balance', $emp_data) && $emp_data['initial_leave_balance'] !== null;
+
+// حماية: الموظف يجب أن ينتمي للمؤسسة النشطة الحالية
+if (!empty($emp_data) && CURRENT_ORG_ID !== null && (int)($emp_data['organization_id'] ?? 0) !== (int)CURRENT_ORG_ID) {
+    redirect('index.php');
+}
 
 $global_allow_leaves = getSetting('allow_leave_requests') === '1';
 
@@ -215,7 +220,7 @@ include '../includes/header.php';
             <div class="col-6 mb-2"><strong><?php echo __('operation_code'); ?>:</strong></div>
             <div class="col-6 mb-2 text-primary fw-bold"><?php echo $op_code; ?></div>
             <div class="col-6"><strong><?php echo __('operation_time'); ?>:</strong></div>
-            <div class="col-6 text-muted"><?php echo $op_time; ?> (Makkah)</div>
+            <div class="col-6 text-muted"><?php echo $op_time; ?> (<?php echo __('timezone_makkah'); ?>)</div>
         </div>
     </div>
 <?php endif; ?>
@@ -241,7 +246,7 @@ include '../includes/header.php';
                 <tbody>
                     <?php if (empty($my_requests)): ?>
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted small"><?php echo __('no_data'); ?></td>
+                            <td colspan="6" class="text-center py-4 text-muted small"><?php echo __('no_data'); ?></td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($my_requests as $req): 
@@ -250,7 +255,7 @@ include '../includes/header.php';
                             <tr>
                                 <td><?php echo h(get_name(['name_ar' => $req['type_ar'], 'name_en' => $req['type_en']])); ?></td>
                                 <td>
-                                    <div class="small"><?php echo h($req['start_date']); ?> to <?php echo h($req['end_date']); ?></div>
+                                    <div class="small"><?php echo h($req['start_date']); ?> <?php echo __('date_to'); ?> <?php echo h($req['end_date']); ?></div>
                                     <div class="badge bg-light text-dark border mt-1 shadow-sm"><?php echo $days; ?> <?php echo __('days'); ?></div>
                                 </td>
                                 <td>
@@ -281,20 +286,20 @@ include '../includes/header.php';
                                     <?php if (!empty($req['attachment_url'])): ?>
                                         <div class="mt-2">
                                             <a href="<?php echo htmlspecialchars($req['attachment_url']); ?>" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
-                                                <i class="fas fa-file-alt"></i> <?php echo __('view_attachment'); ?>
+                                                <i class="bi bi-file-earmark"></i> <?php echo __('view_attachment'); ?>
                                             </a>
                                         </div>
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if ($req['status'] == 'pending'): ?>
-                                        <form action="my_requests.php" method="POST" onsubmit="return confirm('<?php echo __('confirm_cancel_leave'); ?>');">
-                                            <?php echo csrf_field(); ?>
-                                            <input type="hidden" name="request_id" value="<?php echo $req['id']; ?>">
-                                            <button type="submit" name="cancel_request" class="btn btn-sm btn-outline-danger">
-                                                <?php echo __('cancel_request'); ?>
-                                            </button>
-                                        </form>
+                    <?php if ($req['status'] == 'pending'): ?>
+                        <form action="my_requests.php" method="POST" class="cancel-leave-form" data-confirm="<?php echo h(__('confirm_cancel_leave')); ?>">
+                            <?php echo csrf_field(); ?>
+                            <input type="hidden" name="request_id" value="<?php echo $req['id']; ?>">
+                            <button type="submit" name="cancel_request" class="btn btn-sm btn-outline-danger">
+                                <?php echo __('cancel_request'); ?>
+                            </button>
+                        </form>
                                     <?php else: ?>
                                         <span class="text-muted small">--</span>
                                     <?php endif; ?>
@@ -344,14 +349,14 @@ include '../includes/header.php';
                     </div>
                     <?php if ($leave_attachment_visible): ?>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold"><?php echo __('attachment_field'); ?> <?php echo $leave_attachment_required ? '*' : '(اختياري)'; ?></label>
+                        <label class="form-label small fw-bold"><?php echo __('attachment_field'); ?> <?php echo $leave_attachment_required ? '*' : __('optional'); ?></label>
                         <div class="d-grid">
-                            <button type="button" id="upload_widget" class="btn btn-outline-secondary border-dashed text-primary shadow-sm" style="border-style: dashed; border-width: 2px;">
-                                <i class="fas fa-cloud-upload-alt me-2"></i> <?php echo __('upload_attachment'); ?>
+                            <button type="button" id="upload_widget" class="btn btn-outline-secondary text-primary shadow-sm" style="border-style: dashed; border-width: 2px;">
+                                <i class="bi bi-cloud-upload me-2"></i> <?php echo __('upload_attachment'); ?>
                             </button>
                         </div>
                         <input type="hidden" name="attachment_url" id="attachment_url" <?php echo $leave_attachment_required ? 'required' : ''; ?>>
-                        <small id="upload_success_msg" class="text-success d-none mt-1 fw-bold"><i class="fas fa-check-circle"></i> <?php echo __('file_uploaded'); ?></small>
+                        <small id="upload_success_msg" class="text-success d-none mt-1 fw-bold"><i class="bi bi-check-circle"></i> <?php echo __('file_uploaded'); ?></small>
                     </div>
                     <?php endif; ?>
 
@@ -387,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const endDate = new Date(end);
 
             if (endDate >= startDate) {
-                // حسبة النظام السعودي (<?php echo __('calendar_days'); ?> تشمل الويكند)
+                // الحسبة الأولية تقويمية؛ الخصم الفعلي بعد استبعاد العطلات (يعرض النظام القيمة النهائية عند الحفظ)
                 const diffTime = Math.abs(endDate - startDate);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
                 
@@ -440,14 +445,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, (error, result) => { 
         if (!error && result && result.event === "success") { 
-            console.log('Done! Here is the image info: ', result.info); 
             document.getElementById('attachment_url').value = result.info.secure_url;
             
             // تحديث زر الرفع للنجاح
             const uploadBtn = document.getElementById('upload_widget');
             uploadBtn.classList.remove('btn-outline-secondary', 'text-primary');
             uploadBtn.classList.add('btn-success', 'text-white');
-            uploadBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> <?php echo __('file_uploaded_btn'); ?>';
+            uploadBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i> <?php echo __('file_uploaded_btn'); ?>';
             
             document.getElementById('upload_success_msg').classList.remove('d-none');
         }

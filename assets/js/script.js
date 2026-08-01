@@ -160,4 +160,29 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.body.appendChild(toast);
     }
+
+    // 3. Generic data-confirm handler for destructive forms
+    document.querySelectorAll('form[data-confirm]').forEach((form) => {
+        form.addEventListener('submit', (e) => {
+            const message = form.getAttribute('data-confirm') || 'Are you sure?';
+            if (!window.confirm(message)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+        });
+    });
+
+    // 4. Auto-dismiss dismissible alerts after 6 seconds
+    document.querySelectorAll('.alert[data-auto-dismiss]').forEach((alert) => {
+        setTimeout(() => {
+            const closeBtn = alert.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.click();
+            } else {
+                alert.style.transition = 'opacity .3s';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }
+        }, 6000);
+    });
 });

@@ -34,11 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_holiday'])) {
 }
 
 // حذف عطلة
-if (isset($_GET['delete'])) {
-    if (!isset($_GET['csrf_token']) || !verify_csrf($_GET['csrf_token'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
+    if (!verify_csrf()) {
         $error = __('csrf_token_invalid');
     } else {
-    $holiday_id = (int)$_GET['delete'];
+    $holiday_id = (int)$_POST['delete'];
     try {
         $stmt = $pdo->prepare("DELETE FROM holidays WHERE id = ? AND organization_id = ?");
         $stmt->execute([$holiday_id, $org_id]);
@@ -116,9 +116,13 @@ if ($_SESSION['role'] === 'super_admin') {
                                 <td><span class="badge bg-light text-dark border"><?php echo h($h['end_date']); ?></span></td>
                                 <td><strong class="text-primary"><?php echo $days; ?></strong> <?php echo __('days'); ?></td>
                                 <td class="pe-4 text-end">
-                                    <a href="holidays.php?delete=<?php echo $h['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" class="btn btn-sm btn-outline-danger shadow-sm" onclick="return confirm('<?php echo __('confirm_delete'); ?>')">
-                                        <i class="bi bi-trash"></i> <?php echo __('delete'); ?>
-                                    </a>
+                                    <form method="POST" action="holidays.php" class="d-inline" onsubmit="return confirm('<?php echo __('confirm_delete'); ?>')">
+                                        <?php echo csrf_field(); ?>
+                                        <input type="hidden" name="delete" value="<?php echo $h['id']; ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm" aria-label="<?php echo __('delete'); ?>">
+                                            <i class="bi bi-trash"></i> <?php echo __('delete'); ?>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

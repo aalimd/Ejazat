@@ -18,9 +18,20 @@ $stmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY cr
 $stmt->execute([$user_id]);
 $notifications = $stmt->fetchAll();
 
-// Mark all as read
-$stmtMark = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0");
-$stmtMark->execute([$user_id]);
+// Mark all as read (explicit action only, via POST button with CSRF)
+$marked_read = false;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mark_all_read']) && verify_csrf()) {
+    $stmtMark = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0");
+    $stmtMark->execute([$user_id]);
+    $marked_read = true;
+}
+
+// بعد التحديث الصريح: إعادة الجلب ليعكس الحالة الجديدة
+if ($marked_read) {
+    $stmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT $per_page OFFSET $offset");
+    $stmt->execute([$user_id]);
+    $notifications = $stmt->fetchAll();
+}
 
 $pageTitle = __('notifications_page');
 include 'includes/header.php';
@@ -28,8 +39,20 @@ include 'includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3"><?php echo __('notifications_page'); ?></h1>
-    <span class="text-muted small"><?php echo __('total_records'); ?>: <?php echo $total_records; ?></span>
+    <div class="d-flex align-items-center gap-2">
+        <span class="text-muted small"><?php echo __('total_records'); ?>: <?php echo $total_records; ?></span>
+        <form method="POST" action="notifications.php" class="m-0">
+            <?php echo csrf_field(); ?>
+            <button type="submit" name="mark_all_read" class="btn btn-sm btn-outline-primary" <?php echo $total_records === 0 ? 'disabled' : ''; ?>>
+                <i class="bi bi-check2-all"></i> <?php echo __('mark_as_read'); ?>
+            </button>
+        </form>
+    </div>
 </div>
+
+<?php if ($marked_read): ?>
+    <div class="alert alert-success shadow-sm border-0"><i class="bi bi-check-circle"></i> <?php echo __('success_updated'); ?></div>
+<?php endif; ?>
 
 <div class="card shadow-sm border-0">
     <div class="card-body p-0">
@@ -43,12 +66,15 @@ include 'includes/header.php';
                 <?php foreach ($notifications as $notif): ?>
                     <div class="list-group-item list-group-item-action d-flex align-items-start gap-3 py-3 px-4 <?php echo !$notif['is_read'] ? 'bg-light' : ''; ?>">
                         <div class="flex-shrink-0 mt-1">
-                            <span class="emoji-icon fs-5"><?php echo $notif['is_read'] ? '🔔' : '🔴'; ?></span>
+                            <span class="emoji-icon fs-5"><?php echo $notif['is_read'] ? '🔔' : '🆕'; ?></span>
                         </div>
                         <div class="flex-grow-1">
                             <div class="fw-medium"><?php echo h(get_name(['name_ar' => $notif['message_ar'], 'name_en' => $notif['message_en']])); ?></div>
                             <div class="small text-muted mt-1"><?php echo h($notif['created_at']); ?></div>
                         </div>
+                        <?php if (!$notif['is_read']): ?>
+                            <span class="badge bg-primary rounded-pill mt-1"><?php echo __('new_notification'); ?></span>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>

@@ -12,19 +12,25 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf()) {
         $error = __('all_fields_required');
+    } elseif (!checkIpRateLimit('request_org', 3, 60)) {
+        $error = __('rate_limit_exceeded');
     } else {
     $name_ar = trim($_POST['name_ar'] ?? '');
     $name_en = trim($_POST['name_en'] ?? '');
-    $slug = trim($_POST['slug'] ?? '');
+    $slug = strtolower(trim($_POST['slug'] ?? ''));
     $manager_name = trim($_POST['manager_name'] ?? '');
-    $manager_email = trim($_POST['manager_email'] ?? '');
+    $manager_email = strtolower(trim($_POST['manager_email'] ?? ''));
     $manager_phone = trim($_POST['manager_phone'] ?? '');
     $notes = trim($_POST['notes'] ?? '');
 
     if (empty($name_ar) || empty($name_en) || empty($slug) || empty($manager_name) || empty($manager_email) || empty($manager_phone)) {
         $error = __('all_fields_required');
+    } elseif (!filter_var($manager_email, FILTER_VALIDATE_EMAIL)) {
+        $error = __('enter_valid_email');
     } elseif (!preg_match('/^[a-z0-9\-]+$/', $slug)) {
         $error = __('slug_format_error');
+    } elseif (mb_strlen($name_ar) > 150 || mb_strlen($name_en) > 150 || mb_strlen($slug) > 50 || mb_strlen($manager_name) > 150 || mb_strlen($manager_phone) > 20 || mb_strlen($notes) > 2000) {
+        $error = __('all_fields_required');
     } else {
         try {
             // التحقق من أن Slug غير مستخدم مسبقاً في المؤسسات النشطة أو الطلبات القائمة

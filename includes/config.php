@@ -11,11 +11,32 @@ date_default_timezone_set('Asia/Riyadh');
 require_once __DIR__ . '/dotenv.php';
 loadDotEnv();
 
-// قراءة إعدادات قاعدة البيانات من متغيرات البيئة مع خيار احتياطي
-$is_local_environment = !isset($_SERVER['HTTP_HOST']) || $_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1';
+// ========================================
+// ENVIRONMENT DETECTION — ثابت عبر APP_ENV وليس HTTP_HOST القابل للتزوير
+// ========================================
+$app_env = env('APP_ENV', '');
+if (empty($app_env)) {
+    $app_env = (isset($_SERVER['HTTP_HOST']) && ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1')) ? 'local' : 'production';
+}
+$is_local_environment = ($app_env === 'local' || $app_env === 'development');
 ini_set('display_errors', $is_local_environment ? '1' : '0');
 ini_set('display_startup_errors', $is_local_environment ? '1' : '0');
 error_reporting($is_local_environment ? E_ALL : E_ALL & ~E_DEPRECATED & ~E_STRICT);
+ini_set('log_errors', '1');
+
+// ========================================
+// TRUSTED HOSTS — منع تسميم روابط إعادة التعيين (Host Header Poisoning)
+// ========================================
+$trusted_hosts = array_values(array_filter(array_map('trim', explode(',', (string)env('TRUSTED_HOSTS', '')))));
+if (!empty($trusted_hosts) && isset($_SERVER['HTTP_HOST'])) {
+    $request_host = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST']));
+    $is_trusted = in_array($request_host, ['localhost', '127.0.0.1'])
+        || in_array($request_host, array_map('strtolower', $trusted_hosts));
+    if (!$is_trusted) {
+        http_response_code(403);
+        die('Invalid request.');
+    }
+}
 
 if ($is_local_environment) {
     define('DB_HOST', env('DB_HOST_LOCAL', '127.0.0.1'));
@@ -33,16 +54,34 @@ if ($is_local_environment) {
 
 // Auto-detect absolute URL for emails if BASE_URL is relative
 if (defined('BASE_URL') && strpos(BASE_URL, '://') === false) {
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $app_url = env('APP_URL', '');
+    if (!empty($app_url)) {
+        $protocol_host = rtrim($app_url, '/');
+    } else {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $protocol_host = "$protocol://$host";
+    }
     $path = rtrim(BASE_URL, '/');
-    define('ABSOLUTE_BASE_URL', "$protocol://$host$path/");
+    define('ABSOLUTE_BASE_URL', "$protocol_host$path/");
 } else {
     define('ABSOLUTE_BASE_URL', rtrim(BASE_URL, '/') . '/');
 }
 
-// بدء الجلسة
+// بدء الجلسة مع إعدادات أمنية صارمة
 if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_samesite', 'Lax');
     session_start();
 }
 
@@ -138,7 +177,7 @@ function logActivity($action_ar, $action_en, $details = null, $org_id = null) {
 }
 
 function generateSystemId() {
-    return 'HR' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+    return 'HR' . date('Y') . str_pad((string)random_int(1, 9999), 4, '0', STR_PAD_LEFT);
 }
 
 function generateOperationCode($prefix = 'OP') {
@@ -207,6 +246,42 @@ if (isLoggedIn()) {
         redirect('auth/login.php?error=session_expired');
     }
     $_SESSION['last_activity'] = time();
+
+    // ===== فحص صلاحية الجلسة مقابل قاعدة البيانات (تعليق المؤسسة + إبطال الجلسات بعد تغيير كلمة المرور) =====
+    try {
+        $stmtSession = $pdo->prepare(
+            "SELECT u.auth_version, u.organization_id, o.status AS org_status
+             FROM users u
+             LEFT JOIN organizations o ON u.organization_id = o.id
+             WHERE u.id = ?"
+        );
+        $stmtSession->execute([$_SESSION['user_id']]);
+        $session_row = $stmtSession->fetch();
+
+        if (!$session_row) {
+            $_SESSION = [];
+            session_destroy();
+            redirect('auth/login.php?error=invalid_org');
+        }
+
+        // المؤسسة معلّقة → إنهاء الجلسة فوراً
+        if (!empty($session_row['organization_id']) && $session_row['org_status'] === 'suspended') {
+            $_SESSION = [];
+            session_destroy();
+            redirect('auth/login.php?error=invalid_org');
+        }
+
+        // تغيّر إصدار الجلسة (تغيير كلمة المرور/إعادة تعيينها) → إنهاء كل الجلسات القديمة
+        if (isset($_SESSION['auth_version']) && isset($session_row['auth_version'])
+            && (int)$_SESSION['auth_version'] !== (int)$session_row['auth_version']) {
+            $_SESSION = [];
+            session_destroy();
+            redirect('auth/login.php?error=session_expired');
+        }
+        $_SESSION['auth_version'] = (int)$session_row['auth_version'];
+    } catch (PDOException $e) {
+        // عمود auth_version غير موجود بعد (قبل تشغيل migration 007): تجاهل بصمت
+    }
 }
 
 // دوال مساعدة عامة
@@ -278,6 +353,21 @@ function checkAuth($roles = []) {
 // الحماية من XSS
 function h($string) {
     return htmlspecialchars($string ?? '', ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * تنقية قيمة CSS آمنة (ألوان، خطوط) لمنع حقن CSS
+ * Returns: /^#(?:[0-9a-f]{3}){1,2}$/i للون، أو سلسلة خطوط آمنة
+ */
+function sanitizeCssValue($value, $default = '#0d6efd') {
+    $value = trim((string)$value);
+    if (preg_match('/^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/', $value)) {
+        return $value;
+    }
+    if (preg_match('/^[a-zA-Z0-9 _,+-]+$/', $value) && strpos($value, '<') === false && strpos($value, '}') === false && strpos($value, ';') === false) {
+        return $value;
+    }
+    return $default;
 }
 
 // حساب عدد أيام الإجازة الفعلي باستثناء الإجازات الأسبوعية والعطلات الرسمية للمؤسسة
@@ -494,12 +584,55 @@ function sendWelcomeEmailToUser($email, $username, $full_name = '', $org_id = nu
 }
 
 /**
- * Check if login attempts exceed limit
+ * Read a system-wide setting (system_settings table) with in-request cache
+ */
+function getSystemSetting($key, $default = null) {
+    global $pdo, $system_settings_cache;
+    if (!isset($system_settings_cache)) {
+        $system_settings_cache = [];
+        try {
+            $stmt = $pdo->query("SELECT setting_key, setting_value FROM system_settings");
+            while ($row = $stmt->fetch()) {
+                $system_settings_cache[$row['setting_key']] = $row['setting_value'];
+            }
+        } catch (Exception $e) {
+        }
+    }
+    return $system_settings_cache[$key] ?? $default;
+}
+
+/**
+ * Generic IP-based rate limiter (uses ip_rate_limits table)
+ * Returns true if request is allowed, false if rate limit exceeded.
+ */
+function checkIpRateLimit($action, $max = 10, $window_minutes = 60) {
+    global $pdo;
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM ip_rate_limits WHERE ip_address = ? AND action_key = ? AND created_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)");
+        $stmt->execute([$ip, $action, $window_minutes]);
+        $count = (int)$stmt->fetchColumn();
+        if ($count >= $max) {
+            return false;
+        }
+        $stmt = $pdo->prepare("INSERT INTO ip_rate_limits (ip_address, action_key) VALUES (?, ?)");
+        $stmt->execute([$ip, $action]);
+        return true;
+    } catch (Exception $e) {
+        // جدول غير موجود بعد: نسمح بصمت (graceful degradation)
+        return true;
+    }
+}
+
+/**
+ * Check if login attempts exceed limit (per username + per IP)
+ * Returns a generic message to avoid username enumeration.
  */
 function checkLoginAttempts($username) {
     global $pdo;
     
-    $max_attempts = 5;
+    $max_attempts = (int)getSystemSetting('max_login_attempts', 5);
+    if ($max_attempts < 1) $max_attempts = 5;
     $lockout_minutes = 15;
     
     try {
@@ -508,10 +641,9 @@ function checkLoginAttempts($username) {
         $attempt = $stmt->fetch();
         
         if ($attempt && $attempt['failed_attempts'] >= $max_attempts) {
-            $remaining_time = date('Y-m-d H:i:s', strtotime($attempt['last_attempt']) + ($lockout_minutes * 60));
             return [
                 'locked' => true,
-                'message' => "Account locked. Try again after {$remaining_time}",
+                'message' => __('error_login'),
                 'attempts' => $attempt['failed_attempts']
             ];
         }
@@ -561,10 +693,10 @@ function generateRandomInvitationCode() {
     $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     
     // Pattern: 3 letters, 3 numbers, 3 letters, 3 numbers
-    for ($i = 0; $i < 3; $i++) $code .= $letters[rand(0, 25)];
-    for ($i = 0; $i < 3; $i++) $code .= rand(0, 9);
-    for ($i = 0; $i < 3; $i++) $code .= $letters[rand(0, 25)];
-    for ($i = 0; $i < 3; $i++) $code .= rand(0, 9);
+    for ($i = 0; $i < 3; $i++) $code .= $letters[random_int(0, 25)];
+    for ($i = 0; $i < 3; $i++) $code .= random_int(0, 9);
+    for ($i = 0; $i < 3; $i++) $code .= $letters[random_int(0, 25)];
+    for ($i = 0; $i < 3; $i++) $code .= random_int(0, 9);
     
     return $code;
 }

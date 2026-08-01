@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_password'])) {
         $error = __('fill_fields_error');
     } elseif ($new_password !== $confirm_password) {
         $error = __('passwords_do_not_match');
-    } elseif (strlen($new_password) < 8) {
+    } elseif (strlen($new_password) < (int)getSystemSetting('min_password_length', 8)) {
         $error = __('password_min_length');
     } else {
         // Validate token and get user
@@ -48,9 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_password'])) {
             try {
                 $pdo->beginTransaction();
                 
-                // Hash and update password
+                // Hash and update password + bump auth_version to invalidate old sessions
                 $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $stmt = $pdo->prepare("UPDATE users SET password = ?, auth_version = auth_version + 1 WHERE id = ?");
                 $stmt->execute([$hashed_password, $user_id]);
                 
                 // Mark token as used

@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS users (
     role ENUM('super_admin','admin','manager','employee') NOT NULL DEFAULT 'employee',
     two_factor_secret VARCHAR(255) DEFAULT NULL,
     two_factor_enabled TINYINT(1) DEFAULT 0,
+    auth_version INT NOT NULL DEFAULT 0,
     organization_id INT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY (username),
@@ -341,7 +342,18 @@ CREATE TABLE IF NOT EXISTS system_settings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =============================================
--- 20. تتبع التحديثات (Schema Migrations)
+-- 20. تقييد المعدل حسب IP (IP Rate Limits)
+-- =============================================
+CREATE TABLE IF NOT EXISTS ip_rate_limits (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45) NOT NULL,
+    action_key VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_ip_action_time (ip_address, action_key, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =============================================
+-- 21. تتبع التحديثات (Schema Migrations)
 -- =============================================
 CREATE TABLE IF NOT EXISTS schema_migrations (
     version VARCHAR(50) NOT NULL PRIMARY KEY,

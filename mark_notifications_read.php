@@ -3,7 +3,7 @@ require_once 'includes/config.php';
 
 header('Content-Type: application/json');
 
-if (isLoggedIn()) {
+if (isLoggedIn() && verify_csrf()) {
     try {
         $stmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?");
         $stmt->execute([$_SESSION['user_id']]);

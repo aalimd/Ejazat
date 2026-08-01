@@ -226,7 +226,7 @@ include '../includes/header.php';
                 <tbody>
                     <?php if (empty($requests)): ?>
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted"><?php echo __('no_data'); ?></td>
+                            <td colspan="7" class="text-center py-5 text-muted"><?php echo __('no_data'); ?></td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($requests as $req): 
@@ -239,7 +239,7 @@ include '../includes/header.php';
                                 </td>
                                 <td><?php echo h(get_name(['name_ar' => $req['type_ar'], 'name_en' => $req['type_en']])); ?></td>
                                 <td>
-                                    <div class="small"><?php echo h($req['start_date']); ?> to <?php echo h($req['end_date']); ?></div>
+                                    <div class="small"><?php echo h($req['start_date']); ?> <?php echo __('date_to'); ?> <?php echo h($req['end_date']); ?></div>
                                     <div class="badge bg-light text-dark border"><?php echo $days; ?> <?php echo __('days'); ?></div>
                                 </td>
                                 <td>
@@ -253,7 +253,7 @@ include '../includes/header.php';
                                     <?php if (!empty($req['attachment_url'])): ?>
                                         <div class="mt-2">
                                             <a href="<?php echo htmlspecialchars($req['attachment_url']); ?>" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
-                                                <i class="fas fa-file-alt"></i> <?php echo __('view_attachment'); ?>
+                                                <i class="bi bi-file-earmark"></i> <?php echo __('view_attachment'); ?>
                                             </a>
                                         </div>
                                     <?php endif; ?>

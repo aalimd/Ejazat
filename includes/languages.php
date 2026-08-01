@@ -1215,8 +1215,6 @@ $translations['ar']['test_email_failed'] = 'فشل إرسال رسالة الا�
 $translations['en']['test_email_failed'] = 'Test email failed';
 $translations['ar']['invalid_email'] = 'البريد الإلكتروني غير صالح';
 $translations['en']['invalid_email'] = 'Invalid email address';
-$translations['ar']['select_org_first'] = 'الرجاء اختيار منشأة أولاً';
-$translations['en']['select_org_first'] = 'Please select an organization first';
 $translations['ar']['last_checked'] = 'آخر فحص';
 $translations['en']['last_checked'] = 'Last checked';
 $translations['ar']['refresh'] = 'تحديث';
@@ -1259,8 +1257,6 @@ $translations['ar']['system_settings_table'] = 'جدول إعدادات النظ
 $translations['en']['system_settings_table'] = 'System Settings Table';
 $translations['ar']['email_service'] = 'خدمة البريد الإلكتروني';
 $translations['en']['email_service'] = 'Email Service';
-$translations['ar']['quick_actions'] = 'إجراءات سريعة';
-$translations['en']['quick_actions'] = 'Quick Actions';
 $translations['ar']['super_admin'] = 'مشرف عام';
 $translations['en']['super_admin'] = 'Super Admin';
 
@@ -1475,6 +1471,46 @@ $translations['ar']['import_error_upload'] = 'خطأ في رفع الملف';
 $translations['en']['import_error_upload'] = 'File upload error';
 $translations['ar']['import_error_empty'] = 'الملف لا يحتوي على بيانات';
 $translations['en']['import_error_empty'] = 'The file contains no data rows';
+
+// ===== إصلاحات الأمان وتجربة المستخدم (v4) =====
+$translations['ar']['theme_toggle'] = 'تبديل المظهر';
+$translations['en']['theme_toggle'] = 'Toggle theme';
+$translations['ar']['menu'] = 'القائمة';
+$translations['en']['menu'] = 'Menu';
+$translations['ar']['view_all_notifications'] = 'عرض كل الإشعارات';
+$translations['en']['view_all_notifications'] = 'View all notifications';
+$translations['ar']['new_notification'] = 'جديد';
+$translations['en']['new_notification'] = 'New';
+$translations['ar']['date_to'] = 'إلى';
+$translations['en']['date_to'] = 'to';
+$translations['ar']['timezone_makkah'] = 'توقيت مكة المكرمة';
+$translations['en']['timezone_makkah'] = 'Makkah time';
+$translations['ar']['optional'] = 'اختياري';
+$translations['en']['optional'] = 'optional';
+$translations['ar']['change_password'] = 'تغيير كلمة المرور';
+$translations['en']['change_password'] = 'Change Password';
+$translations['ar']['current_password'] = 'كلمة المرور الحالية';
+$translations['en']['current_password'] = 'Current Password';
+$translations['ar']['update_password_btn'] = 'تحديث كلمة المرور';
+$translations['en']['update_password_btn'] = 'Update Password';
+$translations['ar']['current_password_incorrect'] = 'كلمة المرور الحالية غير صحيحة.';
+$translations['en']['current_password_incorrect'] = 'Current password is incorrect.';
+$translations['ar']['password_changed_success'] = 'تم تغيير كلمة المرور بنجاح. يرجى تسجيل الدخول مجدداً.';
+$translations['en']['password_changed_success'] = 'Password changed successfully. Please log in again.';
+$translations['ar']['2fa_too_many_attempts'] = 'محاولات كثيرة خاطئة. تم قفل التحقق مؤقتاً، حاول بعد 15 دقيقة.';
+$translations['en']['2fa_too_many_attempts'] = 'Too many failed attempts. Verification is temporarily locked, try again in 15 minutes.';
+$translations['ar']['code_required_for_org'] = 'تتطلب هذه الجهة رمز التحاق خاص. يرجى إدخال الرمز الصحيح للمتابعة.';
+$translations['en']['code_required_for_org'] = 'This organization requires an invitation code. Please enter the correct code to continue.';
+$translations['ar']['email_blocked'] = 'عذراً، لا يمكن إنشاء حساب بهذا البريد الإلكتروني.';
+$translations['en']['email_blocked'] = 'Sorry, you cannot register with this email address.';
+$translations['ar']['my_account'] = 'حسابي';
+$translations['en']['my_account'] = 'My Account';
+$translations['ar']['system_settings'] = 'إدارة النظام';
+$translations['en']['system_settings'] = 'System Management';
+$translations['ar']['back_to_app'] = 'العودة إلى التطبيق';
+$translations['en']['back_to_app'] = 'Back to App';
+$translations['ar']['invitation_codes'] = 'رموز الالتحاق';
+$translations['en']['invitation_codes'] = 'Invitation Codes';
 
 return $translations;
 ?>

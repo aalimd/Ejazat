@@ -58,11 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_department'])) {
 }
 
 // حذف قسم
-if (isset($_GET['delete'])) {
-    if (!isset($_GET['csrf_token']) || !verify_csrf($_GET['csrf_token'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete'])) {
+    if (!verify_csrf()) {
         $error = __('access_denied');
     } else {
-    $id = $_GET['delete'];
+    $id = (int)$_POST['delete'];
     $org_id = CURRENT_ORG_ID ?? 1;
     try {
         $stmt = $pdo->prepare("DELETE FROM departments WHERE id = ? AND organization_id = ?");
@@ -128,9 +128,13 @@ if ($_SESSION['role'] === 'super_admin') {
                                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editDeptModal<?php echo $dept['id']; ?>" aria-label="<?php echo __('edit'); ?>">
                                     <span class="emoji-icon">✏️</span>
                                 </button>
-                                <a href="?delete=<?php echo $dept['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('<?php echo __('confirm_delete'); ?>')" aria-label="<?php echo __('delete'); ?>">
-                                    <span class="emoji-icon">🗑️</span>
-                                </a>
+                                <form method="POST" action="departments.php" class="d-inline" onsubmit="return confirm('<?php echo __('confirm_delete'); ?>')">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="delete" value="<?php echo $dept['id']; ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="<?php echo __('delete'); ?>">
+                                        <span class="emoji-icon">🗑️</span>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>

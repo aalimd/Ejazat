@@ -1,6 +1,15 @@
 <?php
 require_once '../includes/config.php';
 
+// الخروج يتطلب POST مع رمز CSRF (حماية من CSRF logout)
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verify_csrf()) {
+    if (isLoggedIn()) {
+        http_response_code(403);
+        die(__('csrf_token_invalid'));
+    }
+    redirect('auth/login.php');
+}
+
 // تسجيل النشاط قبل إنهاء الجلسة
 logActivity("🚪 تسجيل الخروج", "🚪 Logout");
 
@@ -20,4 +29,3 @@ if (ini_get("session.use_cookies")) {
 // التوجه لصفحة تسجيل الدخول
 header("Location: " . BASE_URL . "auth/login.php");
 exit();
-?>

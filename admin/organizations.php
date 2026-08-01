@@ -95,11 +95,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // Handle approving a request
-if (isset($_GET['approve_req_id']) && isset($_GET['csrf_token'])) {
-    if (!verify_csrf($_GET['csrf_token'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_req_id'])) {
+    if (!verify_csrf()) {
         $error = __('access_denied');
     } else {
-    $req_id = intval($_GET['approve_req_id']);
+    $req_id = intval($_POST['approve_req_id']);
     try {
         // Fetch request details
         $stmtReq = $pdo->prepare("SELECT * FROM organization_requests WHERE id = ? AND status = 'pending'");
@@ -116,7 +116,7 @@ if (isset($_GET['approve_req_id']) && isset($_GET['csrf_token'])) {
             
             // 2. Insert supervising manager
             // Generate a random temporary password
-            $temp_password = "Pass@" . rand(1000, 9999);
+            $temp_password = "Pass@" . random_int(1000, 9999);
             $hashed_pass = password_hash($temp_password, PASSWORD_DEFAULT);
             
             // The username can be derived from the manager_email or slug
@@ -125,7 +125,7 @@ if (isset($_GET['approve_req_id']) && isset($_GET['csrf_token'])) {
             $stmtCheckUser = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
             $stmtCheckUser->execute([$username]);
             if ($stmtCheckUser->fetchColumn() > 0) {
-                $username = $username . rand(10, 99);
+                $username = $username . random_int(10, 99);
             }
             
             $stmtUser = $pdo->prepare("INSERT INTO users (username, password, email, role, organization_id) VALUES (?, ?, ?, 'admin', ?)");
@@ -199,11 +199,11 @@ if (isset($_GET['approve_req_id']) && isset($_GET['csrf_token'])) {
 }
 
 // Handle rejecting a request
-if (isset($_GET['reject_req_id']) && isset($_GET['csrf_token'])) {
-    if (!verify_csrf($_GET['csrf_token'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reject_req_id'])) {
+    if (!verify_csrf()) {
         $error = __('access_denied');
     } else {
-    $req_id = intval($_GET['reject_req_id']);
+    $req_id = intval($_POST['reject_req_id']);
     try {
         $stmt = $pdo->prepare("UPDATE organization_requests SET status = 'rejected' WHERE id = ? AND status = 'pending'");
         $stmt->execute([$req_id]);
@@ -216,12 +216,12 @@ if (isset($_GET['reject_req_id']) && isset($_GET['csrf_token'])) {
 }
 
 // Handle toggling email_enabled
-if (isset($_GET['toggle_email']) && isset($_GET['org_id']) && isset($_GET['csrf_token'])) {
-    if (!verify_csrf($_GET['csrf_token'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_email'])) {
+    if (!verify_csrf()) {
         $error = __('access_denied');
     } else {
-    $org_id = intval($_GET['org_id']);
-    $new_val = $_GET['toggle_email'] === '1' ? '1' : '0';
+    $org_id = intval($_POST['org_id']);
+    $new_val = $_POST['toggle_email'] === '1' ? '1' : '0';
     try {
         $stmt = $pdo->prepare("UPDATE organizations SET email_enabled = ? WHERE id = ?");
         $stmt->execute([$new_val, $org_id]);
@@ -234,12 +234,12 @@ if (isset($_GET['toggle_email']) && isset($_GET['org_id']) && isset($_GET['csrf_
 }
 
 // Handle updating organization status
-if (isset($_GET['toggle_status']) && isset($_GET['org_id']) && isset($_GET['csrf_token'])) {
-    if (!verify_csrf($_GET['csrf_token'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_status'])) {
+    if (!verify_csrf()) {
         $error = __('access_denied');
     } else {
-    $org_id = intval($_GET['org_id']);
-    $new_status = $_GET['toggle_status'] === 'suspended' ? 'suspended' : 'active';
+    $org_id = intval($_POST['org_id']);
+    $new_status = $_POST['toggle_status'] === 'suspended' ? 'suspended' : 'active';
     
     if ($org_id > 1) { // Prevent toggling the default system organization
         try {
@@ -390,23 +390,35 @@ if ($_SESSION['role'] === 'super_admin') {
                                         <?php echo __('enter_org'); ?>
                                     </a>
                                     <?php $email_enabled = $org['email_enabled'] ?? 1; ?>
-                                    <a href="organizations.php?toggle_email=<?php echo $email_enabled ? '0' : '1'; ?>&org_id=<?php echo $org['id']; ?>&csrf_token=<?php echo csrf_token(); ?>"
-                                       class="btn btn-sm fw-bold py-2 <?php echo $email_enabled ? 'btn-outline-success' : 'btn-outline-secondary'; ?>"
-                                       onclick="return confirm('<?php echo $email_enabled ? __('confirm_disable_email') : __('confirm_enable_email'); ?>')">
-                                        <span class="emoji-icon">📧</span> <?php echo $email_enabled ? __('email_on') : __('email_off'); ?>
-                                    </a>
+                                    <form method="POST" action="organizations.php" class="flex-fill">
+                                        <?php echo csrf_field(); ?>
+                                        <input type="hidden" name="org_id" value="<?php echo $org['id']; ?>">
+                                        <input type="hidden" name="toggle_email" value="<?php echo $email_enabled ? '0' : '1'; ?>">
+                                        <button type="submit" class="btn btn-sm fw-bold py-2 w-100 <?php echo $email_enabled ? 'btn-outline-success' : 'btn-outline-secondary'; ?>"
+                                                onclick="return confirm('<?php echo $email_enabled ? __('confirm_disable_email') : __('confirm_enable_email'); ?>')">
+                                            <span class="emoji-icon">📧</span> <?php echo $email_enabled ? __('email_on') : __('email_off'); ?>
+                                        </button>
+                                    </form>
                                     <?php if ($org['id'] > 1): ?>
                                         <?php if ($org['status'] === 'active'): ?>
-                                            <a href="organizations.php?toggle_status=suspended&org_id=<?php echo $org['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" 
-                                               class="btn btn-outline-danger btn-sm w-100 fw-bold py-2"
-                                               onclick="return confirm('<?php echo __('confirm_delete'); ?>')">
-                                                <span class="emoji-icon">❌</span> <?php echo __('suspended'); ?>
-                                            </a>
+                                            <form method="POST" action="organizations.php" class="w-100">
+                                                <?php echo csrf_field(); ?>
+                                                <input type="hidden" name="org_id" value="<?php echo $org['id']; ?>">
+                                                <input type="hidden" name="toggle_status" value="suspended">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm w-100 fw-bold py-2"
+                                                        onclick="return confirm('<?php echo __('confirm_delete'); ?>')">
+                                                    <span class="emoji-icon">❌</span> <?php echo __('suspended'); ?>
+                                                </button>
+                                            </form>
                                         <?php else: ?>
-                                            <a href="organizations.php?toggle_status=active&org_id=<?php echo $org['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" 
-                                               class="btn btn-outline-success btn-sm w-100 fw-bold py-2">
-                                                <span class="emoji-icon">🟢</span> <?php echo __('active'); ?>
-                                            </a>
+                                            <form method="POST" action="organizations.php" class="w-100">
+                                                <?php echo csrf_field(); ?>
+                                                <input type="hidden" name="org_id" value="<?php echo $org['id']; ?>">
+                                                <input type="hidden" name="toggle_status" value="active">
+                                                <button type="submit" class="btn btn-outline-success btn-sm w-100 fw-bold py-2">
+                                                    <span class="emoji-icon">🟢</span> <?php echo __('active'); ?>
+                                                </button>
+                                            </form>
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <button class="btn btn-secondary btn-sm w-100 fw-bold py-2 disabled" disabled>
@@ -468,16 +480,22 @@ if ($_SESSION['role'] === 'super_admin') {
                                         </td>
                                         <td class="text-end">
                                             <div class="d-flex justify-content-end gap-2">
-                                                <a href="organizations.php?approve_req_id=<?php echo $req['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" 
-                                                   class="btn btn-success btn-sm fw-bold px-3"
-                                                   onclick="return confirm('<?php echo __('confirm_approve_org'); ?>')">
-                                                    <?php echo __('approve_activate'); ?>
-                                                </a>
-                                                <a href="organizations.php?reject_req_id=<?php echo $req['id']; ?>&csrf_token=<?php echo csrf_token(); ?>" 
-                                                   class="btn btn-outline-danger btn-sm fw-bold px-3"
-                                                   onclick="return confirm('<?php echo __('confirm_reject_request'); ?>')">
-                                                    <?php echo __('reject_request'); ?>
-                                                </a>
+                                                <form method="POST" action="organizations.php">
+                                                    <?php echo csrf_field(); ?>
+                                                    <input type="hidden" name="approve_req_id" value="<?php echo $req['id']; ?>">
+                                                    <button type="submit" class="btn btn-success btn-sm fw-bold px-3"
+                                                            onclick="return confirm('<?php echo __('confirm_approve_org'); ?>')">
+                                                        <?php echo __('approve_activate'); ?>
+                                                    </button>
+                                                </form>
+                                                <form method="POST" action="organizations.php">
+                                                    <?php echo csrf_field(); ?>
+                                                    <input type="hidden" name="reject_req_id" value="<?php echo $req['id']; ?>">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm fw-bold px-3"
+                                                            onclick="return confirm('<?php echo __('confirm_reject_request'); ?>')">
+                                                        <?php echo __('reject_request'); ?>
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>

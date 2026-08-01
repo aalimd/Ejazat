@@ -25,13 +25,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = $attempt_check['message'];
             logActivity("🔒 محاولة دخول من حساب مقفل", "🔒 Locked Account Login Attempt", "Username: $username");
         } else {
-            $stmt = $pdo->prepare("SELECT id, username, password, role, two_factor_enabled, organization_id FROM users WHERE username = ?");
+            $stmt = $pdo->prepare("SELECT id, username, password, role, two_factor_enabled, organization_id, auth_version FROM users WHERE username = ?");
             $stmt->execute([$username]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
                 // Clear login attempts on successful login
                 clearLoginAttempts($username);
+
+                // المؤسسة معلّقة أو محذوفة → منع الدخول دون كشف السبب
+                if (!empty($user['organization_id'])) {
+                    $stmtOrg = $pdo->prepare("SELECT status FROM organizations WHERE id = ?");
+                    $stmtOrg->execute([$user['organization_id']]);
+                    $org_row = $stmtOrg->fetch();
+                    if (!$org_row || $org_row['status'] === 'suspended') {
+                        recordFailedLogin($username);
+                        logActivity("⚠️ محاولة دخول لمؤسسة معطلة", "⚠️ Suspended Org Login Attempt", "Username: $username");
+                        $error = __('error_login');
+                        goto login_handled;
+                    }
+                }
                 
                 if ($user['two_factor_enabled']) {
                     session_regenerate_id(true);
@@ -46,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['organization_id'] = $user['organization_id'];
                 $_SESSION['2fa_verified'] = true;
+                $_SESSION['auth_version'] = (int)($user['auth_version'] ?? 0);
 
                 // جلب ID واسم الموظف الخاص به (إن وُجد) لجميع الرتب
                 $stmtEmp = $pdo->prepare("SELECT id, full_name FROM employees WHERE user_id = ?");
@@ -65,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = __('error_login');
             }
         }
+        login_handled:
     }
     }
 }
@@ -94,14 +109,14 @@ include '../includes/header.php';
                             <label for="username" class="form-label small fw-bold"><?php echo __('username'); ?></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0"><span class="emoji-icon">👤</span></span>
-                                <input type="text" name="username" id="username" class="form-control bg-light border-start-0" required autofocus>
+                                <input type="text" name="username" id="username" class="form-control bg-light border-start-0" required autofocus autocomplete="username" maxlength="50">
                             </div>
                         </div>
                         <div class="mb-4">
                             <label for="password" class="form-label small fw-bold"><?php echo __('password'); ?></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0"><span class="emoji-icon">🔒</span></span>
-                                <input type="password" name="password" id="password" class="form-control bg-light border-start-0" required>
+                                <input type="password" name="password" id="password" class="form-control bg-light border-start-0" required autocomplete="current-password" maxlength="200">
                             </div>
                             <div class="text-end mt-2">
                                 <a href="forgot_password.php" class="btn btn-link btn-sm text-primary fw-bold text-decoration-none p-0" style="font-size: 0.95rem;"><span class="emoji-icon">❓</span> <?php echo __('forgot_password'); ?></a>

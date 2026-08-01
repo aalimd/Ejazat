@@ -20,7 +20,38 @@ $org_id = $user['organization_id'] ?? 1;
 
 // Check if user is trying to confirm setup
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['enable_2fa'])) {
+    if (!verify_csrf()) {
+        $error = __('csrf_token_invalid');
+    } elseif (isset($_POST['change_password'])) {
+        $current_password = $_POST['current_password'] ?? '';
+        $new_password = $_POST['new_password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
+        $min_length = (int)getSystemSetting('min_password_length', 8);
+        if ($min_length < 6) $min_length = 6;
+
+        if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
+            $error = __('fill_fields_error');
+        } elseif (!password_verify($current_password, $user['password'])) {
+            $error = __('current_password_incorrect');
+        } elseif (strlen($new_password) < $min_length) {
+            $error = __('password_min_length');
+        } elseif ($new_password !== $confirm_password) {
+            $error = __('passwords_do_not_match');
+        } else {
+            $hashed = password_hash($new_password, PASSWORD_DEFAULT);
+            $stmtPw = $pdo->prepare("UPDATE users SET password = ?, auth_version = auth_version + 1 WHERE id = ?");
+            if ($stmtPw->execute([$hashed, $user_id])) {
+                $success = __('password_changed_success');
+                logActivity("🔑 تغيير كلمة المرور", "🔑 Password Changed", "User changed their password");
+                // إبطال الجلسات القديمة
+                $_SESSION = [];
+                session_destroy();
+                redirect('auth/login.php?success=password_changed');
+            } else {
+                $error = 'Error updating password.';
+            }
+        }
+    } elseif (isset($_POST['enable_2fa'])) {
         $secret = $_POST['temp_secret'] ?? '';
         $code = trim($_POST['code'] ?? '');
         
@@ -119,6 +150,7 @@ include '../includes/header.php';
                     </div>
                     
                     <form action="security.php" method="POST" class="border-top pt-4">
+                        <?php echo csrf_field(); ?>
                         <h6 class="text-danger fw-bold mb-3"><?php echo __('2fa_disable_title'); ?></h6>
                         <p class="text-muted small mb-3"><?php echo __('2fa_disable_desc'); ?></p>
                         
@@ -164,7 +196,8 @@ include '../includes/header.php';
                     </div>
 
                     <form action="security.php" method="POST" class="border-top pt-4">
-                        <input type="hidden" name="temp_secret" value="<?php echo $temp_secret; ?>">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="temp_secret" value="<?php echo h($temp_secret); ?>">
                         <h6 class="fw-bold mb-3"><?php echo __('2fa_step_3'); ?></h6>
                         
                         <div class="row g-3 align-items-end">
@@ -180,6 +213,43 @@ include '../includes/header.php';
                         </div>
                     </form>
                 <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- تغيير كلمة المرور -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom py-3">
+                <div class="fw-bold text-dark fs-5">
+                    <span class="emoji-icon">🔑</span> <?php echo __('change_password'); ?>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <form action="security.php" method="POST" autocomplete="off">
+                    <?php echo csrf_field(); ?>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted"><?php echo __('current_password'); ?></label>
+                            <input type="password" name="current_password" class="form-control" required autocomplete="current-password">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted"><?php echo __('new_password'); ?></label>
+                            <input type="password" name="new_password" class="form-control" required autocomplete="new-password" minlength="8">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted"><?php echo __('confirm_password'); ?></label>
+                            <input type="password" name="confirm_password" class="form-control" required autocomplete="new-password" minlength="8">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" name="change_password" class="btn btn-primary px-4 fw-bold shadow-sm">
+                            <span class="emoji-icon">🔑</span> <?php echo __('update_password_btn'); ?>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

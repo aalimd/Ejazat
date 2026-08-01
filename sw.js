@@ -1,7 +1,7 @@
 // Ejazat HR-App Service Worker
 const urlParams = new URLSearchParams(self.location.search);
 const baseURL = urlParams.get('base') || '/';
-const CACHE_NAME = 'ejazat-pwa-v1';
+const CACHE_NAME = 'ejazat-pwa-v2';
 const OFFLINE_URL = baseURL + 'offline.php';
 
 const STATIC_ASSETS = [
