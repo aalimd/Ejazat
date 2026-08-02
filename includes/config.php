@@ -46,8 +46,8 @@ if ($is_local_environment) {
     define('BASE_URL', env('BASE_URL_LOCAL', '/HR-App/'));
 } else {
     define('DB_HOST', env('DB_HOST_PROD', 'localhost'));
-    define('DB_NAME', env('DB_NAME_PROD', '********_ejazat'));
-    define('DB_USER', env('DB_USER_PROD', '********_ejazatuser'));
+    define('DB_NAME', env('DB_NAME_PROD', ''));
+    define('DB_USER', env('DB_USER_PROD', ''));
     define('DB_PASS', env('DB_PASS_PROD', ''));
     define('BASE_URL', env('BASE_URL_PROD', '/'));
 }
